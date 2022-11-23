@@ -1,0 +1,29 @@
+rule all_targets:
+  input:
+    "norarefy-source/dispersion-survey/dispersion.Rmd",
+    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.Rmd",
+    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd",
+    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.Rmd",
+    "norarefy-source/dispersion-survey/dispersion.html",
+    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.html",
+    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.html",
+    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.html"
+
+
+rule download_s1_archive:
+  input:
+    "workflow/scripts/download_s1_archive.sh"
+  output:
+    "norarefy-source/dispersion-survey/dispersion.Rmd",
+    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.Rmd",
+    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd",
+    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.Rmd",
+    "norarefy-source/dispersion-survey/dispersion.html",
+    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.html",
+    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.html",
+    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.html",
+    "norarefy-source/norarefy-source.zip"
+  shell:
+    """
+    {input}
+    """
