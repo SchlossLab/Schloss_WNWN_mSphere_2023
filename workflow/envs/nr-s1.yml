@@ -1,0 +1,28 @@
+name: nr-orig
+channels:
+  - conda-forge
+  - bioconda
+  - r
+dependencies:
+  - snakemake=7.18.2
+  - r-base=4.0.2 #orig=3
+  - r-cluster=2.1.0 #orig=1.14.4
+  - r-doParallel=1.0.17 #orig=1.0.6
+  - bioconductor-edger=3.30.0 #orig=3.4
+  - bioconductor-deseq=1.39.0 #orig=1.14.0
+  - bioconductor-deseq2=1.28.0 #orig=1.2.6
+  - r-foreach=1.5.2 #orig=1.4.1
+  - r-ggplot2=3.3.6 #orig=0.9.3.1
+#  - r-grid #orig=3.0.2 #removed by cran because now part of base R
+  - r-scales #orig=0.2.3=1.2.1
+  - bioconductor-metagenomeSeq=1.30.0 #orig=1.4.0
+  - bioconductor-phyloseq=1.32.0 #differential=1.7.10; cluster=1.6.0
+  - r-plyr=1.8.7 #orig=1.8
+  - r-reshape2=1.4.4 #orig=1.2.2
+  - r-rocr=1.0_11 #orig=1.0.5
+  - r-poiclaclu=1.0.2.1 #orig=1.0.2
+  - r-xtable=1.8_4 #orig=1.7
+  - r-knitr=1.40 #orig=1.5
+  - r-markdown=1.1 #orig=non-specified
+  - diffutils
+  - coreutils

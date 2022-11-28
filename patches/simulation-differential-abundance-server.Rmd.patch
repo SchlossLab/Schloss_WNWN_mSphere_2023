@@ -1,0 +1,144 @@
+--- norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.Rmd	2022-11-23 16:00:57.891481000 -0500
++++ patches/simulation-differential-abundance-server.Rmd	2022-11-30 13:06:46.515004654 -0500
+@@ -1,4 +1,6 @@
+-`r opts_chunk$set(cache=FALSE, fig.width=12, message=FALSE, warning=FALSE)`
++`r opts_chunk$set(cache=FALSE, fig.width=12, message=FALSE, warning=FALSE)
++opts_chunk$set(fig.path="norarefy-source/simulation-differential-abundance/")
++`
+ <link href="http://joey711.github.com/phyloseq/markdown.css" rel="stylesheet"></link>
+ 
+ 
+@@ -79,7 +81,7 @@
+ 
+ # The number of cores to use in this simulation
+ #Ncores = 7
+-Ncores = 30
++Ncores = 8
+ 
+ # Define the simulation parameters combinations
+ simparams = apply(expand.grid(ns, sampletypes, reps, foldeffect, J), 1, paste0, collapse=comdelim)
+@@ -449,6 +451,7 @@
+   countData = countData + 1L
+   colData = data.frame(sample_data(physeq))
+   # Re-order the levels so the NULL set is first.
++  colData$postfix <- as.factor(colData$postfix) #following line was throwing error
+   colData$postfix <- relevel(colData$postfix, levels(colData$postfix)[2])
+   # Create the DESeq data set, dds.
+   dds <- DESeqDataSetFromMatrix(countData, colData, design = ~ postfix)
+@@ -614,24 +617,37 @@
+   }
+   # Wrapper to run the Expectation-maximization algorithm 
+   # and estimate $f_count$ fits with the zero-inflated Guassian (z.i.g.)
+-  fit = fitZig(MGS, mod)
+-  # You need to specify all OTUs to get the full table from MRfulltable. 
+-  x = MRfulltable(fit, number=nrow(assayData(MGS)$counts))
+-  # if any OTUs left out, rm those from x. Detected by NA rownames.
+-  x = x[!is.na(rownames(x)), ]
+-  # Modify this data.frame by adding the OTUnames. Clip the ":1" added to the OTU names
+-  rownames(x) <- gsub(":1", "", x=rownames(x), fixed=TRUE)
+-  x$OTUnames <- as.character(rownames(x))
+-  if( !is.null(tax_table(physeq, errorIfNULL=FALSE)) ){
+-    # Attach the bacterial taxonomy to the table, if available
+-    TAX = data.frame(tax_table(physeq))
+-    TAX$OTUnames <- as.character(rownames(TAX))    
+-    y = merge(x, TAX, by="OTUnames") 
+-  } else {
+-    y = x
++  fit <- 0
++  fit = tryCatch({ #fitZig was throwing errors, catch error and return NA values
++    fitZig(MGS, mod)
++    }, error = function(e) {
++      NULL
++    }, warning = function(w) {
++      NULL
++    }
++  )
++  
++  y <- NULL
++  
++  if(class(fit) == "fitZigResults"){              
++    # You need to specify all OTUs to get the full table from MRfulltable. 
++    x = MRfulltable(fit, number=nrow(assayData(MGS)$counts))
++    # if any OTUs left out, rm those from x. Detected by NA rownames.
++    x = x[!is.na(rownames(x)), ]
++    # Modify this data.frame by adding the OTUnames. Clip the ":1" added to the OTU names
++    rownames(x) <- gsub(":1", "", x=rownames(x), fixed=TRUE)
++    x$OTUnames <- as.character(rownames(x))
++    if( !is.null(tax_table(physeq, errorIfNULL=FALSE)) ){
++      # Attach the bacterial taxonomy to the table, if available
++      TAX = data.frame(tax_table(physeq))
++      TAX$OTUnames <- as.character(rownames(TAX))    
++      y = merge(x, TAX, by="OTUnames") 
++    } else {
++      y = x
++    }
++    # Sort and return
++    y = y[order(y$adjPvalue), ]
+   }
+-  # Sort and return
+-  y = y[order(y$adjPvalue), ]
+   return(y)
+ }
+ ```
+@@ -643,26 +659,37 @@
+   MGSi = make_metagenomeSeq(physeq)
+   designfac = factor(gsub("[[:print:]]+\\;", "", sample_names(physeq)))
+   y = test_metagenomeSeq(MGSi, designfac)
+-  rownames(y) <- y[, "OTUnames"]
+-  # our name convention for B-H adjusted P-value, and OTU-IDs.
+-  # Necessary for standardized evaluation of performance
+-  colnames(y)[colnames(y) == "adjPvalue"] <- "padj"
+-  colnames(y)[colnames(y) == "OTUnames"] <- "id"
++  
++  if(!is.null(y)){
++    rownames(y) <- y[, "OTUnames"]
++    # our name convention for B-H adjusted P-value, and OTU-IDs.
++    # Necessary for standardized evaluation of performance
++    colnames(y)[colnames(y) == "adjPvalues"] <- "padj" #column name changed
++    colnames(y)[colnames(y) == "OTUnames"] <- "id"
++  }
+   return(y)
+ }
++names(MGSreslist) <- simparams
++MGSreslist <- MGSreslist[-which(sapply(MGSreslist, is.null))]
++
+ # Test and validate the results using metagenomeSeq on rareified counts
+ rareMGSreslist <- foreach(physeq=rarelist, .packages=c("phyloseq", "metagenomeSeq")) %dopar% {
+   # physeq = rarelist[[3]]
+   MGSi = make_metagenomeSeq(physeq)
+   designfac = factor(gsub("[[:print:]]+\\;", "", sample_names(physeq)))
+   y = test_metagenomeSeq(MGSi, designfac)
+-  rownames(y) <- y[, "OTUnames"]
++  
++  if(!is.null(y)){
++    rownames(y) <- y[, "OTUnames"]
+   # our name convention for B-H adjusted P-value, and OTU-IDs.
+   # Necessary for standardized evaluation of performance
+-  colnames(y)[colnames(y) == "adjPvalue"] <- "padj"
+-  colnames(y)[colnames(y) == "OTUnames"] <- "id"
++    colnames(y)[colnames(y) == "adjPvalues"] <- "padj" #column name changed
++    colnames(y)[colnames(y) == "OTUnames"] <- "id"
++  }
+   return(y)
+ }
++names(rareMGSreslist) <- simparams
++rareMGSreslist <- rareMGSreslist[-which(sapply(rareMGSreslist, is.null))]
+ ```
+ 
+ 
+@@ -730,13 +757,14 @@
+                 edgeR=edgeRreslist, rare_edgeR=rare_edgeRreslist)
+ # Use foreach to organize all this data into a list of data.frames
+ perfdflist = foreach(resultslist = superlist) %dopar% {
++  #resultslist <- superlist[[8]]
+   perflist <- lapply(resultslist, eval_res_list, NTP=nTP)  
+   if( is.null(names(resultslist)) ){
+     names(perflist) <- simparams
+   } else {
+     names(perflist) <- names(resultslist)
+   }
+-  perfdf = make_power_df(perflist, comdelim, simparamslabels)  
++  perfdf = make_power_df(perflist, comdelim, simparamslabels) 
+   return(perfdf)
+ }
+ names(perfdflist) <- names(superlist)

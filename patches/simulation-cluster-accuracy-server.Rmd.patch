@@ -1,0 +1,21 @@
+--- norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd	2022-11-25 16:37:23.033525659 -0500
++++ patches/simulation-cluster-accuracy-server.Rmd	2022-11-28 18:28:07.459231802 -0500
+@@ -1,4 +1,6 @@
+-`r opts_chunk$set(cache=FALSE, fig.width=10, message=FALSE, warning=FALSE)`
++`r opts_chunk$set(cache=FALSE, fig.width=10, message=FALSE, warning=FALSE)
++opts_chunk$set(fig.path="norarefy-source/simulation-cluster-accuracy/")
++`
+ <link href="http://joey711.github.com/phyloseq/markdown.css" rel="stylesheet"></link>
+ 
+ 
+@@ -11,7 +13,9 @@
+ Clear workspace prior to run.
+ 
+ ```{r clear-workspace}
+-rm(list=ls())
++# This line needed to be removed since it deleted all of the objects in the
++# driver script
++#rm(list=ls())
+ ```
+ 
+ ```{r check-install-load-packages, warning=FALSE, message=FALSE}

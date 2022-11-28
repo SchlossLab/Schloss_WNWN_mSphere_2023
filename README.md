@@ -13,3 +13,9 @@ Make sure conda and mamba are installed
 mamba env create -f workflow/envs/norarefy.yml 
 conda activate norarefy
 ```
+
+Use Snakemake (isntalled in `norarefy` environment) to build project
+
+```bash
+snakemake -c1
+```

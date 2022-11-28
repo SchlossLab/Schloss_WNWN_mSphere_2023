@@ -1,29 +1,97 @@
+import re
+
+norarefy_slugs = [ 
+    "norarefy-source/dispersion-survey/dispersion.Rmd",
+    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.Rmd",
+    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd",
+    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.Rmd"
+]
+
 rule all_targets:
   input:
-    "norarefy-source/dispersion-survey/dispersion.Rmd",
-    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.Rmd",
-    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd",
-    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.Rmd",
-    "norarefy-source/dispersion-survey/dispersion.html",
-    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.html",
-    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.html",
-    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.html"
+    "norarefy-source/dispersion-survey/dispersion.compare.txt",
+    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.compare.txt",
+    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.compare.txt",
+    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.compare.txt",
+    "submission/manuscript.pdf"
 
 
-rule download_s1_archive:
+rule s1_download_archive:
   input:
-    "workflow/scripts/download_s1_archive.sh"
+    "workflow/scripts/s1_download_archive.sh"
   output:
-    "norarefy-source/dispersion-survey/dispersion.Rmd",
-    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.Rmd",
-    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd",
-    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.Rmd",
-    "norarefy-source/dispersion-survey/dispersion.html",
-    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.html",
-    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.html",
-    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.html",
+    expand("{norarefy_slug}.Rmd", norarefy_slug = norarefy_slugs),
+    expand("{norarefy_slug}.html", norarefy_slug = norarefy_slugs),
     "norarefy-source/norarefy-source.zip"
   shell:
     """
     {input}
     """
+
+rule s1_make_rmd_patch:
+  input:
+    sh="workflow/scripts/s1_make_rmd_patch.sh",
+    unmodified=lambda wildcards: [s for s in norarefy_slugs if wildcards.norarefy_slug in s],
+    modified="patches/{norarefy_slug}.Rmd",
+  output:
+    patch="patches/{norarefy_slug}.Rmd.patch"
+  shell:
+    """
+    echo "unmodified: {input.unmodified}"
+    echo {input.sh} {input.unmodified} {input.modified} {output.patch}
+    {input.sh} {input.unmodified} {input.modified} {output.patch}
+    """
+  
+rule s1_patch_rmd:
+  input:
+    sh="workflow/scripts/s1_apply_rmd_patch.sh",
+    unpatched="{norarefy_slug}.Rmd",
+    patch=lambda wildcards: re.sub(".*/", "patches/", f"{wildcards.norarefy_slug}.Rmd.patch")
+  output:
+    "{norarefy_slug}.patched.Rmd"
+  shell:
+    """
+    {input.sh} {input.unpatched} {output} {input.patch}
+    """
+
+rule s1_render_rmd:
+  input:
+    R="workflow/scripts/s1_render_rmd.R",
+    Rmd="{norarefy_slug}.patched.Rmd",
+  output:
+    "{norarefy_slug}_pds.html"
+  shell:
+    """
+    echo {wildcards.norarefy_slug}
+    {input.R} {input.Rmd} {output}
+    """
+
+rule s1_compare_html:
+  input:
+    sh="workflow/scripts/s1_compare_html.sh",
+    pm="{norarefy_slug}.html",
+    pds="{norarefy_slug}_pds.html"
+  output:
+    compare="{norarefy_slug}.compare.txt"
+  shell:
+    """
+    {input.sh} {input.pm} {input.pds}
+    """
+
+
+rule write_paper:
+  input:
+    "workflow/scripts/render_manuscript.R",
+    "submission/manuscript.Rmd",
+    "submission/references.bib",
+    "submission/asm.csl"
+    #
+  output:
+    "submission/manuscript.pdf",
+    "submission/manuscript.md",
+    "submission/manuscript.tex"
+  shell: 
+    """
+    workflow/scripts/render_manuscript.R
+    """
+    

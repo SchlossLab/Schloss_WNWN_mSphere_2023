@@ -1,4 +1,5 @@
 norarefy-source
+figure/
 cache
 
 .snakemake
