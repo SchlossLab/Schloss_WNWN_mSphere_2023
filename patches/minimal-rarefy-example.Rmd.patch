@@ -1,5 +1,5 @@
---- norarefy-source/minimal-rarefy-example/minimal-rarefy-example.Rmd	2022-11-23 16:00:57.891437000 -0500
-+++ patches/minimal-rarefy-example.Rmd	2022-11-28 18:27:08.926323038 -0500
+--- norarefy-source/minimal-rarefy-example/minimal-rarefy-example.Rmd	2022-11-23 16:00:57
++++ patches/minimal-rarefy-example.Rmd	2022-11-28 18:27:08
 @@ -1,4 +1,6 @@
 -`r opts_chunk$set(cache=TRUE, fig.width=10)`
 +`r opts_chunk$set(cache=TRUE, fig.width=10)
