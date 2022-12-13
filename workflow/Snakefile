@@ -13,7 +13,7 @@ rule all_targets:
     "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.compare.txt",
     "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.compare.txt",
     "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.compare.txt",
-    "submission/manuscript.pdf"
+  #  "submission/manuscript.pdf"
 
 
 rule s1_download_archive:
@@ -23,6 +23,8 @@ rule s1_download_archive:
     expand("{norarefy_slug}.Rmd", norarefy_slug = norarefy_slugs),
     expand("{norarefy_slug}.html", norarefy_slug = norarefy_slugs),
     "norarefy-source/norarefy-source.zip"
+  conda:
+    "envs/nr-s1.yml"
   shell:
     """
     {input}
@@ -35,6 +37,8 @@ rule s1_make_rmd_patch:
     modified="patches/{norarefy_slug}.Rmd",
   output:
     patch="patches/{norarefy_slug}.Rmd.patch"
+  conda:
+    "envs/nr-s1.yml"
   shell:
     """
     echo "unmodified: {input.unmodified}"
@@ -49,6 +53,8 @@ rule s1_patch_rmd:
     patch=lambda wildcards: re.sub(".*/", "patches/", f"{wildcards.norarefy_slug}.Rmd.patch")
   output:
     "{norarefy_slug}.patched.Rmd"
+  conda:
+    "envs/nr-s1.yml"
   shell:
     """
     {input.sh} {input.unpatched} {output} {input.patch}
@@ -60,6 +66,8 @@ rule s1_render_rmd:
     Rmd="{norarefy_slug}.patched.Rmd",
   output:
     "{norarefy_slug}_pds.html"
+  conda:
+    "envs/nr-s1.yml"
   shell:
     """
     echo {wildcards.norarefy_slug}
@@ -71,6 +79,8 @@ rule s1_compare_html:
     sh="workflow/scripts/s1_compare_html.sh",
     pm="{norarefy_slug}.html",
     pds="{norarefy_slug}_pds.html"
+  conda:
+    "envs/nr-s1.yml"
   output:
     compare="{norarefy_slug}.compare.txt"
   shell:
@@ -78,7 +88,23 @@ rule s1_compare_html:
     {input.sh} {input.pm} {input.pds}
     """
 
+rule test_rule1:
+  conda:
+    "envs/nr-modern.yml"
+  shell:
+    """
+    R -e 'library(tidyverse);library(rmarkdown);library(here);sessionInfo()'
+    snakemake --version
+    """
 
+rule test_rule2:
+  conda:
+    "envs/nr-s1.yml"
+  shell:
+    """
+    sdiff --version
+    """
+    
 rule write_paper:
   input:
     "workflow/scripts/render_manuscript.R",
@@ -90,6 +116,8 @@ rule write_paper:
     "submission/manuscript.pdf",
     "submission/manuscript.md",
     "submission/manuscript.tex"
+  conda:
+    "envs/nr-modern.yml"
   shell: 
     """
     workflow/scripts/render_manuscript.R
