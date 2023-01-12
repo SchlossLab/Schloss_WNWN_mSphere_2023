@@ -136,9 +136,75 @@ Ann Arbor, MI 48109
 
 ## Introduction
 
+Since the development of sequencing technologies such as those provided by 454 and Illumina microbiome researchers have struggled to produce a consistent number of sequences from each sample in a dataset. It is common to observe more than 10-fold variation in the number of sequences per sample [XXXXX]. Regardless of the source of this variation, researchers desire approaches to control for uneven sampling effort. Of course, this desire is not unique to microbiome research and is a challenge faced by all community ecologists. Common approaches to controlling uneven sampling efforts have included use of proportional abundance (i.e., relative abundance), normalization of counts, parameter estimation, and rarefaction.
+
+In 2014 Paul McMurdie and Susan Holmes published their "Wast not, want not: why rarefying microbiome data is inadmissible" (WNWN) in PLOS Computational Biology [XXXXX]. This paper has had a significant impact on the approaches that microbiome researchers use to analyze 16S rRNA gene sequence data. According to Google Scholar, this paper has been cited more than 2,300 times as of January 2023. Anecdotely, I have received correspondence from researchers over the past 10 years asking how to address critiques from reviewers who criticize my correspondents' analysis for rarefying (e.g., see [this Twitter thread](https://twitter.com/inanna_nalytica/status/1264679859672006656)). I have also received these types of comments from reviewers, specifically in regards to a preprint that I posted in 20XX in regards to my critique of the practice of removing rare taxa from analyses [XXXXX]. In the process of responding to these critiques and preparing a manuscript investigating rarefaction and other approaches to control for uneven sequencing effort, I decided to reassess the WNWN study including their definitions, simulations, and analyses.
+
 ## Results
 
+### Confusion regarding what is meant by "rarefying" and "rarefaction"
+
+I was successfully able to recreate much of the analysis that the authors published as Protocol S1 using R packages that were close to the versions used in the original analysis. It was not possible to fully reproduce the analysis since some of the underlying datasets were not available since the microbio.me website that was used to access data was decomissioned in the last 10 years. As I attempted to reproduce their work, I noticed that the step that purported to rarefy the data only performed one subsampling of the data (Lines 404 through 416 of `simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd`). This caused me to re-inspect how McMurdie and Holmes defined "rarefying" in the following quoted text from their paper:
+
+> Instead, microbiome analysis workflows often begin with an ad hoc library size normalization by random subsampling without replacement, or so-called rarefying [17]–[19]. There is confusion in the literature regarding terminology, and sometimes this normalization approach is conflated with a non-parametric resampling technique — called rarefaction [20], or individual-based taxon re-sampling curves [21] — that can be justified for coverage analysis or species richness estimation in some settings [21], though in other settings it can perform worse than parametric methods [22]. Here we emphasize the distinction between taxon re-sampling curves and normalization by strictly adhering to the terms rarefying or rarefied counts when referring to the normalization procedure, respecting the original definition for rarefaction. Rarefying is most often defined by the following steps [18].
+>
+> 1. Select a minimum library size, N~L,m~. This has also been called the rarefaction level [17], though we will not use the term here.
+> 2. Discard libraries (microbiome samples) that have fewer reads than N~L,m~.
+> 3. Subsample the remaining libraries without replacement such that they all have size N~L,m~.
+>
+> Often N~L,m~ is chosen to be equal to the size of the smallest library that is not considered defective, and the process of identifying defective samples comes with a risk of subjectivity and bias. In many cases researchers have also failed to repeat the random subsampling step (3) or record the pseudorandom number generation seed/process — both of which are essential for reproducibility.
+
+It was unfortunate that McMurdie and Holmes used the term "rarefying" here and throughout their manuscript. The authors were correct to state that the distinction between "rarefying" and "rarefaction" is confusing and leads to their conflation. In my experience, subsequent researchers have conflated the results of this study of the effects of rarefying data with rarefaction of data. As an example, Willis (XXXXX) describes problems with rarefaction rather than rarefying data when citing WSWN in her paper proposing alternatives to rarefaction for use with alpha diversity data:
+
+> Unfortunately, rarefaction is neither justifiable nor necessary, a view framed statistically by McMurdie and Holmes (2014) in the context of comparison of relative abundances.
+
+Adding to the confusion is that the papers cited in the first sentence of the quote I  WSWN included above either do not use the words "rarefy" or "rarefying" or use them interchangably with "rarefaction". In hindsight, as shown in the quoted text, McMurdie and Holmes do emphasize the distinction between rarefying and rarefaction. However, because they seem to have coined a new meaning for rarefying, they seem to have only added to the confusion by using the generally used verb form of rarefaction. Further confusion comes from the author's admonition in the final sentence that some researchers have failed to repeat the subsampling step. To most scientists, repeating the subsampling step is rarefaction. My preference is to use subsampling as the term describing the process they refer to as rarefying. In other words rarefaction with a single randomization.
+
+To provide a more clear definition of rarefaction, I propose the following:
+
+1. Select a minimum library size, N~L,m~. Researchers are encouraged to report the value of N~L,m~.
+2. Discard samples that have fewer reads than N~L,m~.
+3. Subsample the remaining libraries without replacement such that they all have size N~L,m~.
+4. Compute the desired metric (e.g., richness, Shannon diversity, Bray-Curtis distances) using the subsampled data
+5. Repeat steps 3 and 4 a large number of iterations (e.g, 100 or 1,000). Researchers are encouraged to report the number of iterations.
+6. Compute summary statistics using values generated from the subsampled data
+
+This definition aligns well with how rarefaction was originally defined for comparing richness (i.e., the number of taxa in a community) across communities when communities are sampled to different depths. It is important to note that this procedure generates substantially different results to those obtained without accounting for uneven sampling effort or using relative abundances, normalized counts, compositional data transformatins, variance stabilization procedures, or estimation techniques. I have explored the differences in results obtained using the diversity of approaches for controlling for uneven sampling effort; rarefaction, as described here, outperforms the other approaches [XXXXX].
+
+With this more general approach to rarefaction, rarefaction can be performed using any alpha or beta diversity metric. This strategy has been widely used by my research group and others. The next section, "Cluster accuracy", will explore this approach further. Furthermore, the procedure outlined above could also be used for hypothesis tests of differential abundance; however, thought would need to be given to how to synthesize the results of these tests across a large number of replications. This will be explored in the section, "Differential abundance".
+
+### Cluster accuracy
+
+#### Simulation design
+
+McMurdie and Holmes analyzed the effect of rarefying and other approaches on clustering accuracy using what they called "Simulation A" in their Figure 2A and elsewhere in their paper. In Simulation A, they investigated the ability to correctly assign samples to one of two clusters using simulated data used to generate 40 samples from two distributions. A variety of approaches were used to calculate distances between the samples those distances were used as input to partitioning around mediods (PAM) clustering with two groups. The accuracy of the cluster assignment was used as the metric to assess performance. This analysis was performed in the `simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd` R markdown file that was published as Protocol S1 in the original paper. Line numbers from this file will be refernced with an "L" as a prefix.
+
+The two distributions were generated using human fecal and ocean data originally take from the GlobalPaterns dataset (L129) [XXXXX]. To generate a fecal and ocean template distribution, the authors included any operational taxonomic unit (OTU) that appeared in more than one of the 4 fecal and 3 ocean samples (L60 and L137). The OTUs were sorted by how many of the 7 samples the OTUs were observed in followed by their total abundance across all 7 samples (L139). From this sorted list they identified the identifiers of the first 2000 OTUs (L66). Returning to the 7 samples they selected the 2000 most common and abundant OTUs and pooled the abundances of the fecal and ocean samples separately to create two templates (L144, L159-160, L197-198).
+
+Next, the fecal and ocean templates were mixed in 8 different fractions to generate two community types that differend by varying effect sizes (L170-195, L220). To simulate the variation in sequencing depth across the 80 samples, they normalized he number of sequences from each of the 26 samples in the GlobalPatterns dataset so that the median number of sequences (N~L~) for the GlobalPatterns samples matched one of 4 sampling depths (L324-325). The pre-normalized median read depth was XX1,106,894xx sequences with a range of XX58,688XX to XX2,357,181XX sequences. They then randomly sampled the 26 normalized sequencing depths to generate 80 sampling depths. From each community type, they simulated 40 samples by sampling to the desired number of reads (L73, L230-233 and L326-327). Each simulation condition was repeated 5 times (L85). This resulted in 160 simulated communities (8 effect sizes x 4 median sampling depths x 5 replicates = 160 simulations). Finally, they removed rare and low prevalence OTUs by in two steps. First, they removed any OTUs whose total abundance was less than 3 across all 80 samples and that did not appear in at least 3 samples (L368-386). Second, they removed any OTUs that did not have more than 1 sequence in more than 5% of the 80 samples (i.e., 4 samples) and that did not have a total abundance across the 80 samples greater than one half of the number of samples in each community type (i.e., 20) (L523-538, L551).
+
+#### Simulation critique
+
+Although all simulations represent an artificial representation of reality and can be critiqued, two elements of the design of Simulation A standout for critique. First, McMurdie and Holmes were emphatic that "**rarefying biological count data is statistically inadmissible** because it requires the omission of available valid data" (emphasis in original). Thus it is odd that they argue against removing data when rarefying/subsampling, but accept removing rare and low-prevalence OTUs prior to normalizing and analyzing their simulated communities. This practice has become common in microbiome studies and is the standard approach in tools such as dada2, unoise, and deblur [XXXXXXXX]. However, my previous work has shown that rare sequences from a poorly sequenced sample often appear in more deeply sequened samples suggesting that they are not necessarily artifacts. Furthermore, removing rare sequences alters the structure of communities and has undesirable effects on downstream analyses [XXXXXXXX]. Second, for the subsampling simulations the authors removed samples whose number of sequences was less than the 15th percentile (L404-419). In the manuscript, the authors acknowledge that this screening step, which was only used with subsampling, would decrease clustering accuracy putting it at a relative disadvantage to the other methods (page 5, column 1, last paragraph). Although the authors claim that "Rarefying counts requires an arbitrary selection of a library size minimum that affects downstream inference" (page 8, column 1, point 3), in acutal microbiome studies the selection of a sampling depth is not has arbitrary as the authors claim. In the following reassessment of McMurdie and Holmes's Simulation A, I will include results from rarefaction and inclusion of rare sequences and poorly sequenced samples. I also included an additional value of N~L~ of 50,000 to reflect the larger datasets in more modern microbiome studies (see Table 1 of [Singleton Paper XXXXXXXX]).
+
+#### Assessment
+
+
+
+
+
+### Differential abundance
+
+#### Toy example
+see 
+#### Simulations
+
+
+
 ## Discussion
+
+* Gratidue that code was published with paper. This made it straight forward to notice that only a single subsampling step was performed for each random seed and that only 3 random seeds were used.
+
 
 ## Acknowledgements
 
@@ -158,3 +224,6 @@ Ann Arbor, MI 48109
 \newpage
 
 ## Figures
+
+
+A significant challenge one faces when evaluating the appropriateness of a method for analyzing microbial communities is not knowing the true answer. For example, we could design a study comparing soil samples from fields growing soybeans and corn with 40 samples coming from each type of field. Although we might assume that the soils would be different, we do not know the precise difference in their richness, diversity, Bray-Curtis distances, or the relative abundances of the taxa in the soil from the two crops. Simulations allow us to mathematically model the distribution of taxa being sampled so that we know the true parameters that a sample seeks to represent. It is impossible to faithfully model the true structure of microbial communities and so any modeling approach will have limitations.

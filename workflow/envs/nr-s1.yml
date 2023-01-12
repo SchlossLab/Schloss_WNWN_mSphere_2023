@@ -1,4 +1,4 @@
-name: nr-orig
+name: nr-s1
 channels:
   - conda-forge
   - bioconda

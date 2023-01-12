@@ -8,3 +8,4 @@ dependencies:
   - r-tidyverse=1.3.2
   - r-rmarkdown=2.18
   - r-here=1.0.1
+  - r-vegan=2.6-4

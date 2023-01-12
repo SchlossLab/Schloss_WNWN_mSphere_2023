@@ -9,11 +9,11 @@ norarefy_slugs = [
 
 rule all_targets:
   input:
-    "norarefy-source/dispersion-survey/dispersion.compare.txt",
-    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.compare.txt",
-    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.compare.txt",
-    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.compare.txt",
-  #  "submission/manuscript.pdf"
+    # "norarefy-source/dispersion-survey/dispersion.compare.txt",
+    # "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.compare.txt",
+    # "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.compare.txt",
+    # "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.compare.txt",
+   "submission/manuscript.pdf"
 
 
 rule s1_download_archive:
