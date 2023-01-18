@@ -4,7 +4,6 @@ channels:
   - bioconda
   - r
 dependencies:
-  - snakemake=7.18.2
   - r-base=4.0.2 #orig=3
   - r-cluster=2.1.0 #orig=1.14.4
   - r-doParallel=1.0.17 #orig=1.0.6

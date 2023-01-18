@@ -3,3 +3,7 @@ figure/
 cache
 
 .snakemake
+.vscode
+
+data
+!README.md
