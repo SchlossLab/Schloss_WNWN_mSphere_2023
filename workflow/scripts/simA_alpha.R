@@ -1,9 +1,9 @@
-#!/usr/bin/env Rscript --vanilla
+#!/usr/bin/env Rscript
 
 # borrowed from L839-909 of simulation-cluster-accuracy-server.Rmd
 # code edited for clarity and style and to generate file with list of distances
 # from a phyloseq formatted otu_count file
-#
+
 # be sure to first run: conda activate nr-s1
 
 library(phyloseq)
@@ -110,4 +110,5 @@ output <- data.frame(conditions = conditions,
 write.table(output,
             file = output_file,
             quote = FALSE,
+            sep = "\t",
             row.names = FALSE)

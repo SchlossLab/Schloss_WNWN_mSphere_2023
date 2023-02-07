@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript --vanilla
+#!/usr/bin/env Rscript
 
 # borrowed from L839-909 of simulation-cluster-accuracy-server.Rmd
 # code edited for clarity and style and to generate file with list of distances
@@ -119,7 +119,8 @@ hclust_clres <- binaryclusteval(hclust, 2 * samples_per_type)
 
 output_data <- rbind(pam_clres, kmeans_clres, hclust_clres)
 
-output_data <- data.frame(method = c("pam", "kmeans", "hclust"),
+output_data <- data.frame(conditions = pretty_distance_file,
+                          method = c("pam", "kmeans", "hclust"),
                           output_data,
                           row.names = NULL)
 

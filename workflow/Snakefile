@@ -9,8 +9,8 @@ norarefy_slugs = [
 
 depths = [1000, 2000, 5000, 10000, 50000]
 fracs = ["s1", 1, 1.15, 1.25, 1.5, 1.75, 2, 2.5, 3.5]
-reps = range(1, 6)
-preprocs = ["filter", "nofilter"]
+reps = range(1, 101)
+preprocs = ["nofilter", "filter"]
 transforms = ["deseq",
               "none",
               "proportion",
@@ -49,9 +49,19 @@ rule all_targets:
     #     frac = fracs, depth = depths, rep = reps, preproc = preprocs,
     #     transform = transforms),
     #       
-    "data/simulation_cluster_accuracy.tsv",
-    "data/simulation_alpha.tsv",
+    # expand("data/sim_a/{frac}_{depth}_pool.{preproc}.{transform}.{distance}.clusters.tsv",
+    #        frac = fracs, depth = depths, preproc = preprocs,
+    #        transform = transforms, distance = distances),
+    # expand("data/sim_a/{frac}_{depth}_pool.{preproc}.{transform}.{distance}.adonis.tsv",
+    #        frac = fracs, depth = depths, preproc = preprocs,
+    #        transform = transforms, distance = distances),
+    # expand("data/sim_a/{frac}_{depth}_pool.{preproc}.{transform}.alpha.tsv",
+    #     frac = fracs, depth = depths, rep = reps, preproc = preprocs,
+    #     transform = transforms),
+    #
+    "data/simulation_clusters.tsv",
     "data/simulation_adonis.tsv",
+    "data/simulation_alpha.tsv",
     #
     # "submission/manuscript.pdf"
 
@@ -128,15 +138,17 @@ rule s1_compare_html:
     {input.sh} {input.pm} {input.pds}
     """
 
+ruleorder: simA_generate_skew > simA_generate_data
+
 rule simA_generate_data:
   input:
-    R="code/simA_generate_data.R"
+    R="workflow/scripts/simA_generate_data.R"
   conda:
     "envs/nr-s1.yml"
-  wildcard_constraints:
-    frac="^\d"
   output:
     "data/sim_a/{frac}_{depth}_{rep}.nofilter.RDS"
+  group:
+    "generate"
   shell:
     """
     {input.R} {wildcards.frac} {wildcards.depth} {wildcards.rep}
@@ -144,11 +156,13 @@ rule simA_generate_data:
 
 rule simA_generate_skew:
   input:
-    R="code/simA_generate_skew.R"
+    R="workflow/scripts/simA_generate_skew.R"
   conda:
     "envs/nr-s1.yml"
   output:
     "data/sim_a/s1_{depth}_{rep}.nofilter.RDS"
+  group:
+    "generate"
   shell:
     """
     {input.R} {wildcards.depth} {wildcards.rep}
@@ -156,12 +170,14 @@ rule simA_generate_skew:
 
 rule simA_filter_data:
   input:
-    R="code/simA_filter_data.R",
+    R="workflow/scripts/simA_filter_data.R",
     rds="data/sim_a/{frac}_{depth}_{rep}.nofilter.RDS"
   conda:
     "envs/nr-s1.yml"
   output:
     "data/sim_a/{frac}_{depth}_{rep}.filter.RDS"
+  group:
+    "filter"
   shell:
     """
     {input.R} {input.rds}
@@ -174,6 +190,8 @@ rule simA_transform_none:
     "envs/nr-s1.yml"
   output:
     rds="data/sim_a/{frac}_{depth}_{rep}.{filter}.none.RDS"
+  group:
+    "transform"
   shell:
     """
     cp {input.rds} {output.rds}
@@ -181,12 +199,14 @@ rule simA_transform_none:
 
 rule simA_transform_proportions:
   input:
-    R="code/simA_transform_proportions.R",
+    R="workflow/scripts/simA_transform_proportions.R",
     rds="data/sim_a/{frac}_{depth}_{rep}.{filter}.RDS"
   conda:
     "envs/nr-s1.yml"
   output:
     "data/sim_a/{frac}_{depth}_{rep}.{filter}.proportion.RDS"
+  group:
+    "transform"
   shell:
     """
     {input.R} {input.rds}
@@ -194,7 +214,7 @@ rule simA_transform_proportions:
 
 rule simA_transform_subsample:
   input:
-    R="code/simA_transform_subsample.R",
+    R="workflow/scripts/simA_transform_subsample.R",
     rds="data/sim_a/{frac}_{depth}_{rep}.{filter}.RDS"
   conda:
     "envs/nr-s1.yml"
@@ -202,6 +222,8 @@ rule simA_transform_subsample:
     fraction="\d\d"
   output:
     "data/sim_a/{frac}_{depth}_{rep}.{filter}.subsample{fraction}.RDS"
+  group:
+    "transform"
   shell:
     """
     {input.R} {input.rds} 0.{wildcards.fraction} 1
@@ -209,7 +231,7 @@ rule simA_transform_subsample:
 
 rule simA_transform_rarefy:
   input:
-    R="code/simA_transform_subsample.R",
+    R="workflow/scripts/simA_transform_subsample.R",
     rds="data/sim_a/{frac}_{depth}_{rep}.{filter}.RDS"
   conda:
     "envs/nr-s1.yml"
@@ -217,6 +239,8 @@ rule simA_transform_rarefy:
     fraction="\d\d"
   output:
     "data/sim_a/{frac}_{depth}_{rep}.{filter}.rarefaction{fraction}.RDS"
+  group:
+    "transform"
   shell:
     """
     {input.R} {input.rds} 0.{wildcards.fraction} 100
@@ -224,12 +248,14 @@ rule simA_transform_rarefy:
 
 rule simA_transform_deseq:
   input:
-    R="code/simA_transform_deseq.R",
+    R="workflow/scripts/simA_transform_deseq.R",
     rds="data/sim_a/{frac}_{depth}_{rep}.{filter}.RDS"
   conda:
     "envs/nr-s1.yml"
   output:
     "data/sim_a/{frac}_{depth}_{rep}.{filter}.deseq.RDS"
+  group:
+    "transform"
   shell:
     """
     {input.R} {input.rds}
@@ -237,7 +263,7 @@ rule simA_transform_deseq:
 
 rule simA_transform_edger:
   input:
-    R="code/simA_transform_edgeR.R",
+    R="workflow/scripts/simA_transform_edgeR.R",
     rds="data/sim_a/{frac}_{depth}_{rep}.{filter}.RDS"
   conda:
     "envs/nr-s1.yml"
@@ -245,6 +271,8 @@ rule simA_transform_edger:
     "data/sim_a/{frac}_{depth}_{rep}.{filter}.{edger_method}.RDS"
   wildcard_constraints:
     edger_method="upperquartile|TMM|RLE"
+  group:
+    "transform"
   shell:
     """
     {input.R} {input.rds} {wildcards.edger_method}
@@ -252,7 +280,7 @@ rule simA_transform_edger:
 
 rule simA_distance_traditional:
   input:
-    R="code/simA_distance_traditional.R",
+    R="workflow/scripts/simA_distance_traditional.R",
     rds="data/sim_a/{frac}_{depth}_{rep}.{filter}.{transform}.RDS"
   conda:
     "envs/nr-s1.yml"
@@ -260,6 +288,8 @@ rule simA_distance_traditional:
     "data/sim_a/{frac}_{depth}_{rep}.{filter}.{transform}.{distance}.RDS"
   wildcard_constraints:
     distance="bray|euclidean|uunifrac|wunifrac",
+  group:
+    "distance"
   shell:
     """
     {input.R} {input.rds} {wildcards.distance}
@@ -267,12 +297,14 @@ rule simA_distance_traditional:
 
 rule simA_distance_poisson:
   input:
-    R="code/simA_distance_poisson.R",
+    R="workflow/scripts/simA_distance_poisson.R",
     rds="data/sim_a/{frac}_{depth}_{rep}.{filter}.{transform}.RDS"
   conda:
     "envs/nr-s1.yml"
   output:
     "data/sim_a/{frac}_{depth}_{rep}.{filter}.{transform}.poisson.RDS"
+  group:
+    "distance"
   shell:
     """
     {input.R} {input.rds}
@@ -280,7 +312,7 @@ rule simA_distance_poisson:
 
 rule simA_distance_edger:
   input:
-    R="code/simA_distance_edger.R",
+    R="workflow/scripts/simA_distance_edger.R",
     rds="data/sim_a/{frac}_{depth}_{rep}.{filter}.{transform}.RDS"
   conda:
     "envs/nr-s1.yml"
@@ -288,6 +320,8 @@ rule simA_distance_edger:
     "data/sim_a/{frac}_{depth}_{rep}.{filter}.{transform}.{distance}.RDS"
   wildcard_constraints:
     distance="logFC|bcv",
+  group:
+    "distance"
   shell:
     """
     {input.R} {input.rds} {wildcards.distance}
@@ -295,88 +329,99 @@ rule simA_distance_edger:
 
 rule simA_cluster_distances:
   input:
-    R="code/simA_cluster_distances.R",
+    R="workflow/scripts/simA_cluster_distances.R",
     rds="data/sim_a/{frac}_{depth}_{rep}.{filter}.{transform}.{distance}.RDS"
   conda:
     "envs/nr-s1.yml"
   output:
     "data/sim_a/{frac}_{depth}_{rep}.{filter}.{transform}.{distance}.clusters.tsv"
+  group:
+    "cluster"
+  wildcard_constraints:
+    rep="\d{1,3}"
   shell:
     """
     {input.R} {input.rds}
     """
 
-rule simA_pool_clusters:
-  input:
-    R="code/simA_pool_clusters.R",
-    tsv=expand("data/sim_a/{frac}_{depth}_{rep}.{preproc}.{transform}.{distance}.clusters.tsv",
-           frac = fracs, depth = depths, rep = reps, preproc = preprocs,
-           transform = transforms, distance = distances)
-  conda:
-    "envs/nr-modern.yml"
-  output:
-    "data/simulation_cluster_accuracy.tsv"
-  shell:
-    """
-    {input.R}
-    """
-
 rule simA_adonis_distances:
   input:
-    R="code/simA_adonis_distances.R",
+    R="workflow/scripts/simA_adonis_distances.R",
     rds="data/sim_a/{frac}_{depth}_{rep}.{filter}.{transform}.{distance}.RDS"
   conda:
     "envs/nr-modern.yml"
   output:
     "data/sim_a/{frac}_{depth}_{rep}.{filter}.{transform}.{distance}.adonis.tsv"
+  group:
+    "adonis"
+  wildcard_constraints:
+    rep="\d{1,3}"
   shell:
     """
     {input.R} {input.rds}
     """
-
-rule simA_pool_adonis:
-  input:
-    R="code/simA_pool_adonis.R",
-    tsv=expand("data/sim_a/{frac}_{depth}_{rep}.{preproc}.{transform}.{distance}.adonis.tsv",
-           frac = fracs, depth = depths, rep = reps, preproc = preprocs,
-           transform = transforms, distance = distances)
-  conda:
-    "envs/nr-modern.yml"
-  output:
-    "data/simulation_adonis.tsv"
-  shell:
-    """
-    {input.R}
-    """
-
-
 
 rule simA_alpha:
   input:
-    R="code/simA_alpha.R",
-    rds="data/sim_a/{frac}_{depth}_{rep}.{filter}.{transform}.RDS"
+    R="workflow/scripts/simA_alpha.R",
+    rds="data/sim_a/{frac}_{depth}_{rep}.{preproc}.{transform}.RDS"
   conda:
     "envs/nr-s1.yml"
   output:
-    "data/sim_a/{frac}_{depth}_{rep}.{filter}.{transform}.alpha.tsv"
+    "data/sim_a/{frac}_{depth}_{rep}.{preproc}.{transform}.alpha.tsv"
+  group:
+    "alpha"
+  wildcard_constraints:
+    rep="\d{1,3}"
   shell:
     """
     {input.R} {input.rds}
     """
 
-rule simA_pool_alpha:
+rule simA_pool_reps:
   input:
-    R="code/simA_pool_alpha.R",
-    tsv=expand("data/sim_a/{frac}_{depth}_{rep}.{preproc}.{transform}.alpha.tsv",
-           frac = fracs, depth = depths, rep = reps, preproc = preprocs,
-           transform = transforms)
+    sh="workflow/scripts/simA_pool_reps.sh",
+    tsv=expand("data/sim_a/{frac_depth}_{rep}.{suffix}.tsv",
+               rep = reps, allow_missing=True)
+  conda:
+    "envs/nr-base.yml"
+  output:
+    "data/sim_a/{frac_depth}_pool.{suffix}.tsv"
+  group:
+    "pool_reps"
+  shell:
+    """
+    {input.sh} {input.tsv} {output}
+    """
+
+rule simA_pool_betas:
+  input:
+    R="workflow/scripts/simA_pool_pools.R",
+    tsv=expand("data/sim_a/{frac}_{depth}_pool.{preproc}.{transform}.{distance}.{suffix}.tsv",
+               frac = fracs, depth = depths, preproc = preprocs,
+               transform = transforms, distance = distances, allow_missing=True)
+  conda:
+    "envs/nr-modern.yml"
+  output:
+    "data/simulation_{suffix}.tsv"
+  shell:
+    """
+    {input.R} {input.tsv} {output}
+    """
+
+rule simA_pool_alphas:
+  input:
+    R="workflow/scripts/simA_pool_pools.R",
+    tsv=expand("data/sim_a/{frac}_{depth}_pool.{preproc}.{transform}.alpha.tsv",
+               frac = fracs, depth = depths, preproc = preprocs,
+               transform = transforms)
   conda:
     "envs/nr-modern.yml"
   output:
     "data/simulation_alpha.tsv"
   shell:
     """
-    {input.R}
+    {input.R} {input.tsv} {output}
     """
 
 

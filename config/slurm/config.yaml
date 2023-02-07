@@ -1,0 +1,42 @@
+# cluster commands
+cluster: 
+  mkdir -p logs/cluster_logs/`date +"%Y%m%d"`/{rule} &&
+  sbatch 
+    --job-name={rule}_{wildcards}
+    --output=logs/cluster_logs/`date +"%Y%m%d"`/{rule}/{wildcards}_%j.out
+    --partition={resources.partition}
+    --account=pschloss1
+    --nodes=1
+    --time=100:00:00
+    --mem=2000
+    -c 1
+    
+# default resources used for rules with no Resources specified
+default-resources: 
+  - cpus=1
+  - mem_mb=2000
+  - partition=standard
+  - time_min=120
+  - job_name="rare"
+  
+# snakemake args
+jobs: 4950
+scheduler: "greedy"
+rerun-incomplete: true
+use-conda: true
+conda-frontend: "mamba"
+# conda-prefix: 'resources/envs/conda_envs'
+keep-going: true
+latency-wait: 120
+# touch: false
+conda-cleanup-envs: false
+conda-create-envs-only: false
+group-components:
+  - generate=100 #ntargets per job
+  - filter=100
+  - transform=100
+  - distance=100
+  - cluster=100
+  - adonis=100
+  - alpha=100
+  - pool_reps=100

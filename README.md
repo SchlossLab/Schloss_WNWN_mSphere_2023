@@ -10,7 +10,7 @@ R markdown documents, is contained in the directory downloaded from the journal'
 Make sure conda and mamba are installed. Installing TinyTex may take some fenagling and on Mac OSX seems to need to be installed in the home directory Library (i.e., `~/Library/TinyTex`) using `install.packages`. See [this issue](https://github.com/rstudio/tinytex/issues/24) for more clues on installing `tinytex`.
 
 ```bash
-conda config --set channel_priority strict
+mamba config --set channel_priority strict
 mamba env create -f workflow/envs/nr-base.yml 
 conda activate nr-base
 ```

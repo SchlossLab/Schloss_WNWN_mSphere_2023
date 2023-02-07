@@ -1,8 +1,9 @@
-#!/usr/bin/env Rscript --vanilla
+#!/usr/bin/env Rscript
 
-# borrowed from L57-346 of simulation-cluster-accuracy-server.Rmd
-# code edited for clarity and style and to generate singe otu_count file from
-# user specified values of mixfacs, n_l, and rep
+# modified from L57-346 of simulation-cluster-accuracy-server.Rmd code to skew
+# the number of sequences per sample to be confounded with the treatment group
+# original code edited for clarity and style and to generate singe otu_count
+# file from user specified values of mixfacs, n_l, and rep
 #
 # be sure to first run: conda activate nr-s1 
 
@@ -12,21 +13,22 @@ args <- commandArgs(trailingOnly = TRUE)
 
 
 # Effect Size. The artificial mix fraction.
-mixfac <- as.numeric(args[1]) #c(1, 1.15, 1.25, 1.5, 1.75, 2, 2.5, 3.5)
+#mixfac <- as.numeric(args[1]) #c(1, 1.15, 1.25, 1.5, 1.75, 2, 2.5, 3.5)
+mixfac <- 1
 
 # Mean sampling depth
-n_l <- as.numeric(args[2]) #c(1000, 2000, 5000, 10000, 50000)
+n_l <- as.numeric(args[1]) #c(1000, 2000, 5000, 10000, 50000)
 
 # Vector of the replicate numbers to repeat for
 # each comb of simulation parameters (n_l, etc)
-rep <- as.numeric(args[3]) #1:5
+rep <- as.numeric(args[2]) #1:5
 
 rel_path <- "data/sim_a/"
 
 dir.create(rel_path, showWarnings = FALSE)
 
 file_name <- paste0(rel_path,
-                    paste(mixfac, n_l, rep, sep = "_"),
+                    paste(paste0("s", mixfac), n_l, rep, sep = "_"),
                     ".nofilter.RDS")
 
 set.seed(20140206 + rep)
@@ -183,8 +185,9 @@ infiniteloopcounter <- 1
 
 while (try_again && infiniteloopcounter < 5) {
 
-  n1   <- sumsim(n_l, sampsums, samples_per_type)
-  n2   <- sumsim(n_l, sampsums, samples_per_type)
+  n <- sort(sumsim(n_l, sampsums, samples_per_type * 2))
+  n1 <- n[1:samples_per_type]
+  n2 <- n[(samples_per_type + 1): (2*samples_per_type)]
 
   sim1 <- microbesim(sampletypes[1], template1, template2,
                      mixfac, samples_per_type, n1)

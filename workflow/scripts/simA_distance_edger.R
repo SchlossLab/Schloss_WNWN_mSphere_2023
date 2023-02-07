@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript --vanilla
+#!/usr/bin/env Rscript
 
 # borrowed from L604-722 and L776-788 of simulation-cluster-accuracy-server.Rmd
 # code edited for clarity and style and to generate file with list of distances

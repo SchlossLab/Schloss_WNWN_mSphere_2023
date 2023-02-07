@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript --vanilla
+#!/usr/bin/env Rscript
 
 # borrowed from L392-401 of simulation-cluster-accuracy-server.Rmd
 # code edited for clarity and style and to generate singe otu_count file from

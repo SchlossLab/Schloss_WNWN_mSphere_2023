@@ -1,9 +1,12 @@
 norarefy-source
-figure/
+figure
 cache
+logs
 
 .snakemake
 .vscode
+*.out
 
 data
 !README.md
+Rplots.pdf
