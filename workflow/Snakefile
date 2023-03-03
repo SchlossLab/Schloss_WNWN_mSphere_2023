@@ -1,10 +1,10 @@
 import re
 
 norarefy_slugs = [ 
-    "norarefy-source/dispersion-survey/dispersion.Rmd",
-    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.Rmd",
-    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd",
-    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.Rmd"
+    "norarefy-source/dispersion-survey/dispersion",
+    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example",
+    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server",
+    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server"
 ]
 
 depths = [1000, 2000, 5000, 10000, 50000]
@@ -26,10 +26,27 @@ distances = ["bray",
 
 rule all_targets:
   input:
-    # "norarefy-source/dispersion-survey/dispersion.compare.txt",
-    # "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.compare.txt",
-    # "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.compare.txt",
-    # "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.compare.txt",
+    # "patches/dispersion.Rmd.patch",
+    # "patches/minimal-rarefy-example.Rmd.patch",
+    # "patches/simulation-cluster-accuracy-server.Rmd.patch",
+    # "patches/simulation-differential-abundance-server.Rmd.patch",
+    #
+    # "norarefy-source/dispersion-survey/dispersion.patched.Rmd",
+    # "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.patched.Rmd",
+    # "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.patched.Rmd",
+    # "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.patched.Rmd",
+    #
+    # "norarefy-source/dispersion-survey/dispersion_pds.html",
+    # "norarefy-source/minimal-rarefy-example/minimal-rarefy-example_pds.html",
+    # "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server_pds.html",
+    # "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server_pds.html",
+    #
+    "norarefy-source/dispersion-survey/dispersion.compare.txt",
+    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.compare.txt",
+    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.compare.txt",
+    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.compare.txt",
+    #
+    #
     #
     # expand("data/sim_a/{frac}_{depth}_{rep}.{preproc}.RDS",
     #        frac = fracs, depth = depths, rep = reps, preproc = preprocs),
@@ -59,9 +76,9 @@ rule all_targets:
     #     frac = fracs, depth = depths, rep = reps, preproc = preprocs,
     #     transform = transforms),
     #
-    "data/simulation_clusters.tsv",
-    "data/simulation_adonis.tsv",
-    "data/simulation_alpha.tsv",
+    # "data/simulation_clusters.tsv",
+    # "data/simulation_adonis.tsv",
+    # "data/simulation_alpha.tsv",
     #
     # "submission/manuscript.pdf"
 
@@ -118,6 +135,8 @@ rule s1_render_rmd:
     "{norarefy_slug}_pds.html"
   conda:
     "envs/nr-s1.yml"
+  resources:
+    mem_mb=47000
   shell:
     """
     echo {wildcards.norarefy_slug}

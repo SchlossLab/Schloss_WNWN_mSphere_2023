@@ -2,14 +2,14 @@
 cluster: 
   mkdir -p logs/cluster_logs/`date +"%Y%m%d"`/{rule} &&
   sbatch 
-    --job-name={rule}_{wildcards}
-    --output=logs/cluster_logs/`date +"%Y%m%d"`/{rule}/{wildcards}_%j.out
+    --job-name={rule}
+    --output=logs/cluster_logs/`date +"%Y%m%d"`/{rule}/%j.out
     --partition={resources.partition}
     --account=pschloss1
     --nodes=1
     --time=100:00:00
-    --mem=2000
-    -c 1
+    --mem={resources.mem_mb}
+    -c1
     
 # default resources used for rules with no Resources specified
 default-resources: 
@@ -28,7 +28,7 @@ conda-frontend: "mamba"
 # conda-prefix: 'resources/envs/conda_envs'
 keep-going: true
 latency-wait: 120
-# touch: false
+touch: false
 conda-cleanup-envs: false
 conda-create-envs-only: false
 group-components:

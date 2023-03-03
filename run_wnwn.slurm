@@ -19,5 +19,6 @@ conda activate nr-base
 
 ### Run script
 # time snakemake -nr
-time snakemake --profile config/slurm # --batch all_targets=1/3s
-#time snakemake --profile config/slurm
+# time snakemake --profile config/slurm --batch all_targets=1/3s
+
+time snakemake --profile config/slurm
