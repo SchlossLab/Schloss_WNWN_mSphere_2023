@@ -423,7 +423,7 @@ rule simA_pool_betas:
   conda:
     "envs/nr-modern.yml"
   output:
-    "data/simulation_{suffix}.tsv"
+    "data/simulation_{suffix}.tsv.gz"
   shell:
     """
     {input.R} {input.tsv} {output}
@@ -438,7 +438,7 @@ rule simA_pool_alphas:
   conda:
     "envs/nr-modern.yml"
   output:
-    "data/simulation_alpha.tsv"
+    "data/simulation_alpha.tsv.gz"
   shell:
     """
     {input.R} {input.tsv} {output}
@@ -469,16 +469,86 @@ rule plot_globalpatterns_distribution:
     {input.R}
     """
 
+rule plot_my_figure_4:
+  input:
+    R="workflow/scripts/plot_my_figure_4.R",
+    tsv="data/simulation_clusters.tsv.gz"
+  conda:
+    "envs/nr-modern.yml"
+  output:
+    "results/figures/my_figure_4.pdf"
+  shell:
+    """
+    {input.R}
+    """
+
+rule figure_s1:
+  input:
+    "results/figures/globalpatterns_distribution.pdf"
+  output:
+    "submission/figure_s1.pdf"
+  shell:
+    """
+    cp {input} {output}
+    """
+
+rule figure_s2:
+  input:
+    "norarefy-source/simulation-cluster-accuracy/Figure_3.pdf"
+  output:
+    "submission/figure_s2.pdf"
+  shell:
+    """
+    cp {input} {output}
+    """
+
+rule figure_s3:
+  input:
+    "norarefy-source/simulation-cluster-accuracy/Figure_4.pdf"
+  output:
+    "submission/figure_s3.pdf"
+  shell:
+    """
+    cp {input} {output}
+    """
+
+rule figure_s4:
+  input:
+    "results/figures/my_figure_4.pdf"
+  output:
+    "submission/figure_s4.pdf"
+  shell:
+    """
+    cp {input} {output}
+    """
+  
+rule figure_s5:
+  input:
+    "results/figures/my_figure_5.pdf"
+  output:
+    "submission/figure_s5.pdf"
+  shell:
+    """
+    cp {input} {output}
+    """
+
 
 
 rule write_paper:
   input:
-    "data/globalpatterns_distribution.tsv",
     "workflow/scripts/render_manuscript.R",
     "submission/manuscript.Rmd",
     "submission/references.bib",
-    "submission/asm.csl"
+    "submission/asm.csl",
     #
+    "data/globalpatterns_distribution.tsv",
+    "data/simulation_clusters.tsv",
+    "data/simulation_adonis.tsv",
+    "data/simulation_alpha.tsv",
+    #
+    "submission/figure_s1.pdf",
+    "submission/figure_s2.pdf",
+    "submission/figure_s3.pdf",
   output:
     "submission/manuscript.pdf",
     "submission/manuscript.md",
