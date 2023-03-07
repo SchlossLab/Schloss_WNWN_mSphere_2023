@@ -9,3 +9,4 @@ dependencies:
   - r-rmarkdown=2.18
   - r-here=1.0.1
   - r-vegan=2.6-4
+  - r-ggtext=0.1.2

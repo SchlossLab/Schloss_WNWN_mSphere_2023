@@ -41,10 +41,10 @@ rule all_targets:
     # "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server_pds.html",
     # "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server_pds.html",
     #
-    "norarefy-source/dispersion-survey/dispersion.compare.txt",
-    "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.compare.txt",
-    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.compare.txt",
-    "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.compare.txt",
+    # "norarefy-source/dispersion-survey/dispersion.compare.txt",
+    # "norarefy-source/minimal-rarefy-example/minimal-rarefy-example.compare.txt",
+    # "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server.compare.txt",
+    # "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server.compare.txt",
     #
     #
     #
@@ -156,6 +156,7 @@ rule s1_compare_html:
     """
     {input.sh} {input.pm} {input.pds}
     """
+
 
 ruleorder: simA_generate_skew > simA_generate_data
 
@@ -443,9 +444,36 @@ rule simA_pool_alphas:
     {input.R} {input.tsv} {output}
     """
 
+rule get_globalpatterns_distribution:
+  input:
+    R="workflow/scripts/get_globalpatterns_distribution.R",
+  conda:
+    "envs/nr-s1.yml"
+  output:
+    "data/globalpatterns_distribution.tsv"
+  shell:
+    """
+    {input.R}
+    """
+
+rule plot_globalpatterns_distribution:
+  input:
+    R="workflow/scripts/plot_globalpatterns_distribution.R",
+    tsv="data/globalpatterns_distribution.tsv",
+  conda:
+    "envs/nr-modern.yml"
+  output:
+    "results/figures/globalpatterns_distribution.pdf"
+  shell:
+    """
+    {input.R}
+    """
+
+
 
 rule write_paper:
   input:
+    "data/globalpatterns_distribution.tsv",
     "workflow/scripts/render_manuscript.R",
     "submission/manuscript.Rmd",
     "submission/references.bib",
