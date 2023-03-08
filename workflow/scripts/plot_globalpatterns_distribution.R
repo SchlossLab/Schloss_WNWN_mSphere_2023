@@ -5,10 +5,10 @@ library(here)
 library(ggtext)
 
 read_tsv(here("data/globalpatterns_distribution.tsv")) %>%
-  ggplot(aes(x = n_seqs, y=1)) +
+  ggplot(aes(x = n_seqs, y = 1)) +
   geom_jitter(height = 0.25, width = 0.0) +
   scale_y_continuous(limits = c(0, 2), name = NULL) +
-  scale_x_continuous(limits = c(0, 2.5e6), 
+  scale_x_continuous(limits = c(0, 2.5e6),
                     breaks = seq(0, 2.5e6, 0.5e6),
                     labels = seq(0, 2.5, 0.5),
                     name = "Number of sequences per sample (x10^6^)") +
