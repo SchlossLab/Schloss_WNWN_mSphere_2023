@@ -8,9 +8,10 @@ cluster:
     --account=pschloss1
     --nodes=1
     --time=100:00:00
-    --mem={resources.mem_mb}
+    --mem=2000mb
     -c1
     
+#        --mem={resources.mem_mb}#: for pooling rules
 # default resources used for rules with no Resources specified
 default-resources: 
   - cpus=1

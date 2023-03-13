@@ -14,8 +14,10 @@ preprocs = ["nofilter", "filter"]
 transforms = ["deseq",
               "none",
               "proportion",
-              "subsample00", "subsample15",
-              "rarefaction00", "rarefaction15",
+              "subsample00", "subsample05", "subsample10", "subsample15",
+                "subsample20", "subsample25", "subsample40",
+              "rarefaction00", "rarefaction05", "rarefaction10", "rarefaction15",
+                "rarefaction20", "rarefaction25", "rarefaction40",
               "upperquartile", "TMM", "RLE"]
 distances = ["bray",
              "euclidean",
@@ -76,9 +78,9 @@ rule all_targets:
     #     frac = fracs, depth = depths, rep = reps, preproc = preprocs,
     #     transform = transforms),
     #
-    # "data/simulation_clusters.tsv",
-    # "data/simulation_adonis.tsv",
-    # "data/simulation_alpha.tsv",
+    "data/simulation_clusters.tsv.gz",
+    "data/simulation_adonis.tsv.gz",
+    "data/simulation_alpha.tsv.gz",
     #
     # "submission/manuscript.pdf"
 
@@ -426,7 +428,7 @@ rule simA_pool_betas:
     "data/simulation_{suffix}.tsv.gz"
   shell:
     """
-    {input.R} {input.tsv} {output}
+    {input.R} {output}
     """
 
 rule simA_pool_alphas:
@@ -441,7 +443,7 @@ rule simA_pool_alphas:
     "data/simulation_alpha.tsv.gz"
   shell:
     """
-    {input.R} {input.tsv} {output}
+    {input.R} {output}
     """
 
 rule get_globalpatterns_distribution:
@@ -480,6 +482,55 @@ rule plot_my_figure_4:
   shell:
     """
     {input.R}
+    """
+
+rule plot_compare_cluster_methods:
+  input:
+    R="workflow/scripts/plot_compare_cluster_methods.R",
+    tsv="data/simulation_clusters.tsv.gz"
+  conda:
+    "envs/nr-modern.yml"
+  output:
+    "results/figures/compare_cluster_methods.pdf"
+  shell:
+    """
+    {input.R}
+    """
+
+rule plot_compare_pam_kmeans_es:
+  input:
+    R="workflow/scripts/plot_compare_pam_kmeans_es.R",
+    tsv="data/simulation_clusters.tsv.gz"
+  conda:
+    "envs/nr-modern.yml"
+  output:
+    "results/figures/compare_pam_kmeans_es.pdf"
+  shell:
+    """
+    {input.R}
+    """
+
+rule plot_compare_pam_kmeans_nl:
+  input:
+    R="workflow/scripts/plot_compare_pam_kmeans_nl.R",
+    tsv="data/simulation_clusters.tsv.gz"
+  conda:
+    "envs/nr-modern.yml"
+  output:
+    "results/figures/compare_pam_kmeans_nl.pdf"
+  shell:
+    """
+    {input.R}
+    """
+
+rule figure_1:
+  input:
+    "results/figures/compare_cluster_methods.pdf"
+  output:
+    "subsmission/figure_1.pdf"
+  shell:
+    """
+    cp {input} {output}
     """
 
 rule figure_s1:

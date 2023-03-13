@@ -8,8 +8,15 @@ not_all_na <- function(x) any(!is.na(x))
 
 args <- commandArgs(trailingOnly = TRUE)
 
-output_filename <- args[length(args)]
-input_filenames <- args[1:(length(args)-1)]
+output_filename <- args[1]
+#output_filename <- "data/simulation_adonis.tsv.gz"
+
+pattern <- str_replace(output_filename, ".*_(.*\\.tsv).*", "pool\\.\\*\\1")
+
+input_filenames <- list.files(path = "data/sim_a",
+                           pattern = pattern,
+                           full.names = TRUE)
+
 
 read_delim(input_filenames, show_col_types = FALSE) %>%
   mutate(conditions = str_replace(conditions, "data/sim_a/", ""),

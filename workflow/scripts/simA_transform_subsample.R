@@ -16,7 +16,7 @@ raw_otu_file <- args[1]
 smalltrim <- as.numeric(args[2]) #value between 0 and 1
 iters <- as.numeric(args[3])
 
-tag <- ifelse(smalltrim == 0, "00", gsub("0\\.", "", smalltrim))
+tag <- gsub("0\\.", "", format(smalltrim, nsmall = 2L))
 method <- ifelse(iters == 1, "subsample", "rarefaction")
 
 subsample_otu_file <- gsub("RDS",

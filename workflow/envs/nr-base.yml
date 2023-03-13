@@ -3,5 +3,5 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - snakemake=7.18.2
+  - snakemake=7.24.0
   - coreutils
