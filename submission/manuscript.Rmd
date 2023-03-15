@@ -36,6 +36,7 @@ header-includes:
 ```{r, echo=FALSE}
 options(tidyverse.quiet = TRUE)
 suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(ggtext))
 suppressPackageStartupMessages(library(knitr))
 suppressPackageStartupMessages(library(here))
 #suppressPackageStartupMessages(library(kableExtra))
@@ -81,19 +82,7 @@ oxford_comma <- function(x, digits=2) {
   }
 }
 
-capitalize <- function(string) {
-  substr(string, 1, 1) <- toupper(substr(string, 1, 1))
-  string
-}
-
-
-datasets <- c("bioethanol", "human", "lake", "marine", "mice", "peromyscus",
-              "rainforest", "rice", "seagrass", "sediment", "soil", "stream")
-
-pretty_datasets <- tibble(
-  plain = datasets,
-  pretty = capitalize(plain)
-)
+sim_counts <- read_tsv(here("data/simulated_nseqs_distros.tsv")) 
 
 ```
 
@@ -136,15 +125,13 @@ Ann Arbor, MI 48109
 
 ## Introduction
 
-Since the development of sequencing technologies such as those provided by 454 and Illumina microbiome researchers have struggled to produce a consistent number of sequences from each sample in a dataset. It is common to observe more than 10-fold variation in the number of sequences per sample [XXXXX]. Regardless of the source of this variation, researchers desire approaches to control for uneven sampling effort. Of course, this desire is not unique to microbiome research and is a challenge faced by all community ecologists. Common approaches to controlling uneven sampling efforts have included use of proportional abundance (i.e., relative abundance), normalization of counts, parameter estimation, and rarefaction.
+Since the development of sequencing technologies such as those provided by 454 and Illumina, microbiome researchers have struggled to produce a consistent number of sequences from each sample in a dataset. It is common to observe more than 10-fold variation in the number of sequences per sample [XXXXX]. Regardless of the source of this variation, researchers desire approaches to control for uneven sampling effort. Of course, this desire is not unique to microbiome research and is a challenge faced by all community ecologists. Common approaches to controlling uneven sampling efforts have included use of proportional abundance (i.e., relative abundance), normalization of counts, parameter estimation, and rarefaction.
 
 In 2014 Paul McMurdie and Susan Holmes published their "Wast not, want not: why rarefying microbiome data is inadmissible" (WNWN) in PLOS Computational Biology [XXXXX]. This paper has had a significant impact on the approaches that microbiome researchers use to analyze 16S rRNA gene sequence data. According to Google Scholar, this paper has been cited more than 2,300 times as of January 2023. Anecdotely, I have received correspondence from researchers over the past 10 years asking how to address critiques from reviewers who criticize my correspondents' analysis for rarefying (e.g., see [this Twitter thread](https://twitter.com/inanna_nalytica/status/1264679859672006656)). I have also received these types of comments from reviewers, specifically in regards to a preprint that I posted in 20XX in regards to my critique of the practice of removing rare taxa from analyses [XXXXX]. In the process of responding to these critiques and preparing a manuscript investigating rarefaction and other approaches to control for uneven sequencing effort, I decided to reassess the WNWN study including their definitions, simulations, and analyses.
 
-## Results
-
 ### Confusion regarding what is meant by "rarefying" and "rarefaction"
 
-I was successfully able to recreate much of the analysis that the authors published as Protocol S1 using R packages that were close to the versions used in the original analysis. It was not possible to fully reproduce the analysis since some of the underlying datasets were not available since the microbio.me website that was used to access data was decomissioned in the last 10 years. As I attempted to reproduce their work, I noticed that the step that purported to rarefy the data only performed one subsampling of the data (Lines 404 through 416 of `simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd`). This caused me to re-inspect how McMurdie and Holmes defined "rarefying" in the following quoted text from their paper:
+As I attempted to reproduce the results of WNWN, I noticed that the step that purported to rarefy the data only performed one subsampling of the data (Lines 404 through 416 of `simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd`). This caused me to re-inspect how McMurdie and Holmes defined "rarefying" in the following quoted text from their paper:
 
 > Instead, microbiome analysis workflows often begin with an ad hoc library size normalization by random subsampling without replacement, or so-called rarefying [17]–[19]. There is confusion in the literature regarding terminology, and sometimes this normalization approach is conflated with a non-parametric resampling technique — called rarefaction [20], or individual-based taxon re-sampling curves [21] — that can be justified for coverage analysis or species richness estimation in some settings [21], though in other settings it can perform worse than parametric methods [22]. Here we emphasize the distinction between taxon re-sampling curves and normalization by strictly adhering to the terms rarefying or rarefied counts when referring to the normalization procedure, respecting the original definition for rarefaction. Rarefying is most often defined by the following steps [18].
 >
@@ -154,11 +141,11 @@ I was successfully able to recreate much of the analysis that the authors publis
 >
 > Often N~L,m~ is chosen to be equal to the size of the smallest library that is not considered defective, and the process of identifying defective samples comes with a risk of subjectivity and bias. In many cases researchers have also failed to repeat the random subsampling step (3) or record the pseudorandom number generation seed/process — both of which are essential for reproducibility.
 
-It was unfortunate that McMurdie and Holmes used the term "rarefying" here and throughout their manuscript. The authors were correct to state that the distinction between "rarefying" and "rarefaction" is confusing and leads to their conflation. In my experience, subsequent researchers have conflated the results of this study of the effects of rarefying data with rarefaction of data. As an example, Willis (XXXXX) describes problems with rarefaction rather than rarefying data when citing WSWN in her paper proposing alternatives to rarefaction for use with alpha diversity data:
+It was unfortunate that McMurdie and Holmes used the term "rarefying" here and throughout their manuscript. The authors were correct to state that the distinction between "rarefying" and "rarefaction" is confusing and leads to their conflation. In my experience, subsequent researchers have conflated the results of this study of the effects of rarefying data with rarefaction of data. As an example, Willis (XXXXX) describes problems with rarefaction rather than rarefying data when citing WNWN in her paper proposing alternatives to rarefaction for use with alpha diversity data:
 
 > Unfortunately, rarefaction is neither justifiable nor necessary, a view framed statistically by McMurdie and Holmes (2014) in the context of comparison of relative abundances.
 
-Adding to the confusion is that the papers cited in the first sentence of the quote I  WSWN included above either do not use the words "rarefy" or "rarefying" or use them interchangably with "rarefaction". In hindsight, as shown in the quoted text, McMurdie and Holmes do emphasize the distinction between rarefying and rarefaction. However, because they seem to have coined a new meaning for rarefying, they seem to have only added to the confusion by using the generally used verb form of rarefaction. Further confusion comes from the author's admonition in the final sentence that some researchers have failed to repeat the subsampling step. To most scientists, repeating the subsampling step is rarefaction. My preference is to use subsampling as the term describing the process they refer to as rarefying. In other words rarefaction with a single randomization.
+Adding to the confusion is that the papers cited in the first sentence of the quote I  WNWN included above either do not use the words "rarefy" or "rarefying" or use them interchangably with "rarefaction". In hindsight, as shown in the quoted text, McMurdie and Holmes do emphasize the distinction between rarefying and rarefaction. However, because they seem to have coined a new meaning for rarefying, they seem to have only added to the confusion by using the generally used verb form of rarefaction. Further confusion comes from the author's admonition in the final sentence that some researchers have failed to repeat the subsampling step. To most scientists, repeating the subsampling step is rarefaction. My preference is to use subsampling as the term describing the process they refer to as rarefying. In other words rarefaction with a single randomization.
 
 To provide a more clear definition of rarefaction, I propose the following:
 
@@ -171,40 +158,222 @@ To provide a more clear definition of rarefaction, I propose the following:
 
 This definition aligns well with how rarefaction was originally defined for comparing richness (i.e., the number of taxa in a community) across communities when communities are sampled to different depths. It is important to note that this procedure generates substantially different results to those obtained without accounting for uneven sampling effort or using relative abundances, normalized counts, compositional data transformatins, variance stabilization procedures, or estimation techniques. I have explored the differences in results obtained using the diversity of approaches for controlling for uneven sampling effort; rarefaction, as described here, outperforms the other approaches [XXXXX].
 
-With this more general approach to rarefaction, rarefaction can be performed using any alpha or beta diversity metric. This strategy has been widely used by my research group and others. The next section, "Cluster accuracy", will explore this approach further. Furthermore, the procedure outlined above could also be used for hypothesis tests of differential abundance; however, thought would need to be given to how to synthesize the results of these tests across a large number of replications. This will be explored in the section, "Differential abundance".
+With this more general approach to rarefaction, rarefaction can be performed using any alpha or beta diversity metric. This strategy has been widely used by my research group and others. The procedure outlined above could also be used for hypothesis tests of differential abundance; however, thought would need to be given to how to synthesize the results of these tests across a large number of replications.
 
-### Cluster accuracy
+```{r}
+gp_counts <- sim_counts %>% filter(simulation == "GlobalPatterns")
 
-#### Simulation design
+gp_n_samples <- nrow(gp_counts)
+```
 
-McMurdie and Holmes analyzed the effect of rarefying and other approaches on clustering accuracy using what they called "Simulation A" in their Figure 2A and elsewhere in their paper. In Simulation A, they investigated the ability to correctly assign samples to one of two clusters using simulated data used to generate 40 samples from two distributions. A variety of approaches were used to calculate distances between the samples those distances were used as input to partitioning around mediods (PAM) clustering with two groups. The accuracy of the cluster assignment was used as the metric to assess performance. This analysis was performed in the `simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd` R markdown file that was published as Protocol S1 in the original paper. Line numbers from this file will be refernced with an "L" as a prefix.
+### Description of "Simulation A" from WNWN
+
+McMurdie and Holmes analyzed the effect of rarefying and other approaches on clustering accuracy using what they called "Simulation A" in their Figure 2A and elsewhere in their paper. In Simulation A, they investigated the ability to correctly assign samples to one of two clusters using simulated data used to generate 40 samples from each of two distributions. A variety of approaches were used to calculate distances between the samples those distances were used as input to partitioning around mediods (PAM) clustering with two groups. The accuracy of the cluster assignment was used as the metric to assess performance. This analysis was performed in the `simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd` R-flavored markdown file that was published as Protocol S1 in the original paper. Line numbers from this file will be refernced with an "L" as a prefix.
 
 The two distributions were generated using human fecal and ocean data originally take from the GlobalPaterns dataset (L129) [XXXXX]. To generate a fecal and ocean template distribution, the authors included any operational taxonomic unit (OTU) that appeared in more than one of the 4 fecal and 3 ocean samples (L60 and L137). The OTUs were sorted by how many of the 7 samples the OTUs were observed in followed by their total abundance across all 7 samples (L139). From this sorted list they identified the identifiers of the first 2000 OTUs (L66). Returning to the 7 samples they selected the 2000 most common and abundant OTUs and pooled the abundances of the fecal and ocean samples separately to create two templates (L144, L159-160, L197-198).
 
-Next, the fecal and ocean templates were mixed in 8 different fractions to generate two community types that differend by varying effect sizes (L170-195, L220). To simulate the variation in sequencing depth across the 80 samples, they normalized he number of sequences from each of the 26 samples in the GlobalPatterns dataset so that the median number of sequences (N~L~) for the GlobalPatterns samples matched one of 4 sampling depths (L324-325). The pre-normalized median read depth was XX1,106,894xx sequences with a range of XX58,688XX to XX2,357,181XX sequences. They then randomly sampled the 26 normalized sequencing depths to generate 80 sampling depths. From each community type, they simulated 40 samples by sampling to the desired number of reads (L73, L230-233 and L326-327). Each simulation condition was repeated 5 times (L85). This resulted in 160 simulated communities (8 effect sizes x 4 median sampling depths x 5 replicates = 160 simulations). Finally, they removed rare and low prevalence OTUs by in two steps. First, they removed any OTUs whose total abundance was less than 3 across all 80 samples and that did not appear in at least 3 samples (L368-386). Second, they removed any OTUs that did not have more than 1 sequence in more than 5% of the 80 samples (i.e., 4 samples) and that did not have a total abundance across the 80 samples greater than one half of the number of samples in each community type (i.e., 20) (L523-538, L551).
+Next, the fecal and ocean templates were mixed in 8 different fractions to generate two community types that differend by varying effect sizes (1, 1.15, 1.25, 1.5, 1.75, 2, 2.5, and 3.5; L170-195, L220). To simulate the variation in sequencing depth across the 80 samples, they normalized he number of sequences from each of the `gp_n_samples` samples in the GlobalPatterns dataset so that the median number of sequences (N~L~) for the GlobalPatterns had 1,000, 2,000, 5,000, or 10,000 sequences (L324-325). They then randomly sampled the `gp_n_samples` normalized sequencing depths to generate 80 sampling depths. From each community type, they simulated 40 samples by sampling to the desired number of reads (L73, L230-233 and L326-327). Each simulation condition was repeated 5 times (L85). This resulted in 160 simulations (8 effect sizes x 4 median sampling depths x 5 replicates = 160 simulations). Finally, they removed rare and low prevalence OTUs in two steps. First, they removed any OTUs whose total abundance was less than 3 across all 80 samples and that did not appear in at least 3 samples (L368-386). Second, they removed any OTUs that did not have more than 1 sequence in more than 5% of the 80 samples (i.e., 4 samples) and that did not have a total abundance across the 80 samples greater than one half of the number of samples in each community type (i.e., 20) (L523-538, L551).
 
-#### Simulation critique
+### Critique of the original simulation design
 
-Although all simulations represent an artificial representation of reality and can be critiqued, two elements of the design of Simulation A standout for critique. First, McMurdie and Holmes were emphatic that "**rarefying biological count data is statistically inadmissible** because it requires the omission of available valid data" (emphasis in original). Thus it is odd that they argue against removing data when rarefying/subsampling, but accept removing rare and low-prevalence OTUs prior to normalizing and analyzing their simulated communities. This practice has become common in microbiome studies and is the standard approach in tools such as dada2, unoise, and deblur [XXXXXXXX]. However, my previous work has shown that rare sequences from a poorly sequenced sample often appear in more deeply sequened samples suggesting that they are not necessarily artifacts. Furthermore, removing rare sequences alters the structure of communities and has undesirable effects on downstream analyses [XXXXXXXX]. Second, for the subsampling simulations the authors removed samples whose number of sequences was less than the 15th percentile (L404-419). In the manuscript, the authors acknowledge that this screening step, which was only used with subsampling, would decrease clustering accuracy putting it at a relative disadvantage to the other methods (page 5, column 1, last paragraph). Although the authors claim that "Rarefying counts requires an arbitrary selection of a library size minimum that affects downstream inference" (page 8, column 1, point 3), in acutal microbiome studies the selection of a sampling depth is not has arbitrary as the authors claim. In the following reassessment of McMurdie and Holmes's Simulation A, I will include results from rarefaction and inclusion of rare sequences and poorly sequenced samples. I also included an additional value of N~L~ of 50,000 to reflect the larger datasets in more modern microbiome studies (see Table 1 of [Singleton Paper XXXXXXXX]).
+Although all simulations represent an artificial representation of reality and can be critiqued, ten elements of the design of Simulation A warrant further review. 
 
-#### Assessment
+1. Simulated conditions were only replicated 5 times each, which caused results to be sensitive to random number generator seed
+2. The average sizes of the libraries were small by modern standards
+3. A single subsampling of each dataset was evaluated rather than using rarefaction, which likely resulted in noisier data
+4. Results using PAM clustering were not directly compared to those of K-means and hierarchical clustering
+5. Subsampling removed the smallest 15% of the samples, which penalized accuracy values by 15 percentage points
+6. The distribution of library sizes was poorly chosen
+7. A filtering step was applied to remove rare taxa from the simulated datasets, which could distort the shape of the communities
+8. No test of effect of transformation methods to account for effects of uneven sample size between treatment groups
+9. Clustering accuracy was used rather than direct comparisons beta diversity
+10. No consideration of effects of transformations on alpha diversity metrics
+
+These points will serve as an outline for the Results section. After replicating the original simulations, these points will be evaluated to reassess whether subsampling or rarefaction are "inadmissible".
+
+
+## Results
+
+### Replication of WNWN simulations and results
+
+Before assessing the impact of the points I critiqued above, I attempted to replicate the results shown in Figures 4 and 5 of the original paper using the authors original code and my own. I created a Conda environment that used the R version and package versions that were as close as possible to those used in the original paper. Because of the slight differences in packages, it was necessary to apply several patches to the original R-flavored markdown file to get the document to render. I was able to generate a figure similar to that presented as Figures 4 and 5 of the original paper. My results are shown in Figures S2 (**norarefy-source/simulation-cluster-accuracy/Figure_3.pdf**) and S3 (**norarefy-source/simulation-cluster-accuracy/Figure_4.pdf**) of this paper, respectively. The differences in results are likely due to differences in software versions and operating systems. It is also worth noting that their versions of the two figures differ from those included in Protocol S1 within the rendered html file (`simulation-cluster-accuracy/simulation-cluster-accuracy-server.html`) and that the figure numbers are one higher in the paper than those generated by the R-flavored markdown file. Regardless of the differences, the results are qualitatively similar.
+
+### 1. Simulated conditions were only replicated 5 times each
+
+Each simulated condition was replicated 5 times in WNWN and the paper reports the mean and standard deviation of the replicate clustering accuracies. The relatively small number of replicates accounts for the jerkiness of the lines in the original Figures 4 and 5 (e.g. the Bray-Curtis distances calculated on the DEeqVS transformed data). A better approach would have been to use 100 replicates as this would reduce the dependency of the results on the random number generator's seed. Furthermore, because the accuracies are unlikely to be symmetric around a mean at larger accuracy values the median and 95% confidence intervals or intraquartile range should have been reported. To test the effect of increasing the number of replicates, I pulled apart the code in `simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd` into individual R and bash scripts that were executed using a Snakemake workflow with the same Conda environment as above. This was necessary since the number of simulated conditions because of this change increased 20-fold. Such intense data processing was not practical within a single R-flavored markdown document. Again, the observed results were qualitiatively similar to those generated using the single R-flavored markdown file (Figures S4 (**pam_subsample15_fig_4.pdf**) and S5(**pam_subsample_fig_5.pdf**) ). The increased number of replications resulted in smoother lines and allowed me to present empirical 95% confidence intervals. For all analyses in the remainder of this paper, I used 100 randomized replicates per condition. 
+
+### 2. The average sizes of the libraries were small by modern standards
+
+In the 10 years since WNWN was published, sequencing technology has advanced and sequence collections have grown considerably. For more modern datasets, it would be reasonable to expect a median number of sequences larger than 10,000 (see Table 1 of [Singleton Paper XXXXXXXX]). Therefore, I included an additional average depth of sampling value of 50,000 sequences with the four average sequencing sampling depths as WNWN (i.e., 1,000, 2,000, 5,000, 10,000). Additional sequencing coverage would be expected to result in more robust distance values since there would be more information represented in the data. Indeed, the added sampling depth showed higher accuracy values at lower effect sizes for the combinations of normalization methods and distance calculations (Figure S4 (**pam_subsample15_fig_4.pdf**)). Increased sequencing coverage also resulted in improved clustering accuracy for lower effect sizes when the library size minimum quantile was decreased (Figure S5 (**pam_subsample_fig_5.pdf**)). I will revisit the choice of the library size minimum quantile below.
+
+
+### 3. A single subsampling of each dataset was evaluated rather than using rarefaction
+
+As noted above, the original jargon that was used in WNWN was confusing to many who conflated rarefying with rarefaction. One problem with a single subsampling of a community is that it is unlikely to obtain a representative sampling of each community. A more robust analysis would have used rarefaction rather than a single subsampling of the data since it would have averaged across random subsamplings, which individually would be unlikely to represent the overall composition of the communities. Rather than being guilty of "omission of available valid data", rarefaction uses all of the available data. To compare subsampling and rarefaction, I removed the 15% of samples with the lowest number of sequences for each of the 100 simulated datasets and compared the distances from a single subsampling to rarefaction using the distance calculations shown in the original Figure 4. This analysis revealed two benefits of rarefaction. First, the median distances generated by rarefaction was always as large or larger than those from a single subsample (Figure **subsample_rarefaction_compare.pdf**). In general, the difference was most pronounced for smaller average library sizes and at smaller effect sizes. The unweighted UniFrac distances were most impacted by the use of rarefaction over subsampling. Second, the intraquartile ranges for the distances generated by rarefaction were generally smaller than those by subsampling and showed similar trends to the difference in the median distances (Figure **subsample_rarefaction_compare.pdf**). The intraquartile ranges for Bray-Curtis, Euclidean, and unweighted UniFrac distances were actually larger by rarefaction than by subsampling at small effect sizes and average library sizes; however at larger values the intraquartile range by subsampling was larger than by rarefaction for these distance calculations. Because rarefaction incorporates more of the data and generally performed better than subsampling, the remainder of this analysis will report results using rarefaction rather than by subsampling except when noted.
+
+
+```{r}
+cluster_data <- read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
+  filter(filter == "filter") %>%
+  filter(fraction != "s1" & fraction != "1") %>%
+  filter((distance == "bray" &
+            transform %in% c("proportion", "subsample15", "rarefaction15", "none", "deseq")) |
+        (distance == "euclidean" &
+            transform %in% c("none", "subsample15", "deseq", "rarefaction15")) |
+        (distance == "poisson" &
+            transform %in% c("rarefaction15", "subsample15", "none")) |
+        (distance == "logFC" &
+            transform %in% c("upperquartile", "subsample15", "rarefaction15")) |
+        (distance == "uunifrac" &
+            transform %in% c("rarefaction15", "subsample15", "proportion")) |
+        (distance == "wunifrac" &
+            transform %in% c("rarefaction15", "subsample15", "none", "proportion", "deseq"))
+        ) %>%
+  filter(fraction == 1.15) %>%
+  group_by(n_seqs, transform, distance, rep) %>%
+  slice_max(fracCorrect) %>%
+  ungroup() %>%
+  mutate(fracCorrect = 1) %>%
+  select(n_seqs, rep, transform, distance, method, fracCorrect) %>%
+  pivot_wider(names_from = method, values_from = fracCorrect, values_fill = 0)
+
+best_method <- cluster_data %>%
+  filter(transform != "subsample15") %>%
+  summarize(pam = 100 * mean(pam),
+            kmeans = 100 * mean(kmeans),
+            hclust = 100 * mean(hclust))
+
+rarefaction <- cluster_data %>%
+  filter(transform == "rarefaction15") %>%
+  group_by(n_seqs, distance) %>%
+  summarize(pam = 100 * mean(pam),
+          kmeans = 100 * mean(kmeans),
+          hclust = 100 * mean(hclust),
+          k_best = kmeans >= pam & kmeans >= hclust, .groups = "drop")
+  
+rarefaction_count <- rarefaction %>%
+  count(k_best) %>%
+  pivot_wider(names_from = k_best, values_from = n)
+
+stopifnot(sum(rarefaction_count) == rarefaction_count$`TRUE`)
+
+
+subsample <- cluster_data %>%
+  filter(transform == "subsample15") %>%
+  group_by(n_seqs, distance) %>%
+  summarize(pam = 100 * mean(pam),
+          kmeans = 100 * mean(kmeans),
+          hclust = 100 * mean(hclust),
+          k_best = kmeans >= pam & kmeans >= hclust, .groups = "drop")
+  
+subsample_count <- subsample %>%
+  count(k_best) %>%
+  pivot_wider(names_from = k_best, values_from = n)
+
+pretty_distances <- c(bray = "Bray-Curtis",
+                      euclidean = "Euclidean",
+                      poisson = "Poisson",
+                      logFC = "Mean Squared Difference",
+                      uunifrac = "Unweighted UniFrac",
+                      wunifrac = "Weighted UniFrac")
+
+fails <- subsample %>%
+  filter(!k_best) %>%
+  mutate(distance = pretty_distances[distance])
+```
+
+### 4. Results using PAM clustering were not directly compared to those of K-means and hierarchical clustering
+
+The clustering accuracy measurements in the body of the manuscript were determined using PAM-based clusters while Protocol S1 also includes K-means and hierarchichal clustering. Although the data were not displayed in a manner that lent itself to direct comparison, close inspection of the rendered figures suggests that PAM may not have been the optimal choice in all situations. Rather, K-means clustering may have been prefered. Because the accuracies were the smallest at lower effect sizes, I focused my comparison at the effect size of 1.15. For each set of 100 replicated simulated datasets, I compared the clustering accuracy across clustering methods to see how often each clustering method resulted in the highest accuracy Figure **compare_cluster_methods.pdf**). Indeed, K-means clustering performed better than the other methods. Among all combinations of normalization methods, distance calculations, and read depths, PAM clustering resulted in clustering accuracies as good or better than the other methods in `r best_method$pam`% of the randomizations (Figure **compare_cluster_methods.pdf**). K-means clustering was at least as good as the other methods in `r best_method$kmeans`% of the randomizations. HClust was at least as good as the other methods for `r best_method$hclust`% of the randomizations. I specifically compared the clustering accuracies using rarefaction for each of the distance calculations methods using PAM and K-means clustering. Among the `r sum(rarefaction_count)` combinations of distance calculations and read depths, K-means clustering performed better than PAM in each case. Even when using subsampled data, K-means performed better than PAM in `r subsample_count[["TRUE"]]` cases with PAM doing better in `r subsample_count[["FALSE"]]` cases when calculating distances with `r oxford_comma(unique(fails$distance))` using `r oxford_comma(format(fails$n_seqs, big.mark = ","))` sequences. Because K-means clustering did so much better than PAM clustering in the simulated conditions, I will use K-means clustering for the remainder of this study.
+
+```{r}
+clusters <- read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
+  filter(filter == "filter") %>%
+  filter(method == "kmeans") %>%
+  filter(distance != "bcv") %>%
+  filter(str_detect(transform, "rarefaction")) %>%
+  filter(fraction != "s1" & fraction != "1") %>%
+  select(fraction, n_seqs, rep, transform, distance, method, fracCorrect) %>%
+  group_by(fraction, n_seqs, transform, distance, method) %>%
+  summarize(median = median(fracCorrect),
+            lci = quantile(fracCorrect, 0.025),
+            uci = quantile(fracCorrect, 0.975), .groups = "drop") %>%
+  mutate(quant = as.numeric(str_replace(transform, "rarefaction", "")),
+        distance = pretty_distances[distance]) %>%
+  select(fraction, n_seqs, distance, quant, median)
+
+not_zero <- clusters %>%
+  group_by(fraction, n_seqs, distance) %>%
+  arrange(quant) %>%
+  slice_max(median, with_ties = FALSE, n = 1) %>%
+  filter(n_seqs >= 2000 & quant != 0) %>%
+  pull(distance) %>%
+  unique()
+```
+
+### 5. Subsampling removed the smallest 15% of the samples
+
+In WNWN, the authors quantified the tradeoff between sampling effort, the number of samples, and clustering accuracy (original Figure 5, my Figure S5). Although the optimal sampling effort varied by distance metric, transformation method, and sampling effort, they removed samples whose number of sequences was less than the 15th percentile (L404-419). They acknowledged that this screening step, which was only used with subsampling, would decrease clustering accuracy putting it at a relative disadvantage to the other methods (page 5, column 1, last paragraph). Therefore, it was not surprising that the peak clustering accuracy for their subsampled data was at 85% (Figure S2). Because the true result would not known *a priori* in microbiome studies, it would be impossible for researchers to conduct a sensitivity analysis comparing the tradeoffs between sequencing depth, sample number, and clustering accuracy to select a sampling depth. [**Although the authors claim that "Rarefying counts requires an arbitrary selection of a library size minimum that affects downstream inference" (page 8, column 1, point 3), in acutal microbiome studies the selection of a sampling depth is not as arbitrary as the authors claim. Rather, to avoid p-hacking, researchers pick a set of criteria where they will include or exclude samples prior to testing their data.**] The differences in clustering accuracy between subsampling and rarefaction and using PAM and K-means clustering indicated that it was necessary to reassess the tradeoff between the library size minimum quantile and clustering accuracy. When using rarefaction and K-means clustering, the only distance calculations that did not have their maximal clustering accuracy when using the full dataset were `r oxford_comma(not_zero_calcs)` (**kmeans_rarefaction_fig_5.pdf**). These results showed that for modern sequencing depths, using the full datasets with rarefaction and K-means clustering resulted in accuracies that were typically better than those observed when removing the smallest 15% of the samples from each simulated dataset. When the original Figure 4 was recast with these approaches, Rarefaction performed at least as well as any of the other tranformations with each distance calculation, except for with the Poisson distance (Figure **kmeans_rarefaction15_fig_4.pdf**). It is worth noting that at larger effect sizes, K-means clustering did not perform as well for some combinations of normalization methods and distance calculations (compare **kmeans_rarefaction15_fig_4.pdf** and **pam_subsample00_fig_4.pdf**); however, those combinations that performed worse by K-means were not as good as rarefaction or subsampling by either clustering method.
+
+
+```{r}
+gp_median <- median(gp_counts$n_seqs)
+gp_mean <- mean(gp_counts$n_seqs)
+gp_sd <- sd(gp_counts$n_seqs)
+gp_min <- min(gp_counts$n_seqs)
+gp_max <- max(gp_counts$n_seqs)
+
+
+log_counts <- sim_counts %>%
+  filter(simulation == "Log-scaled")
+
+log_median <- median(log_counts$n_seqs)
+log_mean <- mean(log_counts$n_seqs)
+```
+### 6. The distribution of library sizes was poorly chosen
+
+As described above, the sequencing depths used in the `r gp_n_samples` GlobalPatterns datasets were used as the distribution to create sequencing depths for the 80 samples that were generated in each simulation. The GlobalPatterns datasets had a mean of `r gp_mean` sequences and a median of `r gp_median` sequences per dataset. The datasets ranged in sequencing depth between `r gp_min` and `r gp_max` sequences for a `r gp_max/gp_min`-fold difference. Rather than representing a typically observed distribution of sequencing depths that would be skewed right, the sampling distribution was normally distributed (Shapiro-Wilk test of normality, P=`r shapiro.test(gp_counts$n_seqs)$p.value`) (Figure ***distribution_shape.pdf***). From these simulations it is unclear how sensitive the various transformations and distance calculations are to a skewed distribution. A second limitation of this sampling distribution is that it only contained `r gp_n_samples` unique sampling depths such that each sampling depth would have been re-used an average of `r 80/gp_n_samples` times in each simulation. Yet, it is unlikely for a real sequence collection to have duplicate sequencing depths. To reassess the WNWN results in the context of a more typical distribution of sample sizesI created a new set of simulations that would focus on solely on the effect of the shape of the distribution on the results. The issue of number of samples and the distribution of their sequencing depths in the context of controlling for uneven sampling effort is explored in far greater detail in an another analysis [XXXXXX]. 
+
+I created a simple sequencing depth distribution where there were 80 depths logarithmically distributed between the minimum and maximum sequencing depths of the GlobalPatterns dataset (Figure ***distribution_shape.pdf***). The resulting median of this distribution was `r log_median` and the mean was `r log_mean`.
+
+
+
+
+### 7. A filtering step was applied to remove rare taxa from the simulated datasets, which could distort the shape of the communities
+
+**Sixth**, McMurdie and Holmes were emphatic that "**rarefying biological count data is statistically inadmissible** because it requires the omission of available valid data" (emphasis in original). Thus it is strange that they argue against removing data when rarefying/subsampling, but accept removing rare and low-prevalence OTUs prior to normalizing and analyzing their simulated communities. This practice has become common in microbiome studies and is the standard approach in tools such as dada2, unoise, and deblur [XXXXXXXX]. However, my previous work has shown that rare sequences from a poorly sequenced sample often appear in more deeply sequened samples suggesting that they are not necessarily artifacts. Furthermore, removing rare sequences alters the structure of communities and has undesirable effects on downstream analyses [XXXXXXXX]. 
+
+Filtering or not - filtering doesn't remove much...
+#nf <- readRDS("data/sim_a/3.5_10000_1.nofilter.none.RDS")
+#f <- readRDS("data/sim_a/3.5_10000_1.filter.none.RDS")
+#apply(otu_table(nf), 1, sum)
+#apply(otu_table(f), 1, sum)
 
 
 
 
 
-### Differential abundance
+### 8. No test of effect of transformation methods to account for effects of uneven sample size between treatment groups
 
-#### Toy example
-see 
-#### Simulations
+
+
+### 9. Clustering accuracy was used rather than direct comparisons beta diversity
+
+**Ninth**, the authors used clustering accuracy as the dependent variable for assessing the effect of different normalization procedures, distance calculations, and clustering methods. There has been controversy over the meaning of clustering samples (i.e., enterotypes) including whether such clustering should be done on ecological distances or sequence counts and the biological interpretation of such clusters. One notable challenge with using clustering accuracy as the dependent variable is that the clustering methods force the samples into one of two clusters. For the case when the effect size was 1.0, the samples should only be assigned to one cluster, thus the clustering accuracies shown for that effect size in the original Figure 4 are misleading. A preferred approach would be to use a non-parametric analysis of variance test of the various distance matrices. 
+
+
+### 10. No consideration of effects of transformations on alpha diversity metrics
+
+Furthermore, a comparison of alpha diversity metrics could be made to assess the impact of normalization procedures on measurements such as richness and diversity. 
+
 
 
 
 ## Discussion
 
 * Gratidue that code was published with paper. This made it straight forward to notice that only a single subsampling step was performed for each random seed and that only 3 random seeds were used.
-
+* Differential abundance issues
+* How we actually pick a threshold
 
 ## Acknowledgements
 
@@ -226,4 +395,3 @@ see
 ## Figures
 
 
-A significant challenge one faces when evaluating the appropriateness of a method for analyzing microbial communities is not knowing the true answer. For example, we could design a study comparing soil samples from fields growing soybeans and corn with 40 samples coming from each type of field. Although we might assume that the soils would be different, we do not know the precise difference in their richness, diversity, Bray-Curtis distances, or the relative abundances of the taxa in the soil from the two crops. Simulations allow us to mathematically model the distribution of taxa being sampled so that we know the true parameters that a sample seeks to represent. It is impossible to faithfully model the true structure of microbial communities and so any modeling approach will have limitations.

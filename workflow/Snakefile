@@ -78,10 +78,15 @@ rule all_targets:
     #     frac = fracs, depth = depths, rep = reps, preproc = preprocs,
     #     transform = transforms),
     #
-    "data/simulation_clusters.tsv.gz",
-    "data/simulation_adonis.tsv.gz",
-    "data/simulation_alpha.tsv.gz",
+    # "data/simulation_clusters.tsv.gz",
+    # "data/simulation_adonis.tsv.gz",
+    # "data/simulation_alpha.tsv.gz",
     #
+    "results/figures/pam_subsample_fig_5.pdf",
+    "results/figures/kmeans_rarefaction_fig_5.pdf",
+    "results/figures/pam_subsample15_fig_4.pdf",
+    "results/figures/kmeans_rarefaction00_fig_4.pdf",
+
     # "submission/manuscript.pdf"
 
 
@@ -446,26 +451,26 @@ rule simA_pool_alphas:
     {input.R} {output}
     """
 
-rule get_globalpatterns_distribution:
+rule simulated_nseqs_distros:
   input:
-    R="workflow/scripts/get_globalpatterns_distribution.R",
+    R="workflow/scripts/get_simulated_nseqs_distros.R",
   conda:
     "envs/nr-s1.yml"
   output:
-    "data/globalpatterns_distribution.tsv"
+    "data/simulated_nseqs_distros.tsv"
   shell:
     """
     {input.R}
     """
 
-rule plot_globalpatterns_distribution:
+rule plot_distribution_shape:
   input:
-    R="workflow/scripts/plot_globalpatterns_distribution.R",
-    tsv="data/globalpatterns_distribution.tsv",
+    R="workflow/scripts/plot_distribution_shape.R",
+    tsv="data/simulated_nseqs_distros.tsv",
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/globalpatterns_distribution.pdf"
+    "results/figures/distribution_shape.pdf"
   shell:
     """
     {input.R}
@@ -478,10 +483,23 @@ rule plot_my_figure_4:
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/my_figure_4.pdf"
+    "results/figures/{cluster_method}_{transform}_fig_5.pdf"
   shell:
     """
-    {input.R}
+    {input.R} {wildcards.cluster_method} {wildcards.transform}
+    """
+
+rule plot_my_figure_5:
+  input:
+    R="workflow/scripts/plot_my_figure_5.R",
+    tsv="data/simulation_clusters.tsv.gz"
+  conda:
+    "envs/nr-modern.yml"
+  output:
+    "results/figures/{cluster_method}_{transform}_fig_5.pdf"
+  shell:
+    """
+    {input.R} {wildcards.cluster_method} {wildcards.transform}
     """
 
 rule plot_compare_cluster_methods:
@@ -497,91 +515,80 @@ rule plot_compare_cluster_methods:
     {input.R}
     """
 
-rule plot_compare_pam_kmeans_es:
+rule plot_subsample_rarefaction_compare:
   input:
-    R="workflow/scripts/plot_compare_pam_kmeans_es.R",
+    R="plot_subsample_rarefaction_compare.R",
     tsv="data/simulation_clusters.tsv.gz"
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/compare_pam_kmeans_es.pdf"
+    "results/figures/subsample_rarefaction_compare.pdf"
   shell:
     """
     {input.R}
     """
 
-rule plot_compare_pam_kmeans_nl:
-  input:
-    R="workflow/scripts/plot_compare_pam_kmeans_nl.R",
-    tsv="data/simulation_clusters.tsv.gz"
-  conda:
-    "envs/nr-modern.yml"
-  output:
-    "results/figures/compare_pam_kmeans_nl.pdf"
-  shell:
-    """
-    {input.R}
-    """
 
-rule figure_1:
-  input:
-    "results/figures/compare_cluster_methods.pdf"
-  output:
-    "subsmission/figure_1.pdf"
-  shell:
-    """
-    cp {input} {output}
-    """
 
-rule figure_s1:
-  input:
-    "results/figures/globalpatterns_distribution.pdf"
-  output:
-    "submission/figure_s1.pdf"
-  shell:
-    """
-    cp {input} {output}
-    """
+# rule figure_1:
+#   input:
+#     "results/figures/compare_cluster_methods.pdf"
+#   output:
+#     "subsmission/figure_1.pdf"
+#   shell:
+#     """
+#     cp {input} {output}
+#     """
 
-rule figure_s2:
-  input:
-    "norarefy-source/simulation-cluster-accuracy/Figure_3.pdf"
-  output:
-    "submission/figure_s2.pdf"
-  shell:
-    """
-    cp {input} {output}
-    """
+# rule figure_s1:
+#   input:
+#     "results/figures/globalpatterns_distribution.pdf"
+#   output:
+#     "submission/figure_s1.pdf"
+#   shell:
+#     """
+#     cp {input} {output}
+#     """
 
-rule figure_s3:
-  input:
-    "norarefy-source/simulation-cluster-accuracy/Figure_4.pdf"
-  output:
-    "submission/figure_s3.pdf"
-  shell:
-    """
-    cp {input} {output}
-    """
+# rule figure_s2:
+#   input:
+#     "norarefy-source/simulation-cluster-accuracy/Figure_3.pdf"
+#   output:
+#     "submission/figure_s2.pdf"
+#   shell:
+#     """
+#     cp {input} {output}
+#     """
 
-rule figure_s4:
-  input:
-    "results/figures/my_figure_4.pdf"
-  output:
-    "submission/figure_s4.pdf"
-  shell:
-    """
-    cp {input} {output}
-    """
+# rule figure_s3:
+#   input:
+#     "norarefy-source/simulation-cluster-accuracy/Figure_4.pdf"
+#   output:
+#     "submission/figure_s3.pdf"
+#   shell:
+#     """
+#     cp {input} {output}
+#     """
+
+# rule figure_s4:
+#   input:
+#     "results/figures/my_figure_4.pdf"
+#   output:
+#     "submission/figure_s4.pdf"
+#   shell:
+#     """
+#     cp {input} {output}
+#     """
   
-rule figure_s5:
-  input:
-    "results/figures/my_figure_5.pdf"
-  output:
-    "submission/figure_s5.pdf"
-  shell:
-    """
-    cp {input} {output}
-    """
+# rule figure_s5:
+#   input:
+#     "results/figures/my_figure_5.pdf"
+#   output:
+#     "submission/figure_s5.pdf"
+#   shell:
+#     """
+#     cp {input} {output}
+#     """
 
 
 
@@ -611,3 +618,4 @@ rule write_paper:
     workflow/scripts/render_manuscript.R
     """
     
+
