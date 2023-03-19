@@ -176,7 +176,6 @@ skip <- FALSE
 
 if (grepl("upperquartile|RLE|TMM", transformed_otu_file)) {
 
-  library(edgeR)
 
   edger_data <- readRDS(transformed_otu_file)
   counts <- as.data.frame(edger_data$count)
@@ -196,7 +195,14 @@ if (grepl("upperquartile|RLE|TMM", transformed_otu_file)) {
                           transformed_otu,
                           list(transformed_otu))
 
+	if (any(otu_table(transformed_otu[[1]]) < 0)) {
+
+		skip <- TRUE
+
+	}
+
 }
+
 
 if (!skip) {
 
@@ -207,12 +213,12 @@ if (!skip) {
   if (length(transformed_otu) == 2) { #this would be an edgeR dataset
 		mean_distance <- edgeRdist(transformed_otu, method = method, top = 2000, 
 															 gene.selection = "pairwise")
-		} else {
-			distances <- lapply(transformed_otu,
-													edgeRdist,
-													method = method, top = 2000,
-													gene.selection = "pairwise")
-			mean_distance <- Reduce("+", distances) / length(distances)
+	} else {
+		distances <- lapply(transformed_otu,
+												edgeRdist,
+												method = method, top = 2000,
+												gene.selection = "pairwise")
+		mean_distance <- Reduce("+", distances) / length(distances)
 	}
 }
 

@@ -29,6 +29,7 @@ plot_four <- function(cluster_method, transformation){
 
   read_tsv("data/simulation_clusters.tsv.gz") %>%
     rename(subset = fracCorrectPred, all = fracCorrect) %>%
+    filter(simulation == "sim_a") %>%
     filter(filter == "filter" &
             transform %in% names(pretty_transform) &
             distance %in% names(pretty_distances)) %>%

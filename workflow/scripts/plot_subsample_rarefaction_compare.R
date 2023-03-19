@@ -23,6 +23,7 @@ pretty_distances <- c(bray = "Bray-Curtis",
                       wunifrac = "Weighted UniFrac")
 
 rare_sub <- read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
+  filter(simulation == "sim_a") %>%
   filter(filter == "filter") %>%
   filter(fraction != "s1" & fraction != "1") %>%
   filter(transform %in% c("subsample15", "rarefaction15")) %>%

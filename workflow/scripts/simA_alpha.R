@@ -96,7 +96,7 @@ if (!any(is.na(shannon))) {
   shannon_ocean <- median(shannon[treatment_group == "Ocean"])
 }
 
-conditions <- gsub("data/sim_a/(.*)\\.RDS", "\\1", phyloseq_list_file)
+conditions <- gsub("data/.*/(.*)\\.RDS", "\\1", phyloseq_list_file)
 
 output <- data.frame(conditions = conditions,
                      sobs_ocean = sobs_ocean,

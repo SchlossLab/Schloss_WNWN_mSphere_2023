@@ -28,6 +28,7 @@ pretty_method <- c(pam = "PAM",
                   hclust = "HClust")
 
 best_method <- read_tsv("data/simulation_clusters.tsv.gz") %>%
+  filter(simulation == "sim_a") %>%
   filter(filter == "filter") %>%
   filter(fraction != "s1" & fraction != "1") %>%
   filter((distance == "bray" &

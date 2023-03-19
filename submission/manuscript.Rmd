@@ -214,6 +214,7 @@ As noted above, the original jargon that was used in WNWN was confusing to many 
 
 ```{r}
 cluster_data <- read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
+  filter(simulation == "sim_a") %>%
   filter(filter == "filter") %>%
   filter(fraction != "s1" & fraction != "1") %>%
   filter((distance == "bray" &
@@ -288,6 +289,7 @@ The clustering accuracy measurements in the body of the manuscript were determin
 
 ```{r}
 clusters <- read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
+  filter(simulation == "sim_a") %>%
   filter(filter == "filter") %>%
   filter(method == "kmeans") %>%
   filter(distance != "bcv") %>%
@@ -336,30 +338,61 @@ As described above, the sequencing depths used in the `r gp_n_samples` GlobalPat
 
 I created a simple sequencing depth distribution where there were 80 depths logarithmically distributed between the minimum and maximum sequencing depths of the GlobalPatterns dataset (Figure ***distribution_shape.pdf***). The resulting median of this distribution was `r log_median` and the mean was `r log_mean`.
 
-
+Generate new Figure 4 and 5 w/ kmeans
 
 
 ### 7. A filtering step was applied to remove rare taxa from the simulated datasets, which could distort the shape of the communities
 
-**Sixth**, McMurdie and Holmes were emphatic that "**rarefying biological count data is statistically inadmissible** because it requires the omission of available valid data" (emphasis in original). Thus it is strange that they argue against removing data when rarefying/subsampling, but accept removing rare and low-prevalence OTUs prior to normalizing and analyzing their simulated communities. This practice has become common in microbiome studies and is the standard approach in tools such as dada2, unoise, and deblur [XXXXXXXX]. However, my previous work has shown that rare sequences from a poorly sequenced sample often appear in more deeply sequened samples suggesting that they are not necessarily artifacts. Furthermore, removing rare sequences alters the structure of communities and has undesirable effects on downstream analyses [XXXXXXXX]. 
+McMurdie and Holmes were emphatic that "**rarefying biological count data is statistically inadmissible** because it requires the omission of available valid data" (emphasis in original). Thus it is strange that they argue against removing data when rarefying/subsampling, but accept removing rare and low-prevalence OTUs prior to normalizing and analyzing their simulated communities. This practice has become common in microbiome studies and is the standard approach in tools such as dada2, unoise, and deblur [XXXXXXXX]. However, my previous work has shown that rare sequences from a poorly sequenced sample often appear in more deeply sequened samples suggesting that they are not necessarily artifacts. Furthermore, removing rare sequences alters the structure of communities and has undesirable effects on downstream analyses [XXXXXXXX]. 
 
-Filtering or not - filtering doesn't remove much...
-#nf <- readRDS("data/sim_a/3.5_10000_1.nofilter.none.RDS")
-#f <- readRDS("data/sim_a/3.5_10000_1.filter.none.RDS")
-#apply(otu_table(nf), 1, sum)
-#apply(otu_table(f), 1, sum)
+Filtering or not doesn't impact clustering accuracy with the GlobalPatterns distribution since filtering doesn't remove much - likely because the same sample size is used multiple times within a treatment group... Still rarefaction/subsample more stable that others - deseq, uq, proportion, none
 
+```{r}
+clusters <- read_tsv(here("data/simulation_clusters.tsv.gz"))
 
-
+clusters %>%
+  filter(simulation == "sim_a") %>%
+  filter((distance == "bray" &
+            transform %in% c("proportion", "subsample15", "rarefaction00", "none", "deseq")) |
+        (distance == "euclidean" &
+            transform %in% c("none", "rarefaction00", "deseq", "rarefaction15")) |
+        (distance == "poisson" &
+            transform %in% c("rarefaction00", "subsample15", "none")) |
+        (distance == "logFC" &
+            transform %in% c("upperquartile", "subsample15", "rarefaction00")) |
+        (distance == "uunifrac" &
+            transform %in% c("rarefaction00", "subsample15", "proportion")) |
+        (distance == "wunifrac" &
+            transform %in% c("rarefaction00", "subsample15", "none", "proportion", "deseq"))
+        ) %>%
+  filter(fraction != "1" & fraction != "s1") %>%
+  filter(method == "kmeans") %>%
+  select(-fracCorrectPred) %>%
+  pivot_wider(names_from = filter, values_from = fracCorrect) %>%
+  mutate(f_nf = filter - nofilter) %>%
+  group_by(fraction, n_seqs, transform, distance) %>%
+  summarize(mean = mean(f_nf), .groups = "drop") %>%
+  ggplot(aes(x = as.numeric(fraction), y = mean, group = transform, color = transform)) +
+  geom_line() +
+  facet_grid(n_seqs ~ distance)
+ggsave("test.pdf")
+```
 
 
 ### 8. No test of effect of transformation methods to account for effects of uneven sample size between treatment groups
 
+In previous analyses I have seen that removing rare taxa and not rarefying data can lead to falsely detecing differences between communities when sampling effort is confounded with the treatment group [XXXXXXX]. For example, such situations have been observed when comparing communities at different body parts where one site is more likely to generate contaminating sequence reads from the host. To see if this result was replicated with the WNWN framework, I used by both the GlobalPatterns and log-distributed sequence distributions but skewed the counts so that the samples with sequencing effort below and above the median were in separate treatment groups. 
 
+For the case when the effect size was 1.0, the samples should have only been assigned to one cluster. Thus the clustering accuracies shown for that effect size in the original Figure 4 are misleading. When there are two groups of 40 samples that do not differ, the best a method could do would be to correctly assign 41 of the 80 samples for an accuracy of `r 41/80`.
 
 ### 9. Clustering accuracy was used rather than direct comparisons beta diversity
 
-**Ninth**, the authors used clustering accuracy as the dependent variable for assessing the effect of different normalization procedures, distance calculations, and clustering methods. There has been controversy over the meaning of clustering samples (i.e., enterotypes) including whether such clustering should be done on ecological distances or sequence counts and the biological interpretation of such clusters. One notable challenge with using clustering accuracy as the dependent variable is that the clustering methods force the samples into one of two clusters. For the case when the effect size was 1.0, the samples should only be assigned to one cluster, thus the clustering accuracies shown for that effect size in the original Figure 4 are misleading. A preferred approach would be to use a non-parametric analysis of variance test of the various distance matrices. 
+The analysis of Simulation A in WNWN used clustering accuracy to assess the effect of different normalization procedures, distance calculations, and clustering methods. There has been controversy over the meaning of clustering samples (i.e., enterotypes) including whether such clustering should be done on ecological distances or sequence counts and the biological interpretation of such clusters [XXXXXXXXX]. One notable challenge with using clustering accuracy as the dependent variable is that the clustering methods force the samples into one of two clusters. For the case where the effect size was 1.0, it was impossible for all 80 samples to be assigned to a single cluster. As has already been demonstrated, an additional challenge with using clustering accuracy is that there is sensitivity to the clustering method that a researcher selects. Given the apparent interaction between the various variables and clustering method with clustering accuracy, an alternative approach is needed. In fact, a more common analysis of distance matrices would be to use a non-parametric analysis of variance test of the various distance matrices. Therefore, I subjected each of the distance matrices to such a test using `adonis2`, a function from the vegan R package that implements this test. This analysis allowed me to quantify the probability of falsely rejecting a null hypothesis (i.e., Type I error) when the effect size was 1.0 and the power to detect a difference when the effect sizes were larger than 1.0. Such an analysis was not possible in the original study since only 5 replicates of each simulation were performed. 
+
+Type I error...
+
+
+Type II error...
 
 
 ### 10. No consideration of effects of transformations on alpha diversity metrics

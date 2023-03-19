@@ -8,14 +8,14 @@ cluster:
     --account=pschloss1
     --nodes=1
     --time=100:00:00
-    --mem=2000mb
+    --mem=8000mb
     -c1
     
 #        --mem={resources.mem_mb}#: for pooling rules
 # default resources used for rules with no Resources specified
 default-resources: 
   - cpus=1
-  - mem_mb=2000
+  - mem_mb=4000
   - partition=standard
   - time_min=120
   - job_name="rare"

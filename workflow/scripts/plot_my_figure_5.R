@@ -25,6 +25,7 @@ pretty_distances <- c(bray = "Bray-Curtis",
 plot_five <- function(cluster_method, transformation){
 
   clusters <- read_tsv("data/simulation_clusters.tsv.gz") %>%
+    filter(simulation == "sim_a") %>%
     filter(filter == "filter") %>%
     filter(method == cluster_method) %>%
     filter(distance != "bcv") %>%
