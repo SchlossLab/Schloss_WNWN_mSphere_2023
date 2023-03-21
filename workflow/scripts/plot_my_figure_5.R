@@ -3,6 +3,8 @@
 library(tidyverse)
 library(ggtext)
 
+set.seed(19760620)
+
 add_es <- function(x) {
 
   paste0("ES = ", format(as.numeric(x), nsmall = 2L))

@@ -4,6 +4,8 @@ library(tidyverse)
 library(here)
 library(ggtext)
 
+set.seed(19760620)
+
 read_tsv(here("data/simulated_nseqs_distros.tsv")) %>%
   mutate(simulation = factor(simulation,
                              levels = c("Log-scaled", "GlobalPatterns"))) %>%

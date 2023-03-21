@@ -1,8 +1,9 @@
 #!/usr/bin/env Rscript
 
 library(tidyverse)
-
 library(ggtext)
+
+set.seed(19760620)
 
 add_nl <- function(x) {
 
