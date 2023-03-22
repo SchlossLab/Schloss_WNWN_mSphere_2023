@@ -26,11 +26,11 @@ pretty_transform <- c(deseq = "DeSeq VS",
                     upperquartile = "Upper Quartile Log Fold Change")
 
 
-plot_four <- function(cluster_method, transformation){
+plot_four <- function(sim, cluster_method, transformation){
 
   read_tsv("data/simulation_clusters.tsv.gz") %>%
     rename(subset = fracCorrectPred, all = fracCorrect) %>%
-    filter(simulation == "sim_a") %>%
+    filter(simulation == paste0("sim_", sim)) %>%
     filter(filter == "filter" &
             transform %in% names(pretty_transform) &
             distance %in% names(pretty_distances)) %>%
@@ -97,11 +97,11 @@ plot_four <- function(cluster_method, transformation){
           shape = guide_legend(nrow = 1))
 
   ggsave(paste0("results/figures/",
-                cluster_method, "_", transformation, "_fig_4.pdf"),
+            "fig_4_", cluster_method, "_", transformation, "_", sim, ".pdf"),
           width = 11, height = 10)
 
 }
 
 args <- commandArgs(trailingOnly = TRUE)
 
-plot_four(args[1], args[2])
+plot_four(args[1], args[2], args[3])

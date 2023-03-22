@@ -24,10 +24,10 @@ pretty_distances <- c(bray = "Bray-Curtis",
                       uunifrac = "Unweighted UniFrac",
                       wunifrac = "Weighted UniFrac")
 
-plot_five <- function(cluster_method, transformation){
+plot_five <- function(sim, cluster_method, transformation){
 
   clusters <- read_tsv("data/simulation_clusters.tsv.gz") %>%
-    filter(simulation == "sim_a") %>%
+    filter(simulation == paste0("sim_", sim)) %>%
     filter(filter == "filter") %>%
     filter(method == cluster_method) %>%
     filter(distance != "bcv") %>%
@@ -82,11 +82,11 @@ plot_five <- function(cluster_method, transformation){
           shape = guide_legend(nrow = 1))
 
   ggsave(paste0("results/figures/",
-                cluster_method, "_", transformation, "_fig_5.pdf"),
+              "fig_5_", cluster_method, "_", transformation, "_", sim, ".pdf"),
           width = 11, height = 10)
 
 }
 
 args <- commandArgs(trailingOnly = TRUE)
 
-plot_five(args[1], args[2])
+plot_five(args[1], args[2], args[3])
