@@ -26,9 +26,9 @@ pretty_transform <- c(deseq = "DeSeq VS",
                     upperquartile = "Upper Quartile Log Fold Change")
 
 
-plot_four <- function(sim, cluster_method, transformation){
+plot_four <- function(sim, cluster_method, transformation, deseq){
 
-  read_tsv("data/simulation_clusters.tsv.gz") %>%
+  df <- read_tsv("data/simulation_clusters.tsv.gz") %>%
     rename(subset = fracCorrectPred, all = fracCorrect) %>%
     filter(simulation == paste0("sim_", sim)) %>%
     filter(filter == "filter" &
@@ -53,7 +53,16 @@ plot_four <- function(sim, cluster_method, transformation){
     group_by(fraction, n_seqs, transform, distance) %>%
     summarize(mean = mean(all, na.rm = TRUE),
               lci = quantile(all, 0.025, na.rm = TRUE),
-              uci = quantile(all, 0.975, na.rm = TRUE), .groups = "drop") %>%
+              uci = quantile(all, 0.975, na.rm = TRUE), .groups = "drop")
+
+  if(deseq == "no_deseq"){
+
+    df <- df %>%
+      filter(transform != "deseq" |
+              (transform == "deseq" & distance == "euclidean"))
+  }
+
+  df %>%
     mutate(distance = factor(pretty_distances[distance],
                             levels = pretty_distances),
           transform = factor(pretty_transform[transform],
@@ -104,4 +113,4 @@ plot_four <- function(sim, cluster_method, transformation){
 
 args <- commandArgs(trailingOnly = TRUE)
 
-plot_four(args[1], args[2], args[3])
+plot_four(args[1], args[2], args[3], args[4])

@@ -57,6 +57,24 @@ rule all_targets:
     # "data/simulation_clusters.tsv.gz",
     # "data/simulation_adonis.tsv.gz",
     # "data/simulation_alpha.tsv.gz",
+    # "data/deseq_negative_values.tsv.gz"
+    #
+    "results/figures/deseq_negative_values.pdf"
+    #
+    # Snakefile too complex to run these...
+    # Run within nr-modern
+    # workflow/scripts/plot_distribution_shape.R
+    # workflow/scripts/plot_my_figure_4.R a pam subsample15 deseq
+    # workflow/scripts/plot_my_figure_4.R a kmeans rarefaction00 no_deseq
+    # workflow/scripts/plot_my_figure_4.R log pam subsample15 no_deseq
+    # workflow/scripts/plot_my_figure_4.R log kmeans rarefaction00 no_deseq
+    # workflow/scripts/plot_my_figure_5.R a pam subsample 
+    # workflow/scripts/plot_my_figure_5.R a kmeans rarefaction
+    # workflow/scripts/plot_my_figure_5.R log pam subsample
+    # workflow/scripts/plot_my_figure_5.R log kmeans rarefaction
+    # workflow/scripts/plot_compare_cluster_methods.R 
+    # workflow/scripts/plot_subsample_rarefaction_compare.R
+    # workflow/scripts/plot_cluster_skew_compare_i.R
     #
     # "results/figures/pam_subsample_fig_5.pdf",
     # "results/figures/kmeans_rarefaction_fig_5.pdf",
@@ -449,6 +467,36 @@ rule simA_pool_alphas:
     {input.R} {output}
     """
 
+rule get_deseq_negative_values:
+  input:
+    R="workflow/scripts/get_deseq_negative_values.R",
+    sim_a=expand("data/sim_a/{frac}_{depth}_{rep}.{preproc}.deseq.RDS",
+               frac = sim_a_fracs, depth = depths, rep = reps, preproc = preprocs),
+    sim_log=expand("data/sim_log/{frac}_{depth}_{rep}.{preproc}.deseq.RDS",
+               frac = sim_log_fracs, depth = depths, rep = reps, preproc = preprocs)
+  conda:
+    "envs/nr-s1.yml"
+  output:
+    "data/deseq_negative_values.tsv.gz"
+  shell:
+    """
+    {input.R}
+    """
+
+rule plot_deseq_negative_values:
+  input:
+    R="workflow/scripts/plot_deseq_negative_values.R",
+    tsv="data/deseq_negative_values.tsv.gz"
+  conda:
+    "envs/nr-modern.yml"
+  output:
+    "results/figures/deseq_negative_values.pdf"
+  shell:
+    """
+    {input.R}
+    """
+
+
 rule simulated_nseqs_distros:
   input:
     R="workflow/scripts/get_simulated_nseqs_distros.R",
@@ -526,6 +574,32 @@ rule plot_subsample_rarefaction_compare:
     {input.R}
     """
 
+rule plot_compare_filter_accuracy:
+  input:
+    R="workflow/scripts/plot_compare_filter_accuracy.R"
+    tsv="data/simulation_clusters.tsv.gz"
+  conda:
+    "envs/nr-modern.yml"
+  output:
+    "results/figures/compare_filter_accuracy.pdf"
+  shell:
+    """
+    {input.R}
+    """
+
+rule plot_cluster_skew_compare_i:
+  input:
+    R="workflow/scripts/plot_cluster_skew_compare_i.R"
+    tsv="data/simulation_clusters.tsv.gz"
+  conda:
+    "envs/nr-modern.yml"
+  output:
+    "results/figures/cluster_skew_compare_i.pdf"
+  shell:
+    """
+    {input.R}
+    """
+  
 
 
 # rule figure_1:

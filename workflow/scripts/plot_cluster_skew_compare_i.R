@@ -30,7 +30,7 @@ read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
     filter(fraction == "s1" | fraction == "1") %>%
     filter(n_seqs == 10000) %>%
     filter((distance == "bray" &
-              transform %in% c("proportion", "none", "deseq", "rarefaction00")) |
+              transform %in% c("proportion", "none", "rarefaction00")) |
             (distance == "euclidean" &
               transform %in% c("none", "deseq", "rarefaction00")) |
             (distance == "poisson" &
@@ -40,7 +40,7 @@ read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
             (distance == "uunifrac" &
               transform %in% c("proportion", "rarefaction00")) |
             (distance == "wunifrac" &
-              transform %in% c("none", "proportion", "deseq", "rarefaction00"))
+              transform %in% c("none", "proportion", "rarefaction00"))
             ) %>%
     group_by(simulation, n_seqs, fraction, method, transform, distance) %>%
     summarize(mean = mean(fracCorrect, na.rm = TRUE),
@@ -91,6 +91,6 @@ read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
           fill = guide_legend(nrow = 1),
           shape = guide_legend(nrow = 1))
 
-  ggsave("results/figures/staggered_cluster.pdf",
+  ggsave("results/figures/cluster_skew_compare_i.pdf",
          width = 11, height = 4)
 

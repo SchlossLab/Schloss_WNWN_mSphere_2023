@@ -15,11 +15,7 @@
 
 ### Conda environment:
 source ~/miniconda3/etc/profile.d/conda.sh
-conda activate nr-base
+conda activate nr-modern
 
 ### Run script
-#time snakemake -nr
-#time snakemake --use-conda --conda-frontend mamba -nr data/sim_a/1_1000_1.filter.RDS
-#time snakemake --profile config/slurm --batch all_targets=10/10
-time snakemake --profile config/slurm
- 
+time workflow/scripts/simA_pool_pools.R data/simulation_clusters.tsv.gz 
