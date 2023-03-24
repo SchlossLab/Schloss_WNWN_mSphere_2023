@@ -10,7 +10,9 @@ read_pool_files <- function(input_filenames) {
 
   readr::read_delim(input_filenames, show_col_types = FALSE) %>%
     dplyr::mutate(
-         simulation = if_else(str_detect(conditions, "^s?l"), "sim_log", "sim_a"),
+         simulation = case_when(str_detect(conditions, "^s?l") ~ "sim_log",
+                                str_detect(conditions, "^s") ~ "skew_a",
+                                str_detect(conditions, "^\\d") ~ "sim_a"),
          conditions = str_replace(conditions, "l?(\\d)", "\\1"),
          model = str_replace(conditions, "\\.n?o?filter.*", ""),
          processing = str_replace(conditions, ".*\\.(n?o?filter.*)", "\\1")) %>%
@@ -42,8 +44,13 @@ input_filenames_log <- list.files(path = "data/sim_log",
                            pattern = pattern,
                            full.names = TRUE)
 
+input_filenames_skew <- list.files(path = "data/skew_a",
+                           pattern = pattern,
+                           full.names = TRUE)
+
 sim_a_pools <- read_pool_files(input_filenames_a)
 sim_log_pools <- read_pool_files(input_filenames_log)
+sim_skew_pools <- read_pool_files(input_filenames_skew)
 
-bind_rows(sim_a_pools, sim_log_pools) %>%
+bind_rows(sim_a_pools, sim_log_pools, sim_skew_pools) %>%
   write_tsv(output_filename)

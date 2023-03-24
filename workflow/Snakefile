@@ -8,7 +8,8 @@ norarefy_slugs = [
 ]
 
 depths = [1000, 2000, 5000, 10000, 50000]
-sim_a_fracs = ["s1", 1, 1.15, 1.25, 1.5, 1.75, 2, 2.5, 3.5]
+sim_a_fracs = [1, 1.15, 1.25, 1.5, 1.75, 2, 2.5, 3.5]
+skew_a_fracs = ["s1", "s1.15", "s1.25", "s1.5", "s1.75", "s2", "s2.5", "s3.5"]
 sim_log_fracs = ["sl1", "l1", "l1.15", "l1.25", "l1.5", "l1.75", "l2", "l2.5", "l3.5"]
 reps = range(1, 101)
 preprocs = ["nofilter", "filter"]
@@ -43,7 +44,15 @@ rule all_targets:
     # expand("data/sim_a/{frac}_{depth}_pool.{preproc}.{transform}.alpha.tsv",
     #     frac = sim_a_fracs, depth = depths, rep = reps, preproc = preprocs,
     #     transform = transforms),
-    #       
+    expand("data/skew_a/{frac}_{depth}_pool.{preproc}.{transform}.{distance}.clusters.tsv",
+           frac = skew_a_fracs, depth = depths, preproc = preprocs,
+           transform = transforms, distance = distances),
+    expand("data/skew_a/{frac}_{depth}_pool.{preproc}.{transform}.{distance}.adonis.tsv",
+           frac = skew_a_fracs, depth = depths, preproc = preprocs,
+           transform = transforms, distance = distances),
+    expand("data/skew_a/{frac}_{depth}_pool.{preproc}.{transform}.alpha.tsv",
+        frac = skew_a_fracs, depth = depths, rep = reps, preproc = preprocs,
+        transform = transforms),
     # expand("data/sim_log/{frac}_{depth}_pool.{preproc}.{transform}.{distance}.clusters.tsv",
     #        frac = sim_log_fracs, depth = depths, preproc = preprocs,
     #        transform = transforms, distance = distances),
@@ -59,7 +68,7 @@ rule all_targets:
     # "data/simulation_alpha.tsv.gz",
     # "data/deseq_negative_values.tsv.gz"
     #
-    "results/figures/deseq_negative_values.pdf"
+    # "results/figures/deseq_negative_values.pdf"
     #
     # Snakefile too complex to run these...
     # Run within nr-modern
@@ -177,16 +186,18 @@ rule simA_generate_data:
 
 rule simA_generate_skew:
   input:
-    R="workflow/scripts/simA_generate_skew.R"
+    R="workflow/scripts/simA_generate_skewA.R"
   conda:
     "envs/nr-s1.yml"
   output:
-    "data/sim_a/s1_{depth}_{rep}.nofilter.RDS"
+    "data/skew_a/s{frac}_{depth}_{rep}.nofilter.RDS"
   group:
     "generate"
+  wildcard_constraints:
+    frac="\\d\\.*\\d*"
   shell:
     """
-    {input.R} {wildcards.depth} {wildcards.rep}
+    {input.R} {wildcards.frac} {wildcards.depth} {wildcards.rep}
     """
 
 rule simA_generate_log:
@@ -439,11 +450,14 @@ rule simA_pool_betas:
                transform = transforms, distance = distances, allow_missing=True),
     sim_log=expand("data/sim_log/{frac}_{depth}_pool.{preproc}.{transform}.{distance}.{suffix}.tsv",
                frac = sim_log_fracs, depth = depths, preproc = preprocs,
+               transform = transforms, distance = distances, allow_missing=True),
+    skew_a=expand("data/skew_a/{frac}_{depth}_pool.{preproc}.{transform}.{distance}.{suffix}.tsv",
+               frac = skew_a_fracs, depth = depths, preproc = preprocs,
                transform = transforms, distance = distances, allow_missing=True)
   conda:
     "envs/nr-modern.yml"
   output:
-    "data/{sim}_{suffix}.tsv.gz"
+    "data/simulation_{suffix}.tsv.gz"
   shell:
     """
     {input.R} {output}
@@ -457,11 +471,14 @@ rule simA_pool_alphas:
                transform = transforms),
     sim_log=expand("data/sim_log/{frac}_{depth}_pool.{preproc}.{transform}.alpha.tsv",
                frac = sim_log_fracs, depth = depths, preproc = preprocs,
-               transform = transforms)
+               transform = transforms),
+    skew_a=expand("data/skew_a/{frac}_{depth}_pool.{preproc}.{transform}.alpha.tsv",
+               frac = skew_a_fracs, depth = depths, preproc = preprocs,
+               transform = transforms, distance = distances, allow_missing=True)
   conda:
     "envs/nr-modern.yml"
   output:
-    "data/{sim}_alpha.tsv.gz"
+    "data/simulation_alpha.tsv.gz"
   shell:
     """
     {input.R} {output}
@@ -471,9 +488,11 @@ rule get_deseq_negative_values:
   input:
     R="workflow/scripts/get_deseq_negative_values.R",
     sim_a=expand("data/sim_a/{frac}_{depth}_{rep}.{preproc}.deseq.RDS",
-               frac = sim_a_fracs, depth = depths, rep = reps, preproc = preprocs),
+              frac = sim_a_fracs, depth = depths, rep = reps, preproc = preprocs),
     sim_log=expand("data/sim_log/{frac}_{depth}_{rep}.{preproc}.deseq.RDS",
-               frac = sim_log_fracs, depth = depths, rep = reps, preproc = preprocs)
+              frac = sim_log_fracs, depth = depths, rep = reps, preproc = preprocs),
+    skew_a=expand("data/skew_a/{frac}_{depth}_{rep}.{preproc}.deseq.RDS",
+              frac = skew_a_fracs, depth = depths, rep = reps, preproc = preprocs)
   conda:
     "envs/nr-s1.yml"
   output:
@@ -576,7 +595,7 @@ rule plot_subsample_rarefaction_compare:
 
 rule plot_compare_filter_accuracy:
   input:
-    R="workflow/scripts/plot_compare_filter_accuracy.R"
+    R="workflow/scripts/plot_compare_filter_accuracy.R",
     tsv="data/simulation_clusters.tsv.gz"
   conda:
     "envs/nr-modern.yml"
@@ -589,7 +608,7 @@ rule plot_compare_filter_accuracy:
 
 rule plot_cluster_skew_compare_i:
   input:
-    R="workflow/scripts/plot_cluster_skew_compare_i.R"
+    R="workflow/scripts/plot_cluster_skew_compare_i.R",
     tsv="data/simulation_clusters.tsv.gz"
   conda:
     "envs/nr-modern.yml"
@@ -599,7 +618,6 @@ rule plot_cluster_skew_compare_i:
     """
     {input.R}
     """
-  
 
 
 # rule figure_1:

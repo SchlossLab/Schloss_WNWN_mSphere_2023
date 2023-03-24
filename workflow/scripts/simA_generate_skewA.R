@@ -5,7 +5,7 @@
 # original code edited for clarity and style and to generate singe otu_count
 # file from user specified values of mixfacs, n_l, and rep
 #
-# be sure to first run: conda activate nr-s1 
+# be sure to first run: conda activate nr-s1
 
 library(phyloseq)
 
@@ -13,17 +13,16 @@ args <- commandArgs(trailingOnly = TRUE)
 
 
 # Effect Size. The artificial mix fraction.
-#mixfac <- as.numeric(args[1]) #c(1, 1.15, 1.25, 1.5, 1.75, 2, 2.5, 3.5)
-mixfac <- 1
+mixfac <- as.numeric(args[1]) #c(1, 1.15, 1.25, 1.5, 1.75, 2, 2.5, 3.5)
 
 # Mean sampling depth
-n_l <- as.numeric(args[1]) #c(1000, 2000, 5000, 10000, 50000)
+n_l <- as.numeric(args[2]) #c(1000, 2000, 5000, 10000, 50000)
 
 # Vector of the replicate numbers to repeat for
 # each comb of simulation parameters (n_l, etc)
-rep <- as.numeric(args[2]) #1:5
+rep <- as.numeric(args[3]) #1:5
 
-rel_path <- "data/sim_a/"
+rel_path <- "data/skew_a/"
 
 dir.create(rel_path, showWarnings = FALSE)
 
@@ -76,7 +75,7 @@ mix_microbes <- function(template1, template2, unmixfac) {
   if (!identical(phyloseq::nsamples(template1), 1L)) {
     stop("`template1` should have only 1 sample")
   }
-  if (!identical(phyloseq::nsamples(template2), 1L)){
+  if (!identical(phyloseq::nsamples(template2), 1L)) {
     stop("`template2` should have only 1 sample")
   }
 
@@ -136,13 +135,13 @@ microbesim <- function(postfix = "sim", template, templatex, unmixfac,
   if (length(samples_per_type) != 1) {
     stop("Length of samples_per_type should be 1.")
   }
-  if (length(samples_per_type) != 1 & length(n_l) != samples_per_type) {
+  if (length(samples_per_type) != 1 && length(n_l) != samples_per_type) {
     stop("n_l should be length 1, or length samples_per_type.")
   }
 
 # Actually create the simulated abundance table
   simat <- mapply(
-    function(i, x, sample_size){
+    function(i, x, sample_size) {
       if (FALSE) print(i)  # i is a dummy iterator
       phyloseq:::rarefaction_subsample(x, sample_size)
     },
@@ -168,7 +167,7 @@ microbesim <- function(postfix = "sim", template, templatex, unmixfac,
                     postfix = postfix,
                     stringsAsFactors = FALSE)
   rownames(sdf) <- phyloseq::sample_names(otu)
-  
+
   sdf <- phyloseq::sample_data(sdf)
 
 # Return a phyloseq object
@@ -187,7 +186,7 @@ while (try_again && infiniteloopcounter < 5) {
 
   n <- sort(sumsim(n_l, sampsums, samples_per_type * 2))
   n1 <- n[1:samples_per_type]
-  n2 <- n[(samples_per_type + 1): (2*samples_per_type)]
+  n2 <- n[(samples_per_type + 1):(2 * samples_per_type)]
 
   sim1 <- microbesim(sampletypes[1], template1, template2,
                      mixfac, samples_per_type, n1)

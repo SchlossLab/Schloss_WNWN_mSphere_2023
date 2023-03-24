@@ -18,4 +18,6 @@ source ~/miniconda3/etc/profile.d/conda.sh
 conda activate nr-modern
 
 ### Run script
-time workflow/scripts/simA_pool_pools.R data/simulation_clusters.tsv.gz 
+time workflow/scripts/simA_pool_pools.R data/simulation_clusters.tsv.gz
+time workflow/scripts/simA_pool_pools.R data/simulation_alpha.tsv.gz
+time workflow/scripts/simA_pool_pools.R data/simulation_adonis.tsv.gz
