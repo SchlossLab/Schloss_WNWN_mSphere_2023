@@ -23,7 +23,7 @@ args <- commandArgs(trailingOnly = TRUE)
 # with 1.25x the max value - rewrote for speed and to fix infinite values (there
 # weren't actually any infinite values that I could find)
 
-fixbadDs <- function(dd) {
+fixbad_dists <- function(dd) {
 
   not_finite <- !is.finite(dd)
   n_not_finite <- sum(not_finite)
@@ -56,26 +56,32 @@ output_file <- str_replace(distance_file, "RDS", "adonis.tsv")
 
 distances <- readRDS(distance_file)
 
-# this is needed for poisson distances
-distances <- fixbadDs(distances)
+run_adonis <- function(distance_matrix) {
 
-test_result <- tibble(conditions = conditions,
-                      r_squared = NA,
-                      p_value = NA)
+  # this is needed for poisson distances
+  distance_matrix <- fixbad_dists(distance_matrix)
 
-if (!is.na(distances[1])) {
-  sample_ids <- labels(distances)
-  group_ids <- str_replace(sample_ids, "\\d*", "")
+  test_result <- tibble(r_squared = NA,
+                        p_value = NA)
 
-  test <- adonis2(as.dist(distances) ~ group_ids)
-  
-  r_squared <- test[["R2"]][1]
-  p_value <- test[["Pr(>F)"]][1]
-  
-  test_result <- tibble(conditions = conditions,
-                        r_squared = r_squared,
-                        p_value = p_value)
+  if (!is.na(distance_matrix[1])) {
+    sample_ids <- labels(distance_matrix)
+    group_ids <- str_replace(sample_ids, "\\d*", "")
 
+    test <- adonis2(as.dist(distance_matrix) ~ group_ids)
+
+    r_squared <- test[["R2"]][1]
+    p_value <- test[["Pr(>F)"]][1]
+
+    test_result <- tibble(r_squared = r_squared,
+                          p_value = p_value)
+
+  }
+
+  return(test_result)
 }
 
-write_tsv(test_result, output_file)
+do.call(rbind, lapply(distances, run_adonis)) %>%
+  mutate(conditions = conditions,
+        reps = seq_along(distances)) %>%
+  write_tsv(output_file)

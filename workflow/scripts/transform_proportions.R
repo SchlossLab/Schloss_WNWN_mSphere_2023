@@ -19,12 +19,19 @@ raw_otu_data <- readRDS(raw_otu_file)
 # PDS: each sample takes on the total abundance of the most abundant sample
 #      in the dataset; the correlation between the values from this approach
 #      and normalizing to the smallest sample or to a total of 1 is 1.0
-normf <- function(x, tot = max(phyloseq::sample_sums(raw_otu_data))) {
-
+normf <- function(x, tot) {
   tot * x / sum(x)
+}
+
+normalize_otu_data <- function(raw_data) {
+
+  phyloseq::transform_sample_counts(
+      raw_data,
+      function(x) normf(x, tot = max(phyloseq::sample_sums(raw_data)))
+    )
 
 }
 
-normalize_otu_data <- phyloseq::transform_sample_counts(raw_otu_data, normf)
+normalized_otu_data <- lapply(raw_otu_data, normalize_otu_data)
 
-saveRDS(normalize_otu_data, normalize_otu_file)
+saveRDS(normalized_otu_data, normalize_otu_file)

@@ -13,43 +13,27 @@ args <- commandArgs(trailingOnly = TRUE)
 
 
 # Effect Size. The artificial mix fraction.
-mixfac <- args[1] #c(1, 1.15, 1.25, 1.5, 1.75, 2, 2.5, 3.5)
-#mixfac <- "sl2.5"
-#mixfac <- "l1.15"
-
-tag <- mixfac
-
-skew <- FALSE
-
-if (grepl("s", mixfac)) {
-  skew <- TRUE
-  mixfac <- gsub("s", "", mixfac)
-}
-
-if (grepl("l", mixfac)) {
-  mixfac <- as.numeric(gsub("l", "", mixfac))
-} else {
-  stop("could not find 'l' tag in mixfac value")
-}
-
-
+mixfac <- as.numeric(args[1]) #c(1, 1.15, 1.25, 1.5, 1.75, 2, 2.5, 3.5)
 
 # Mean sampling depth
 n_l <- as.numeric(args[2]) #c(1000, 2000, 5000, 10000, 50000)
 
-# Vector of the replicate numbers to repeat for
-# each comb of simulation parameters (n_l, etc)
-rep <- as.numeric(args[3]) #1:5
+#random or skewed
+distribution <- args[3]
+skew <- distribution == "skew"
 
-rel_path <- "data/sim_log/"
+# The number of times to repeat each comb of simulation parameters (n_l, etc)
+n_reps <- as.numeric(args[4]) #100
 
-dir.create(rel_path, showWarnings = FALSE)
+rel_path <- paste0("data/log/", distribution, "/")
+
+dir.create(rel_path, showWarnings = FALSE, recursive = TRUE)
 
 file_name <- paste0(rel_path,
-                    paste(tag, n_l, rep, sep = "_"),
+                    paste(mixfac, n_l, sep = "_"),
                     ".nofilter.RDS")
 
-set.seed(20140206 + rep)
+set.seed(20140206)
 data("GlobalPatterns")
 
 sampletypes <- c("Feces", "Ocean")
@@ -187,55 +171,60 @@ microbesim <- function(postfix = "sim", template, templatex, unmixfac,
 }
 
 
+generate_log_distribution <- function() {
 
-# Rarely a simulation has a weird value and fails.
-# Catch these with `try`, and repeat the simulation call
-# if error (it will be a new seed)
-try_again <- TRUE
-infiniteloopcounter <- 1
+  # Rarely a simulation has a weird value and fails.
+  # Catch these with `try`, and repeat the simulation call
+  # if error (it will be a new seed)
+  try_again <- TRUE
+  infiniteloopcounter <- 1
 
-while (try_again && infiniteloopcounter < 5) {
+  while (try_again && infiniteloopcounter < 5) {
 
-  # be sure that each of the 80 n_seqs values is used once between both
-  # treatment groups
-  temp_sampsums <- sampsums
+    # be sure that each of the 80 n_seqs values is used once between both
+    # treatment groups
+    temp_sampsums <- sampsums
 
-  if (!skew) {
-    temp_sampsums <- sample(sampsums, 2 * samples_per_type)
+    if (!skew) {
+      temp_sampsums <- sample(sampsums, 2 * samples_per_type)
+    }
+
+    normalized_sample <- round(temp_sampsums * n_l / median(temp_sampsums))
+
+    n1 <- normalized_sample[1:samples_per_type]
+    n2 <- normalized_sample[(samples_per_type + 1):(2 * samples_per_type)]
+
+    sim1 <- microbesim(sampletypes[1], template1, template2,
+                      mixfac, samples_per_type, n1)
+    sim2 <- microbesim(sampletypes[2], template2, template1,
+                      mixfac, samples_per_type, n2)
+
+    if (is.null(sim1) || is.null(sim2) || is.null(n1) || is.null(n2) ||
+          inherits(sim1, "try-error") || inherits(sim2, "try-error")) {
+      try_again <- TRUE
+      infiniteloopcounter <- infiniteloopcounter + 1
+    } else {
+      try_again <- FALSE
+    }
   }
 
-  normalized_sample <- round(temp_sampsums * n_l / median(temp_sampsums))
-
-  n1 <- normalized_sample[1:samples_per_type]
-  n2 <- normalized_sample[(samples_per_type + 1):(2 * samples_per_type)]
-
-  sim1 <- microbesim(sampletypes[1], template1, template2,
-                     mixfac, samples_per_type, n1)
-  sim2 <- microbesim(sampletypes[2], template2, template1,
-                     mixfac, samples_per_type, n2)
-
-  if (is.null(sim1) || is.null(sim2) || is.null(n1) || is.null(n2) ||
-        inherits(sim1, "try-error") || inherits(sim2, "try-error")) {
-    try_again <- TRUE
-    infiniteloopcounter <- infiniteloopcounter + 1
-  } else {
-    try_again <- FALSE
+  if (infiniteloopcounter >= 5) {
+    stop("Consistent error found during simulation. Need to investigate cause.")
   }
+
+
+  # Merge the two simulated datasets together into one phyloseq object
+  # and add back tree. then remove any otus that have zero abundance across all
+  # samples
+  sim <- phyloseq::merge_phyloseq(sim1, sim2)
+  sim <- phyloseq::merge_phyloseq(sim,
+                                  phyloseq::tax_table(GlobalPatterns),
+                                  phyloseq::phy_tree(GlobalPatterns))
+  sim <- phyloseq::prune_taxa(phyloseq::taxa_sums(sim) > 0, sim)
+
+  return(sim)
 }
 
-if (infiniteloopcounter >= 5) {
-  stop("Consistent error found during simulation. Need to investigate cause.")
-}
+replicates <- replicate(n_reps, generate_log_distribution())
 
-
-# Merge the two simulated datasets together into one phyloseq object
-# and add back tree. then remove any otus that have zero abundance across all
-# samples
-sim <- phyloseq::merge_phyloseq(sim1, sim2)
-sim <- phyloseq::merge_phyloseq(sim,
-                                phyloseq::tax_table(GlobalPatterns),
-                                phyloseq::phy_tree(GlobalPatterns))
-sim <- prune_taxa(taxa_sums(sim) > 0, sim)
-
-
-saveRDS(sim, file_name)
+saveRDS(replicates, file_name)

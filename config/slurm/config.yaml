@@ -33,11 +33,10 @@ touch: false
 conda-cleanup-envs: false
 conda-create-envs-only: false
 group-components:
-  - generate=100 #ntargets per job
-  - filter=100
-  - transform=100
+  - generate=5 #ntargets per job
+  - filter=5
+  - transform=25
   - distance=100
   - cluster=100
   - adonis=100
   - alpha=100
-  - pool_reps=100

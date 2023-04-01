@@ -25,17 +25,21 @@ subsample_otu_file <- gsub("RDS",
 
 raw_otu_data <- readRDS(raw_otu_file)
 
-# Set the minimum value as the smallest library quantile, `smalltrim`
-samplemin <- quantile(phyloseq::sample_sums(raw_otu_data), smalltrim)
+subsample_data <- function(raw_data) {
 
-subsample_otu_data <- replicate(
-                        iters,
-                        phyloseq::rarefy_even_depth(raw_otu_data,
-                                                    sample.size = samplemin,
-                                                    rngseed = FALSE,
-                                                    replace = FALSE,
-                                                    trimOTUs = TRUE,
-                                                    verbose = FALSE)
-                        )
+  # Set the minimum value as the smallest library quantile, `smalltrim`
+  samplemin <- quantile(phyloseq::sample_sums(raw_data), smalltrim)
+
+  replicate(iters,
+            phyloseq::rarefy_even_depth(raw_data,
+                                        sample.size = samplemin,
+                                        rngseed = FALSE,
+                                        replace = FALSE,
+                                        trimOTUs = TRUE,
+                                        verbose = FALSE)
+            )
+}
+
+subsample_otu_data <- lapply(raw_otu_data, subsample_data)
 
 saveRDS(subsample_otu_data, subsample_otu_file)
