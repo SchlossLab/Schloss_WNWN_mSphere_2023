@@ -31,7 +31,7 @@ pretty_skew <- c("FALSE" = "No",
 
 cluster_data <- read_tsv(here("old_data/simulation_clusters.tsv.gz"))
 
-cluster_data %>%
+processed <- cluster_data %>%
   mutate(skew = as.character(str_detect(fraction, "s")),
         fraction = as.numeric(str_replace(fraction, "s", "")),
         simulation = str_replace(simulation, ".*_", "")) %>%
@@ -65,7 +65,7 @@ cluster_data %>%
                             levels = pretty_simulation),
         skew = factor(pretty_skew[skew],
                       levels = pretty_skew)
-        ) -> processed
+        )
 
 processed %>%
     ggplot(aes(x = skew, y = mean, group = transform,

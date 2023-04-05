@@ -374,12 +374,9 @@ To determine whether this result was replicated with the WNWN simulation framewo
 
 ### 10. Clustering accuracy was used rather than direct comparisons beta diversity
 
-The analysis of the GlobalPatterns-based simulations in WNWN used clustering accuracy to assess the effect of different normalization procedures, distance calculations, and clustering methods. There has been controversy over the meaning of clustering samples (i.e., enterotypes) including whether such clustering should be done on ecological distances or sequence counts and the biological interpretation of such clusters [XXXXXXXXX]. As described in the previous point, one notable challenge with using clustering accuracy as the dependent variable is that the clustering methods force the samples into one of two clusters. For the case where the effect size was 1.0, it was impossible for all 80 samples to be assigned to a single cluster. As has already been demonstrated in point 5, an additional problem wiht clustering is the sensitivity to the chosen method. A more common analysis of distance matrices is to use a non-parametric analysis of variance test of the various distance matrices (i.e., AMOVA, PERMANOVA, adonis)[XXXXXXXXXXX]. Therefore, I subjected each of the distance matrices to such a test using `adonis2`, a function from the vegan R package that implements this test.
+The analysis of the GlobalPatterns-based simulations in WNWN used clustering accuracy to assess the effect of different normalization procedures, distance calculations, and clustering methods. There has been controversy over the meaning of clustering samples (i.e., enterotypes) including whether such clustering should be done on ecological distances or sequence counts and the biological interpretation of such clusters [XXXXXXXXX]. As described in the previous point, one notable challenge with using clustering accuracy as the dependent variable is that the clustering methods force the samples into one of two clusters. For the case where the effect size was 1.0, it was impossible for all 80 samples to be assigned to a single cluster. As has already been demonstrated in point 5, an additional problem wiht clustering is the sensitivity to the chosen method. A more common analysis of distance matrices is to use a non-parametric analysis of variance test of the various distance matrices (i.e., AMOVA, PERMANOVA, adonis)[XXXXXXXXXXX]. 
 
-Type I error...
-
-
-Type II error...
+I subjected each of the distance matrices to such a test using `adonis2`, a function from the vegan R package that implements this test to assess the effects of each transformation and distance calculation method on the Type I errors and statistical power. As was seen above, when sequencing depths were randomly distributed across the two treatment groups, the Type I error did not meaningfully deviate from the expected 5% (Figure **adonis_skew_compare_i.pdf**). Again, when sequencing depths were skewed between the two treatment groups, rarefaction was the only transformation approach to control the Type I error. Similar to the clustering accuracy results, when distances were calculated using rarefaction the tests consistently had the best statistical power (Figure **adonis_skew_compare_ii.pdf**). When considering the tradeoff between Type I error and power, rarefaction performed the best among the different transformations within this simulation framework.
 
 
 ### 11. No consideration of effects of transformations on alpha diversity metrics
@@ -395,6 +392,9 @@ Furthermore, a comparison of alpha diversity metrics could be made to assess the
 * Gratidue that code was published with paper. This made it straight forward to notice that only a single subsampling step was performed for each random seed and that only 3 random seeds were used.
 * Differential abundance issues
 * How we actually pick a threshold
+* UniFracs are no longer viable methods since trees are too challenging to construct *de novo* with modern library sizes
+
+
 
 ## Acknowledgements
 
