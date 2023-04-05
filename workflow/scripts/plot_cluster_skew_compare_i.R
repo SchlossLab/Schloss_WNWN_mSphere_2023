@@ -24,7 +24,8 @@ pretty_simulation <- c(sim_a = "GlobalPatterns",
 pretty_fraction <- c("1" = "No",
                     "s1" = "Yes")
 
-read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
+read_tsv(here("old_data/simulation_clusters.tsv.gz")) %>%
+    mutate(simulation = str_replace(simulation, "skew_", "sim_")) %>%
     filter(filter == "filter") %>%
     filter(method == "kmeans") %>%
     filter(fraction == "s1" | fraction == "1") %>%
@@ -92,5 +93,5 @@ read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
           shape = guide_legend(nrow = 1))
 
   ggsave("results/figures/cluster_skew_compare_i.pdf",
-         width = 11, height = 4)
+         width = 11, height = 5)
 
