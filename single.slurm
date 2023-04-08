@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=run_wnwn
+#SBATCH --job-name=run_single
 #SBATCH --output=%x-%j.out
 #SBATCH --mail-user=pschloss@umich.edu
 #SBATCH --mail-type=BEGIN,END,FAIL
@@ -9,7 +9,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=47g
+#SBATCH --mem=12g
 
 
 
@@ -18,6 +18,4 @@ source ~/miniconda3/etc/profile.d/conda.sh
 conda activate nr-modern
 
 ### Run script
-time workflow/scripts/simA_pool_pools.R data/simulation_clusters.tsv.gz
-time workflow/scripts/simA_pool_pools.R data/simulation_alpha.tsv.gz
-time workflow/scripts/simA_pool_pools.R data/simulation_adonis.tsv.gz
+time workflow/scripts/render_manuscript.R

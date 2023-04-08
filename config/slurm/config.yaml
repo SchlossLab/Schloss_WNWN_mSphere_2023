@@ -8,10 +8,10 @@ cluster:
     --account=pschloss1
     --nodes=1
     --time=100:00:00
-    --mem=8000mb
+    --mem={resources.mem_mb}
     -c1
     
-#        --mem={resources.mem_mb}#: for pooling rules
+#    --mem=8000mb
 # default resources used for rules with no Resources specified
 default-resources: 
   - cpus=1
@@ -21,7 +21,7 @@ default-resources:
   - job_name="rare"
   
 # snakemake args
-jobs: 4950
+jobs: 3000
 scheduler: "greedy"
 rerun-incomplete: true
 use-conda: true
@@ -33,10 +33,7 @@ touch: false
 conda-cleanup-envs: false
 conda-create-envs-only: false
 group-components:
-  - generate=5 #ntargets per job
-  - filter=5
-  - transform=25
-  - distance=100
-  - cluster=100
-  - adonis=100
-  - alpha=100
+#   - distance=100
+#   - cluster=100
+#   - adonis=100
+#   - alpha=100

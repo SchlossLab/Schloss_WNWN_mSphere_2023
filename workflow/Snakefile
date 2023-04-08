@@ -31,28 +31,17 @@ betas = [ "clusters", "adonis" ]
 
 rule all_targets:
   input:
-    expand("data/{m}/{d}/{es}_{nseqs}.{preproc}.{transform}.RDS",
-          m = models, d = distributions, es = effect_sizes, nseqs = depths,
-          preproc = preprocs, transform = transforms),
-    # "data/gp/random/1.5_1000.filter.proportion.alpha.tsv",
-    # "data/gp/random/1.5_1000.filter.subsample00.alpha.tsv",
-    # "data/gp/random/1.5_1000.filter.rarefaction15.alpha.tsv",
-    # "data/gp/random/1.5_1000.filter.deseq.alpha.tsv",
-    # "data/gp/random/1.5_1000.filter.upperquartile.alpha.tsv",
-    #
     # "norarefy-source/dispersion-survey/dispersion_pds.html",
     # "norarefy-source/minimal-rarefy-example/minimal-rarefy-example_pds.html",
     # "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server_pds.html",
     # "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server_pds.html",
     #
-      # "data/simulation_clusters.tsv.gz",
-      # "data/simulation_adonis.tsv.gz",
-      # "data/simulation_alpha.tsv.gz",
+    "data/simulation_clusters.tsv.gz",
+    # "data/simulation_alpha.tsv.gz"
     # "data/deseq_negative_values.tsv.gz"
     #
     # "results/figures/deseq_negative_values.pdf"
     #
-    # Snakefile too complex to run these...
     # Run within nr-modern
     # workflow/scripts/plot_distribution_shape.R
     # workflow/scripts/plot_my_figure_4.R a pam subsample15 deseq
@@ -236,8 +225,6 @@ rule sim_transform_subsample:
     fraction="\d\d"
   output:
     "{slug}.subsample{fraction}.RDS"
-  resources:
-    mem_mb=8000
   group:
     "transform"
   conda:
@@ -255,6 +242,8 @@ rule sim_transform_rarefy:
     fraction="\d\d"
   output:
     "{slug}.rarefaction{fraction}.RDS"
+  resources:
+    mem_mb=16000
   group:
     "transform"
   conda:
@@ -304,8 +293,8 @@ rule sim_distance_traditional:
     "{slug}.{distance}.RDS"
   wildcard_constraints:
     distance="bray|euclidean|uunifrac|wunifrac",
-  group:
-    "distance"
+  resources:
+    mem_mb=20000
   conda:
     "envs/nr-s1.yml"
   shell:
@@ -319,8 +308,8 @@ rule sim_distance_poisson:
     rds="{slug}.RDS"
   output:
     "{slug}.poisson.RDS"
-  group:
-    "distance"
+  resources:
+    mem_mb=20000
   conda:
     "envs/nr-s1.yml"
   shell:
@@ -336,8 +325,8 @@ rule sim_distance_edger:
     "{slug}.{distance}.RDS"
   wildcard_constraints:
     distance="logFC|bcv",
-  group:
-    "distance"
+  resources:
+    mem_mb=12000
   conda:
     "envs/nr-s1.yml"
   shell:
@@ -351,8 +340,6 @@ rule sim_cluster_distances:
     rds="{slug}.RDS"
   output:
     "{slug}.clusters.tsv"
-  group:
-    "distance"
   conda:
     "envs/nr-s1.yml"
   shell:
@@ -366,8 +353,6 @@ rule sim_adonis_distances:
     rds="{slug}.RDS"
   output:
     "{slug}.adonis.tsv"
-  group:
-    "adonis"
   conda:
     "envs/nr-modern.yml"
   shell:
@@ -381,8 +366,8 @@ rule sim_alpha:
     rds="{slug}.RDS"
   output:
     "{slug}.alpha.tsv"
-  group:
-    "alpha"
+  resources:
+    mem_mb=24000
   conda:
     "envs/nr-s1.yml"
   shell:
@@ -402,6 +387,8 @@ rule sim_pool_betas:
     "data/simulation_{suffix}.tsv.gz"
   conda:
     "envs/nr-modern.yml"
+  resources:
+    mem_mb=12000
   shell:
     """
     {input.R} {output}

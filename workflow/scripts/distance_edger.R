@@ -24,18 +24,21 @@
 #	Yunshun Chen, Mark Robinson and Gordon Smyth
 #	23 May 2011.  Last modified 7 Feb 2013.
 ################################################################################
-edgeRdist <- function(x, top=500, method="logFC", 
-                      gene.selection="pairwise", prior.count=2){
+edgeRdist <- function(x, top = 500, method = "logFC",
+                      gene.selection = "pairwise", prior.count = 2) {
 	require("edgeR")
   require("phyloseq")
-  if( inherits(x, "phyloseq") ){
+  if (inherits(x, "phyloseq")) {
     # Convert phyloseq object to an otherwise untransformed 
     # abundance matrix in DGEList form
     x = edgeRnorm(x, method="none")
+
+		if(is.na(x)) {return(NA)}
     if( !inherits(x, "DGEList") ){
       stop("x not converted to DGEList for some reason. Dispatch now flawed.")
     }
   }
+
 	#	Remove rows with missing or Inf values
 	ok <- is.finite(x$counts)
 	if(!all(ok)) {
@@ -137,6 +140,14 @@ edgeRnorm = function(physeq, ...){
 		physeq <- t(physeq)
 	}
 	x = as(otu_table(physeq), "matrix")
+
+
+#methods cannot take negative values
+	if(any(x < 0)){
+		return(NA)
+	}
+
+
   # See if adding a single observation, 1, 
   # everywhere (so not zeros) prevents errors
   # without needing to borrow and modify 
