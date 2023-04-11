@@ -18,17 +18,16 @@ pretty_transform <- c(deseq = "DeSeq VS",
                     rarefaction00 = "Rarefaction",
                     upperquartile = "Upper Quartile Log Fold Change")
 
-pretty_simulation <- c(sim_a = "GlobalPatterns",
-                      sim_log = "Log-distributed")
+pretty_model <- c(gp = "GlobalPatterns",
+                  log = "Log-distributed")
 
-pretty_fraction <- c("1" = "No",
-                    "s1" = "Yes")
+pretty_distribution <- c("random" = "No",
+                        "skew" = "Yes")
 
-read_tsv(here("old_data/simulation_clusters.tsv.gz")) %>%
-    mutate(simulation = str_replace(simulation, "skew_", "sim_")) %>%
+cluster_data <- read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
     filter(filter == "filter") %>%
     filter(method == "kmeans") %>%
-    filter(fraction == "s1" | fraction == "1") %>%
+    filter(fraction == 1) %>%
     filter(n_seqs == 10000) %>%
     filter((distance == "bray" &
               transform %in% c("proportion", "none", "rarefaction00")) |
@@ -43,7 +42,7 @@ read_tsv(here("old_data/simulation_clusters.tsv.gz")) %>%
             (distance == "wunifrac" &
               transform %in% c("none", "proportion", "rarefaction00"))
             ) %>%
-    group_by(simulation, n_seqs, fraction, method, transform, distance) %>%
+    group_by(model, distribution, n_seqs, method, transform, distance) %>%
     summarize(mean = mean(fracCorrect, na.rm = TRUE),
               lci = quantile(fracCorrect, 0.025, na.rm = TRUE),
               uci = quantile(fracCorrect, 0.975, na.rm = TRUE),
@@ -52,20 +51,21 @@ read_tsv(here("old_data/simulation_clusters.tsv.gz")) %>%
                             levels = pretty_distances),
           transform = factor(pretty_transform[transform],
                               levels = pretty_transform),
-          simulation = factor(pretty_simulation[simulation],
-                              levels = pretty_simulation),
-          fraction = factor(pretty_fraction[fraction],
-                              levels = pretty_fraction)
-                              ) %>%
-    ggplot(aes(x = fraction, y = mean, group = transform,
+          model = factor(pretty_model[model],
+                              levels = pretty_model),
+          distribution = factor(pretty_distribution[distribution],
+                                levels = pretty_distribution)
+                              )
+
+cluster_data %>%
+    ggplot(aes(x = distribution, y = mean, group = transform,
               color = transform, shape = transform, fill = transform)) +
-    geom_hline(yintercept = 41/80, color = "darkgray") +
     geom_linerange(aes(ymin = lci, ymax = uci),
                   alpha = 0.6, position = position_dodge(width = 0.5),
                   show.legend = FALSE) +
     geom_point(position = position_dodge(width = 0.5),
               size = 2) +
-    facet_grid(simulation ~ distance) +
+    facet_grid(model ~ distance) +
     scale_y_continuous(expand = c(0, 0)) +
     scale_fill_manual(
       values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")

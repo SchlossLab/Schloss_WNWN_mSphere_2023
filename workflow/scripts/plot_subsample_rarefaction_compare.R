@@ -11,8 +11,8 @@ add_nl <- function(x) {
 }
 
 y_axes <- c(
-  median_diff = "Difference between\nrarefaction and subsampling",
-  iqr_diff = "Difference between the IQR\nof subsampling and rarefaction"
+  median_diff = "Difference in clustering\naccuracy using\nrarefaction and subsampling",
+  iqr_diff = "Difference between the IQR in\nclustering accuracy using\nrarefaction and subsampling"
   )
 
 pretty_distances <- c(bray = "Bray-Curtis",
@@ -23,15 +23,14 @@ pretty_distances <- c(bray = "Bray-Curtis",
                       wunifrac = "Weighted UniFrac")
 
 rare_sub <- read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
-  filter(simulation == "sim_a") %>%
+  filter(model == "gp" & distribution == "random" & fraction != 1) %>%
   filter(filter == "filter") %>%
-  filter(fraction != "s1" & fraction != "1") %>%
   filter(transform %in% c("subsample15", "rarefaction15")) %>%
   filter(distance %in%
             c("bray", "euclidean", "logFC", "poisson",
             "uunifrac", "wunifrac")) %>%
   filter(method == "pam") %>%
-  select(fraction, n_seqs, rep, transform, distance, fracCorrect) %>%
+  select(fraction, n_seqs, reps, transform, distance, fracCorrect) %>%
   mutate(fraction = as.numeric(fraction),
             distance = pretty_distances[distance])
 
@@ -42,7 +41,7 @@ rare_sub %>%
   summarize(iqr = IQR(fracCorrect),
             median = median(fracCorrect), .groups = "drop") %>%
   pivot_wider(names_from = transform, values_from = c("median", "iqr")) %>%
-  mutate(iqr_diff = iqr_subsample15 - iqr_rarefaction15,
+  mutate(iqr_diff = iqr_rarefaction15 - iqr_subsample15,
             median_diff = median_rarefaction15 - median_subsample15) %>%
   select(fraction, n_seqs, distance, iqr_diff, median_diff) %>%
   pivot_longer(cols = c(iqr_diff, median_diff), names_to = "metric") %>%

@@ -5,7 +5,6 @@ library(ggh4x)
 library(ggtext)
 library(here)
 
-alpha <- read_tsv("old_data/simulation_alpha.tsv.gz")
 
 add_nl <- function(x) {
   paste0("N~L~ = ", format(as.numeric(x), big.mark = "\\\\,"))
@@ -22,14 +21,11 @@ pretty_transform <- c(deseq = "DeSeq VS",
                     upperquartile = "Upper Quartile Log Fold Change")
 
 
-alpha %>%
-  mutate(skew = if_else(str_detect(fraction, "s"), "Skewed distribution", "Random distribution"),
-        fraction = as.numeric(str_replace(fraction, "s", ""))) %>%
-  filter(simulation != "sim_log") %>%
-  filter(filter == "filter") %>%
+alpha <- read_tsv(here("data/simulation_alpha.tsv.gz")) %>%
+  filter(model == "gp" & filter == "filter") %>%
   filter(transform %in%
         c("proportion", "none", "rarefaction00", "deseq", "upperquartile")) %>%
-  group_by(skew, fraction, n_seqs, transform) %>%
+  group_by(distribution, fraction, n_seqs, transform) %>%
   summarize(sobs_p = mean(sobs_p <= 0.05),
             shannon_p = mean(shannon_p <= 0.05), .groups = "drop") %>%
   pivot_longer(cols = c(sobs_p, shannon_p)) %>%
@@ -37,13 +33,15 @@ alpha %>%
   filter(!(name == "shannon_p" & transform == "deseq")) %>%
   mutate(name = factor(name, levels = c("sobs_p", "shannon_p")),
         transform = factor(pretty_transform[transform],
-                              levels = pretty_transform)) %>%
+                              levels = pretty_transform))
+
+alpha %>%
   ggplot(aes(x = as.numeric(fraction), y = value, shape = transform,
             group = transform, color = transform, fill = transform)) +
   geom_line(position = position_dodge(width = 0.075)) +
   geom_point(position = position_dodge(width = 0.075),
             size = 2) +
-  facet_nested(n_seqs ~ name + skew,
+  facet_nested(n_seqs ~ name + distribution,
               labeller = labeller(name = pretty_alpha, n_seqs = add_nl),
               strip = strip_nested(
                 text_x = elem_list_text(colour = c("#000000", "#FFFFFF")),

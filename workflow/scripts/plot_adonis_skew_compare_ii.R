@@ -16,18 +16,15 @@ pretty_transform <- c(deseq = "DeSeq VS",
                     rarefaction00 = "Rarefaction",
                     upperquartile = "Upper Quartile Log Fold Change")
 
-pretty_simulation <- c(a = "GlobalPatterns",
-                      log = "Log-distributed")
+pretty_model <- c(gp = "GlobalPatterns",
+                  log = "Log-distributed")
 
-adonis_data <- read_tsv("old_data/simulation_adonis.tsv.gz")
+pretty_distribution <- c("random" = "No",
+                        "skew" = "Yes")
 
-pretty_fraction <- c("1.15" = "No",
-                    "s1.15" = "Yes")
-
-p <- adonis_data %>%
-  mutate(simulation = str_replace(simulation, ".*_", "")) %>%
-  filter(filter == "filter") %>%
-  filter(n_seqs == 10000) %>%
+adonis_data <- read_tsv("data/simulation_adonis.tsv.gz") %>%
+  filter(filter == "filter" & n_seqs == 10000 & fraction == 1.15) %>%
+  filter() %>%
   filter((distance == "bray" &
             transform %in% c("proportion", "none", "rarefaction00")) |
           (distance == "euclidean" &
@@ -41,25 +38,23 @@ p <- adonis_data %>%
           (distance == "wunifrac" &
             transform %in% c("none", "proportion", "rarefaction00"))
           ) %>%
-  group_by(simulation, fraction, n_seqs, transform, distance) %>%
+  group_by(model, distribution, n_seqs, transform, distance) %>%
   summarize(p = mean(p_value <= 0.05), .groups = "drop") %>%
   mutate(distance = factor(pretty_distances[distance],
                         levels = pretty_distances),
       transform = factor(pretty_transform[transform],
                           levels = pretty_transform),
-      simulation = factor(pretty_simulation[simulation],
-                          levels = pretty_simulation)
+      model = factor(pretty_model[model],
+                          levels = pretty_model),
+      distribution = factor(pretty_distribution[distribution],
+                          levels = pretty_distribution)
   )
 
-p %>%
-  filter(fraction == "s1.15" | fraction == "1.15") %>%
-  mutate(fraction = factor(pretty_fraction[fraction],
-                          levels = pretty_fraction)
-                          ) %>%
-  ggplot(aes(x = fraction, y = p, color = transform, shape = transform,
+adonis_data %>%
+  ggplot(aes(x = distribution, y = p, color = transform, shape = transform,
               fill = transform)) +
   geom_point(position = position_dodge(width = 0.5), size = 2) +
-  facet_grid(simulation ~ distance) +
+  facet_grid(model ~ distance) +
   scale_fill_manual(
     values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")
   ) +

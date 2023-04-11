@@ -24,16 +24,14 @@ pretty_distances <- c(bray = "Bray-Curtis",
                       uunifrac = "Unweighted UniFrac",
                       wunifrac = "Weighted UniFrac")
 
-plot_five <- function(sim, cluster_method, transformation){
+plot_five <- function(model, cluster_method, transformation){
 
   clusters <- read_tsv("data/simulation_clusters.tsv.gz") %>%
-    filter(simulation == paste0("sim_", sim)) %>%
+    filter(model == model & distribution == "random" & fraction != 1) %>%
     filter(filter == "filter") %>%
     filter(method == cluster_method) %>%
     filter(distance != "bcv") %>%
     filter(str_detect(transform, transformation)) %>%
-    filter(fraction != "s1" & fraction != "1") %>%
-    select(fraction, n_seqs, rep, transform, distance, method, fracCorrect) %>%
     group_by(fraction, n_seqs, transform, distance, method) %>%
     summarize(median = median(fracCorrect),
               lci = quantile(fracCorrect, 0.025),
@@ -82,7 +80,7 @@ plot_five <- function(sim, cluster_method, transformation){
           shape = guide_legend(nrow = 1))
 
   ggsave(paste0("results/figures/",
-              "fig_5_", cluster_method, "_", transformation, "_", sim, ".pdf"),
+              "fig5_", cluster_method, "_", transformation, "_", model, ".pdf"),
           width = 11, height = 10)
 
 }

@@ -30,11 +30,10 @@ pretty_method <- c(pam = "PAM",
                   hclust = "HClust")
 
 best_method <- read_tsv("data/simulation_clusters.tsv.gz") %>%
-  filter(simulation == "sim_a") %>%
-  filter(filter == "filter") %>%
-  filter(fraction != "s1" & fraction != "1") %>%
+  filter(model == "gp" & distribution == "random" & filter == "filter") %>%
+  filter(fraction == 1.15) %>%
   filter((distance == "bray" &
-            transform %in% c("proportion", "subsample15", "rarefaction15", "none", "deseq")) |
+            transform %in% c("proportion", "subsample15", "rarefaction15", "none")) |
         (distance == "euclidean" &
             transform %in% c("none", "deseq", "subsample15", "rarefaction15")) |
         (distance == "poisson" &
@@ -44,15 +43,14 @@ best_method <- read_tsv("data/simulation_clusters.tsv.gz") %>%
         (distance == "uunifrac" &
             transform %in% c("subsample15", "proportion", "rarefaction15")) |
         (distance == "wunifrac" &
-            transform %in% c("subsample15", "none", "proportion", "deseq", "rarefaction15"))
+            transform %in% c("subsample15", "none", "proportion", "rarefaction15"))
         ) %>%
-  filter(fraction == 1.15) %>%
-  select(n_seqs, rep, transform, distance, method, fracCorrect) %>%
-    group_by(n_seqs, transform, distance, rep) %>%
-    slice_max(fracCorrect) %>%
-    ungroup() %>%
-    mutate(fracCorrect = 1) %>%
-    pivot_wider(names_from = method, values_from = fracCorrect, values_fill = 0)
+  select(n_seqs, reps, transform, distance, method, fracCorrect) %>%
+  group_by(n_seqs, transform, distance, reps) %>%
+  slice_max(fracCorrect) %>%
+  ungroup() %>%
+  mutate(fracCorrect = 1) %>%
+  pivot_wider(names_from = method, values_from = fracCorrect, values_fill = 0)
 
 # overall <- best_method %>%
 #               summarize(pam = 100 * mean(pam),

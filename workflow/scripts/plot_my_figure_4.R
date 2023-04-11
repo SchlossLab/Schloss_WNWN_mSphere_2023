@@ -26,18 +26,18 @@ pretty_transform <- c(deseq = "DeSeq VS",
                     upperquartile = "Upper Quartile Log Fold Change")
 
 
-plot_four <- function(sim, cluster_method, transformation, deseq){
+plot_four <- function(model, cluster_method, transformation, deseq) {
 
-  df <- read_tsv("data/simulation_clusters.tsv.gz") %>%
-    rename(subset = fracCorrectPred, all = fracCorrect) %>%
-    filter(simulation == paste0("sim_", sim)) %>%
-    filter(filter == "filter" &
+  df <- readr::read_tsv("data/simulation_clusters.tsv.gz") %>%
+    dplyr::rename(subset = fracCorrectPred,
+                  all = fracCorrect) %>%
+    dplyr::filter(model == model, distribution == "random") %>%
+    dplyr::filter(filter == "filter" &
             transform %in% names(pretty_transform) &
             distance %in% names(pretty_distances)) %>%
-    filter(method == cluster_method) %>%
-    filter(fraction != "s1") %>%
-    mutate(fraction = as.numeric(fraction)) %>%
-    filter((distance == "bray" &
+    dplyr::filter(method == cluster_method) %>%
+    dplyr::mutate(fraction = as.numeric(fraction)) %>%
+    dplyr::filter((distance == "bray" &
               transform %in% c("proportion", transformation, "none", "deseq")) |
           (distance == "euclidean" &
               transform %in% c("none", "deseq", transformation)) |
@@ -50,12 +50,13 @@ plot_four <- function(sim, cluster_method, transformation, deseq){
           (distance == "wunifrac" &
               transform %in% c(transformation, "none", "proportion", "deseq"))
           ) %>%
-    group_by(fraction, n_seqs, transform, distance) %>%
-    summarize(mean = mean(all, na.rm = TRUE),
-              lci = quantile(all, 0.025, na.rm = TRUE),
-              uci = quantile(all, 0.975, na.rm = TRUE), .groups = "drop")
+    dplyr::group_by(fraction, n_seqs, transform, distance) %>%
+    dplyr:: summarize(mean = mean(all, na.rm = TRUE),
+                      lci = quantile(all, 0.025, na.rm = TRUE),
+                      uci = quantile(all, 0.975, na.rm = TRUE),
+                      .groups = "drop")
 
-  if(deseq == "no_deseq"){
+  if (deseq == "nds") {
 
     df <- df %>%
       filter(transform != "deseq" |
@@ -63,51 +64,55 @@ plot_four <- function(sim, cluster_method, transformation, deseq){
   }
 
   df %>%
-    mutate(distance = factor(pretty_distances[distance],
+    dplyr::mutate(distance = factor(pretty_distances[distance],
                             levels = pretty_distances),
           transform = factor(pretty_transform[transform],
                               levels = pretty_transform)) %>%
-    ggplot(aes(x = fraction, y = mean, group = transform,
-              color = transform, shape = transform, fill = transform)) +
-    geom_hline(yintercept = 0.5, color = "darkgray") +
-    geom_line(position = position_dodge(width = 0.075)) +
-    geom_linerange(aes(ymin = lci, ymax = uci),
+    ggplot2::ggplot(ggplot2::aes(x = fraction, y = mean,
+                                group = transform, color = transform,
+                                shape = transform, fill = transform)) +
+    ggplot2::geom_line(position = position_dodge(width = 0.075)) +
+    ggplot2::geom_linerange(aes(ymin = lci, ymax = uci),
                   alpha = 0.6, position = position_dodge(width = 0.075),
                   show.legend = FALSE) +
-    geom_point(position = position_dodge(width = 0.075),
-              size = 2) +
-    facet_grid(n_seqs ~ distance,
-              labeller = labeller(n_seqs = add_nl)) +
-    scale_y_continuous(expand = c(0, 0)) +
-    scale_fill_manual(
-      values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#000000")
+    ggplot2::geom_point(position = position_dodge(width = 0.075),
+                        size = 2) +
+    ggplot2::facet_grid(n_seqs ~ distance,
+              labeller = ggplot2::labeller(n_seqs = add_nl)) +
+    ggplot2::scale_y_continuous(expand = c(0, 0)) +
+    ggplot2::scale_fill_manual(
+      values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")
     ) +
-    scale_color_manual(
-      values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#000000")
+    ggplot2::scale_color_manual(
+      values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")
     ) +
-    scale_shape_manual(
-      values = c(21, 22, 23, 24, 25, 21)
+    ggplot2::scale_shape_manual(
+      values = c(21, 22, 23, 24, 25)
     ) +
-    coord_cartesian(ylim = c(0.4, 1.05)) +
-    labs(x = "Effect Size",
+    ggplot2::coord_cartesian(ylim = c(0.4, 1.05)) +
+    ggplot2::labs(x = "Effect Size",
         y = "Accuracy",
         color = "Normalization Method:",
         fill = "Normalization Method:",
         shape = "Normalization Method:") +
-    theme_light() +
-    theme(
+    ggplot2::theme_light() +
+    ggplot2::theme(
       legend.position = "top",
       legend.box = "horizontal",
-      legend.margin = margin(t = 0, r = -0.5, b = 0, l = -0.5, unit = "cm"),
-      strip.text.y = element_markdown()
+      legend.margin = ggplot2::margin(t = 0, r = -0.5, b = 0, l = -0.5,
+                                      unit = "cm"),
+      strip.text.y = ggtext::element_markdown()
     ) +
-    guides(color = guide_legend(nrow = 1),
-          fill = guide_legend(nrow = 1),
-          shape = guide_legend(nrow = 1))
+    ggplot2::guides(color = ggplot2::guide_legend(nrow = 1),
+                    fill = ggplot2::guide_legend(nrow = 1),
+                    shape = ggplot2::guide_legend(nrow = 1))
 
-  ggsave(paste0("results/figures/",
-            "fig_4_", cluster_method, "_", transformation, "_", sim, ".pdf"),
-          width = 11, height = 10)
+  ggplot2::ggsave(
+      paste0("results/figures/",
+            "fig4_", cluster_method, "_", transformation, "_", model,
+            "_", deseq, ".pdf"),
+      width = 11, height = 10
+    )
 
 }
 

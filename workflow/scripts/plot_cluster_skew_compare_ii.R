@@ -20,25 +20,18 @@ pretty_transform <- c(deseq = "DeSeq VS",
                     rarefaction00 = "Rarefaction",
                     upperquartile = "Upper Quartile Log Fold Change")
 
-pretty_simulation <- c(a = "GlobalPatterns",
-                      log = "Log-distributed")
+pretty_model <- c(gp = "GlobalPatterns",
+                  log = "Log-distributed")
 
-pretty_skew <- c("FALSE" = "No",
-                    "TRUE" = "Yes")
+pretty_distribution <- c("random" = "No",
+                        "skew" = "Yes")
 
 # need to get global patterns skew for all effect sizes to compare
 # type i/type ii errors
 
-cluster_data <- read_tsv(here("old_data/simulation_clusters.tsv.gz"))
-
-processed <- cluster_data %>%
-  mutate(skew = as.character(str_detect(fraction, "s")),
-        fraction = as.numeric(str_replace(fraction, "s", "")),
-        simulation = str_replace(simulation, ".*_", "")) %>%
-  filter(filter == "filter") %>%
-  filter(method == "kmeans") %>%
-  filter(fraction == 1.15) %>%
-  filter(n_seqs == 10000) %>%
+cluster_data <- read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
+  filter(filter == "filter" & method == "kmeans" & fraction == 1.15 &
+            n_seqs == 10000) %>%
   filter((distance == "bray" &
             transform %in% c("proportion", "none", "rarefaction00")) |
           (distance == "euclidean" &
@@ -52,7 +45,7 @@ processed <- cluster_data %>%
           (distance == "wunifrac" &
             transform %in% c("none", "proportion", "rarefaction00"))
           ) %>%
-  group_by(simulation, skew, transform, distance) %>%
+  group_by(model, distribution, transform, distance) %>%
   summarize(mean = mean(fracCorrect, na.rm = TRUE),
             lci = quantile(fracCorrect, 0.025, na.rm = TRUE),
             uci = quantile(fracCorrect, 0.975, na.rm = TRUE),
@@ -61,22 +54,21 @@ processed <- cluster_data %>%
                           levels = pretty_distances),
         transform = factor(pretty_transform[transform],
                             levels = pretty_transform),
-        simulation = factor(pretty_simulation[simulation],
-                            levels = pretty_simulation),
-        skew = factor(pretty_skew[skew],
-                      levels = pretty_skew)
+        model = factor(pretty_model[model],
+                            levels = pretty_model),
+        distribution = factor(pretty_distribution[distribution],
+                      levels = pretty_distribution)
         )
 
-processed %>%
-    ggplot(aes(x = skew, y = mean, group = transform,
+cluster_data %>%
+    ggplot(aes(x = distribution, y = mean, group = transform,
               color = transform, shape = transform, fill = transform)) +
-    geom_hline(yintercept = 41 / 80, color = "darkgray") +
     geom_linerange(aes(ymin = lci, ymax = uci),
                   alpha = 0.6, position = position_dodge(width = 0.5),
                   show.legend = FALSE) +
     geom_point(position = position_dodge(width = 0.5),
               size = 2) +
-    facet_grid(simulation ~ distance) +
+    facet_grid(model ~ distance) +
     scale_y_continuous(expand = c(0, 0)) +
     scale_fill_manual(
       values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")
