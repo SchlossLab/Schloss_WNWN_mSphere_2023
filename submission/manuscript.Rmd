@@ -39,7 +39,6 @@ suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(ggtext))
 suppressPackageStartupMessages(library(knitr))
 suppressPackageStartupMessages(library(here))
-#suppressPackageStartupMessages(library(kableExtra))
 suppressPackageStartupMessages(library(glue))
 
 opts_chunk$set("tidy" = TRUE)
@@ -49,36 +48,38 @@ opts_chunk$set("warning" = FALSE)
 opts_chunk$set("message" = FALSE)
 opts_chunk$set("cache" = FALSE)
 
-inline_hook <- function(x, digits=2){
+inline_hook <- function(x, digits = 2) {
 
-  if(is.list(x)){
+  if (is.list(x)) {
     x <- unlist(x)
   }
-  if(is.numeric(x)){
-      paste(format(x,big.mark=',', digits=digits, nsmall=digits, scientific=FALSE))
+  if (is.numeric(x)) {
+      paste(
+        format(x, big.mark = ",", digits = digits, nsmall = digits,
+              scientific = FALSE)
+      )
   } else {
       paste(x)
   }
 }
-knitr::knit_hooks$set(inline=inline_hook)
+knitr::knit_hooks$set(inline = inline_hook)
 
-package_version <- function(package){
+package_version <- function(package) {
 
-  paste(unlist(packageVersion(package)), collapse='.')
+  paste(unlist(packageVersion(package)), collapse = ".")
 
 }
 
+oxford_comma <- function(x, digits = 2) {
 
-oxford_comma <- function(x, digits=2) {
+  x <- purrr::map_chr(x, inline_hook, digits = digits)
 
-  x <- map_chr(x, inline_hook, digits=digits)
-
-  if(length(x) < 2){
+  if (length(x) < 2) {
     x
-  } else if(length(x) == 2){
+  } else if (length(x) == 2) {
     paste(x, collapse = " and ")
   } else {
-    paste(paste(x[-length(x)], collapse=", "), x[length(x)], sep=", and ")
+    paste(paste(x[-length(x)], collapse = ", "), x[length(x)], sep = ", and ")
   }
 }
 ```
@@ -113,10 +114,17 @@ Ann Arbor, MI 48109
 \newpage
 
 ```{r datasets}
-sim_counts <- read_tsv(here("data/simulated_nseqs_distros.tsv")) 
+sim_counts <- read_tsv(here("data/simulated_nseqs_distros.tsv"))
 cluster_data <- read_tsv(here("data/simulation_clusters.tsv.gz"))
 adonis_data <- read_tsv(here("data/simulation_adonis.tsv.gz"))
 alpha_data <- read_tsv(here("data/simulation_alpha.tsv.gz"))
+
+pretty_distances <- c(bray = "Bray-Curtis",
+                      euclidean = "Euclidean",
+                      poisson = "Poisson",
+                      logFC = "Mean Squared Difference",
+                      uunifrac = "Unweighted UniFrac",
+                      wunifrac = "Weighted UniFrac")
 ```
 
 ## Abstract
@@ -161,7 +169,8 @@ This definition aligns well with how rarefaction was originally defined for comp
 With this more general approach to rarefaction, rarefaction can be performed using any alpha or beta diversity metric. This strategy has been widely used by my research group and others. The procedure outlined above could also be used for hypothesis tests of differential abundance; however, thought would need to be given to how to synthesize the results of these tests across a large number of replications.
 
 ```{r}
-gp_counts <- sim_counts %>% filter(simulation == "GlobalPatterns")
+gp_counts <- sim_counts %>%
+  filter(simulation == "GlobalPatterns")
 
 gp_n_samples <- nrow(gp_counts)
 ```
@@ -209,8 +218,9 @@ In the 10 years since WNWN was published, sequencing technology has advanced and
 
 ```{r}
 deseq_wunifrac <- cluster_data %>%
-  filter(simulation == "sim_a" & fraction == 3.5 & filter == "filter" &
-        transform == "deseq" & distance == "wunifrac" & method == "pam") %>%
+  filter(model == "gp" & distribution == "random" & fraction == 3.5 &
+        filter == "filter" & transform == "deseq" & distance == "wunifrac" &
+        method == "pam") %>%
   filter(n_seqs %in% c(1000, 2000, 10000)) %>%
   group_by(n_seqs) %>%
   summarize(accuracy = mean(fracCorrect),
@@ -232,11 +242,13 @@ As noted above, the original jargon that was used in WNWN was confusing to many 
 
 ```{r}
 cluster_method <- cluster_data %>%
-  filter(simulation == "sim_a") %>%
+  filter(model == "gp") %>%
+  filter(distribution == "random") %>%
   filter(filter == "filter") %>%
-  filter(fraction != "s1" & fraction != "1") %>%
+  filter(fraction == 1.15) %>%
   filter((distance == "bray" &
-            transform %in% c("proportion", "subsample15", "rarefaction15", "none")) |
+            transform %in%
+                c("proportion", "subsample15", "rarefaction15", "none")) |
         (distance == "euclidean" &
             transform %in% c("none", "subsample15", "deseq", "rarefaction15")) |
         (distance == "poisson" &
@@ -246,14 +258,14 @@ cluster_method <- cluster_data %>%
         (distance == "uunifrac" &
             transform %in% c("rarefaction15", "subsample15", "proportion")) |
         (distance == "wunifrac" &
-            transform %in% c("rarefaction15", "subsample15", "none", "proportion"))
+            transform %in%
+                c("rarefaction15", "subsample15", "none", "proportion"))
         ) %>%
-  filter(fraction == 1.15) %>%
-  group_by(n_seqs, transform, distance, rep) %>%
+  group_by(n_seqs, transform, distance, reps) %>%
   slice_max(fracCorrect) %>%
   ungroup() %>%
   mutate(fracCorrect = 1) %>%
-  select(n_seqs, rep, transform, distance, method, fracCorrect) %>%
+  select(n_seqs, reps, transform, distance, method, fracCorrect) %>%
   pivot_wider(names_from = method, values_from = fracCorrect, values_fill = 0)
 
 best_method <- cluster_method %>%
@@ -269,12 +281,14 @@ rarefaction <- cluster_method %>%
           kmeans = 100 * mean(kmeans),
           hclust = 100 * mean(hclust),
           k_best = kmeans >= pam & kmeans >= hclust, .groups = "drop")
-  
+
 rarefaction_count <- rarefaction %>%
   count(k_best) %>%
   pivot_wider(names_from = k_best, values_from = n)
 
-stopifnot(sum(rarefaction_count) == rarefaction_count$`TRUE`)
+fails <- rarefaction %>%
+  filter(!k_best) %>%
+  mutate(distance = pretty_distances[distance])
 
 
 subsample <- cluster_method %>%
@@ -284,36 +298,30 @@ subsample <- cluster_method %>%
           kmeans = 100 * mean(kmeans),
           hclust = 100 * mean(hclust),
           k_best = kmeans >= pam & kmeans >= hclust, .groups = "drop")
-  
+
 subsample_count <- subsample %>%
   count(k_best) %>%
   pivot_wider(names_from = k_best, values_from = n)
 
-pretty_distances <- c(bray = "Bray-Curtis",
-                      euclidean = "Euclidean",
-                      poisson = "Poisson",
-                      logFC = "Mean Squared Difference",
-                      uunifrac = "Unweighted UniFrac",
-                      wunifrac = "Weighted UniFrac")
+stopifnot(sum(subsample_count) == subsample_count$`TRUE`)
 
-fails <- subsample %>%
-  filter(!k_best) %>%
-  mutate(distance = pretty_distances[distance])
 ```
 
 ### 5. Results using PAM clustering were not directly compared to those of K-means and hierarchical clustering
 
-The clustering accuracy measurements in the body of the manuscript were determined using PAM-based clusters while Protocol S1 also includes K-means and hierarchichal clustering. Although the data were not displayed in a manner that lent itself to direct comparison, close inspection of the rendered figures suggests that PAM may not have been the optimal choice in all situations. Rather, K-means clustering may have been prefered. Because the accuracies were the smallest at lower effect sizes, I focused my comparison at the effect size of 1.15. For each set of 100 replicated simulated datasets, I compared the clustering accuracy across clustering methods to see how often each clustering method resulted in the highest accuracy (Figure **compare_cluster_methods.pdf**). Indeed, K-means clustering performed better than the other methods. Among all combinations of normalization methods, distance calculations, and read depths, PAM clustering resulted in clustering accuracies as good or better than the other methods in `r best_method$pam`% of the randomizations (Figure **compare_cluster_methods.pdf**). K-means clustering was at least as good as the other methods in `r best_method$kmeans`% of the randomizations. HClust was at least as good as the other methods for `r best_method$hclust`% of the randomizations. I specifically compared the clustering accuracies using rarefaction for each of the distance calculations methods using PAM and K-means clustering. Among the `r sum(rarefaction_count)` combinations of distance calculations and read depths, K-means clustering performed better than PAM in each case. Even when using subsampled data, K-means performed better than PAM in `r subsample_count[["TRUE"]]` cases with PAM doing better in `r subsample_count[["FALSE"]]` cases when calculating distances with `r oxford_comma(unique(fails$distance))` using `r oxford_comma(format(fails$n_seqs, big.mark = ","))` sequences. Because K-means clustering did so much better than PAM clustering in the simulated conditions, I will use K-means clustering for the remainder of this study.
+The clustering accuracy measurements in the body of the manuscript were determined using PAM-based clusters while Protocol S1 also includes K-means and hierarchichal clustering. Although the data were not displayed in a manner that lent itself to direct comparison, close inspection of the rendered figures suggests that PAM may not have been the optimal choice in all situations. Rather, K-means clustering may have been prefered. Because the accuracies were the smallest at lower effect sizes, I focused my comparison at the effect size of 1.15. For each set of 100 replicated simulated datasets, I compared the clustering accuracy across clustering methods to see how often each clustering method resulted in the highest accuracy (Figure **compare_cluster_methods.pdf**). Indeed, K-means clustering performed better than the other methods. Among all combinations of normalization methods, distance calculations, and read depths, PAM clustering resulted in clustering accuracies as good or better than the other methods in `r best_method$pam`% of the randomizations (Figure **compare_cluster_methods.pdf**). K-means clustering was at least as good as the other methods in `r best_method$kmeans`% of the randomizations. HClust was at least as good as the other methods for `r best_method$hclust`% of the randomizations. I specifically compared the clustering accuracies using rarefaction for each of the distance calculations methods using PAM and K-means clustering. Among the `r sum(rarefaction_count)` combinations of distance calculations and read depths, K-means performed better than PAM in `r rarefaction_count[["TRUE"]]` cases with PAM doing better in the `r rarefaction_count[["FALSE"]]` other case when calculating distances with `r oxford_comma(unique(fails$distance))` using `r oxford_comma(format(fails$n_seqs, big.mark = ","))` sequences.
+When using subsampled data, K-means clustering performed better than PAM in each case. Because K-means clustering did so much better than PAM clustering in the simulated conditions, I will use K-means clustering for the remainder of this study.
 
 ```{r}
 quantile_analysis <- cluster_data %>%
-  filter(simulation == "sim_a") %>%
+  filter(model == "gp") %>%
+  filter(distribution == "random") %>%
   filter(filter == "filter") %>%
   filter(method == "kmeans") %>%
   filter(distance != "bcv") %>%
   filter(str_detect(transform, "rarefaction")) %>%
-  filter(fraction != "s1" & fraction != "1") %>%
-  select(fraction, n_seqs, rep, transform, distance, method, fracCorrect) %>%
+  filter(fraction != 1) %>%
+  select(fraction, n_seqs, reps, transform, distance, method, fracCorrect) %>%
   group_by(fraction, n_seqs, transform, distance, method) %>%
   summarize(median = median(fracCorrect),
             lci = quantile(fracCorrect, 0.025),
@@ -329,11 +337,13 @@ not_zero <- quantile_analysis %>%
   filter(n_seqs >= 2000 & quant != 0) %>%
   pull(distance) %>%
   unique()
+
+stopifnot(length(not_zero) == 0)
 ```
 
 ### 6. Subsampling removed the smallest 15% of the samples
 
-In WNWN, the authors quantified the tradeoff between sampling effort, the number of samples, and clustering accuracy (original Figure 5, my Figure S5). Although the optimal sampling effort varied by distance metric, transformation method, and sampling effort, they removed samples whose number of sequences was less than the 15th percentile (L404-419). They acknowledged that this screening step, which was only used with subsampling, would decrease clustering accuracy putting it at a relative disadvantage to the other methods (page 5, column 1, last paragraph). Therefore, it was not surprising that the peak clustering accuracy for their subsampled data was at 85% (Figure S2). Because the true result would not known *a priori* in microbiome studies, it would be impossible for researchers to conduct a sensitivity analysis comparing the tradeoffs between sequencing depth, sample number, and clustering accuracy to select a sampling depth. [**Although the authors claim that "Rarefying counts requires an arbitrary selection of a library size minimum that affects downstream inference" (page 8, column 1, point 3), in acutal microbiome studies the selection of a sampling depth is not as arbitrary as the authors claim. Rather, to avoid p-hacking, researchers pick a set of criteria where they will include or exclude samples prior to testing their data.**] The differences in clustering accuracy between subsampling and rarefaction and using PAM and K-means clustering indicated that it was necessary to reassess the tradeoff between the library size minimum quantile and clustering accuracy. When using rarefaction and K-means clustering, the only distance calculations that did not have their maximal clustering accuracy when using the full dataset were `r oxford_comma(not_zero)` (**kmeans_rarefaction_fig_5.pdf**). These results showed that for modern sequencing depths, using the full datasets with rarefaction and K-means clustering resulted in accuracies that were typically better than those observed when removing the smallest 15% of the samples from each simulated dataset. When the original Figure 4 was recast with these approaches, Rarefaction performed at least as well as any of the other tranformations with each distance calculation, except for with the Poisson distance (Figure **kmeans_rarefaction15_fig_4.pdf**). It is worth noting that at larger effect sizes, K-means clustering did not perform as well for some combinations of normalization methods and distance calculations (compare **kmeans_rarefaction15_fig_4.pdf** and **pam_subsample00_fig_4.pdf**); however, those combinations that performed worse by K-means were not as good as rarefaction or subsampling by either clustering method.
+In WNWN, the authors quantified the tradeoff between sampling effort, the number of samples removed below the threshold, and clustering accuracy (original Figure 5, my Figure S5). Although the optimal sampling effort varied by distance metric, transformation method, and sampling effort, they removed samples whose number of sequences was less than the 15th percentile (L404-419). They acknowledged that this screening step, which was only used with subsampling, would decrease clustering accuracy putting it at a relative disadvantage to the other methods (page 5, column 1, last paragraph). Therefore, it was not surprising that the peak clustering accuracy for their subsampled data was at 85% (Figure S2). Because the true result would not known *a priori* in microbiome studies, it would be impossible for researchers to conduct a sensitivity analysis comparing the tradeoffs between sequencing depth, sample number, and clustering accuracy to select a sampling depth. [**Although the authors claim that "Rarefying counts requires an arbitrary selection of a library size minimum that affects downstream inference" (page 8, column 1, point 3), in acutal microbiome studies the selection of a sampling depth is not as arbitrary as the authors claim. Rather, to avoid p-hacking, researchers pick a set of criteria where they will include or exclude samples prior to testing their data.**] The differences in clustering accuracy between subsampling and rarefaction and using PAM and K-means clustering indicated that it was necessary to reassess the tradeoff between the library size minimum quantile and clustering accuracy. When using rarefaction, K-means clustering, and only considering conditions with 2,000 or more sequences, there was not a condition where setting a higher threshold resulted in a better accuracy than using all of the samples (**kmeans_rarefaction_fig_5.pdf**). These results showed that for modern sequencing depths, using the full datasets with rarefaction and K-means clustering resulted in accuracies that were typically better than those observed when removing the smallest 15% of the samples from each simulated dataset. When the original Figure 4 was recast with these approaches, Rarefaction performed at least as well as any of the other tranformations with each distance calculation, except for with the Poisson distance (Figure **kmeans_rarefaction15_fig_4.pdf**). It is worth noting that at larger effect sizes, K-means clustering did not perform as well for some combinations of normalization methods and distance calculations (compare **kmeans_rarefaction15_fig_4.pdf** and **pam_subsample00_fig_4.pdf**); however, those combinations that performed worse by K-means were not as good as rarefaction or subsampling by either clustering method.
 
 
 ```{r}
@@ -381,9 +391,9 @@ I subjected each of the distance matrices to such a test using `adonis2`, a func
 
 ### 11. No consideration of effects of transformations on alpha diversity metrics
 
-Furthermore, a comparison of alpha diversity metrics could be made to assess the impact of normalization procedures on measurements such as richness and diversity. 
+Rarefaction was originally proposed as a method for controlling uneven sampling effort when comparing community richness values. Thus it was surprising that WNWN did not consider the effect of the proposed transformations on richness or other alpha-diversity metrics such as Shannon diversity. Therefore, for each of the transformations, I compared the richness and diversity of the two treatment groups. The DeSeq transformed data were not included because the transformation produced negative values which were not compatible with calculations of richness or Shannon diversity. Also, data from the Upper Quartile Log Fold Change transformation were not used for richness calculations since the transformation returned the same richness values for each sample regardless of the treatment group. I assessed significance for each iteration using the non-parametric Wilcoxon two-sampled test.
 
-
+As shown above, I compared the risk of committing Type I errors and the power to detect differences by the different transformations (Figure **alpha_compare.pdf**). For these analyses, I used the GlobalPatterns data with the random and skewed distribution of samples. As shown earlier, the simulations using a skewed distribution resulted in all of the replicates having a significant test result when using any of the tranformations except rarefaction. The power to detect differences in richness and diversity at effect sizes of 1.15 and greater with rarefaction was at least as high or greater than any of the other transformations when samples were randomly distributed between the two treatment groups. Again, these results demonstrate that for alpha diversity measurements, rarefaction is the preferred approach of controlling for uneven sampling effort.
 
 
 
@@ -393,7 +403,9 @@ Furthermore, a comparison of alpha diversity metrics could be made to assess the
 * Differential abundance issues
 * How we actually pick a threshold
 * UniFracs are no longer viable methods since trees are too challenging to construct *de novo* with modern library sizes
-
+* Estimating richness
+* Saturate richness at large number of sequences
+  * 952 of 2000 OTUs overlap between Ocean and Feces
 
 
 ## Acknowledgements
