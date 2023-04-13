@@ -11,7 +11,7 @@ pretty_distances <- c(bray = "Bray-Curtis",
                       uunifrac = "Unweighted<br>UniFrac",
                       wunifrac = "Weighted<br>UniFrac")
 
-pretty_transform <- c(deseq = "DeSeq VS",
+pretty_transform <- c(deseq = "DESeq VS",
                     none = "Raw counts",
                     proportion = "Relative abundance",
                     rarefaction00 = "Rarefaction",

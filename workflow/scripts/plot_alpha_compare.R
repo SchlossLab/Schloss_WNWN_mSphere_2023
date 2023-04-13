@@ -13,7 +13,7 @@ add_nl <- function(x) {
 pretty_alpha <- c(sobs_p = "Richness",
                  shannon_p = "Shannon diversity")
 
-pretty_transform <- c(deseq = "DeSeq VS",
+pretty_transform <- c(deseq = "DESeq VS",
                     none = "Raw counts",
                     proportion = "Relative abundance",
                     subsample15 = "Sub-sampled (15%)",
