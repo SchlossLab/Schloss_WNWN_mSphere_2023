@@ -6,7 +6,7 @@ library(ggtext)
 
 add_nl <- function(x) {
 
-  paste0("N~L~ = ", format(as.numeric(x), big.mark = "\\\\,"))
+  paste0("&Ntilde;~L~ = ", format(as.numeric(x), big.mark = "\\\\,"))
 
 }
 

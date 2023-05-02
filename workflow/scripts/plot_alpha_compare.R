@@ -7,7 +7,7 @@ library(here)
 
 
 add_nl <- function(x) {
-  paste0("N~L~ = ", format(as.numeric(x), big.mark = "\\\\,"))
+  paste0("&Ntilde;~L~ = ", format(as.numeric(x), big.mark = "\\\\,"))
 }
 
 pretty_alpha <- c(sobs_p = "Richness",

@@ -401,6 +401,20 @@ rule get_deseq_negative_values:
     {input.R}
     """
 
+rule template_overlap_analysis:
+  input:
+    R="workflow/scripts/template_overlap_analysis.R"
+  conda:
+    "envs/nr-s1.yml"
+  resources:
+    mem_mb=8000
+  output:
+    "data/rarefy_ocean_feces.tsv.gz"
+  shell:
+    """
+    {input.R}
+    """
+
 rule plot_deseq_negative_values:
   input:
     R="workflow/scripts/plot_deseq_negative_values.R",
@@ -644,6 +658,7 @@ rule write_paper:
     "data/simulation_clusters.tsv.gz",
     "data/simulation_adonis.tsv.gz",
     "data/simulation_alpha.tsv.gz",
+    "data/rarefy_ocean_feces.tsv.gz",
     #
     "results/figures/adonis_skew_compare_i.pdf",
     "results/figures/adonis_skew_compare_ii.pdf",
