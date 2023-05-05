@@ -31,12 +31,8 @@ betas = [ "clusters", "adonis" ]
 
 rule all_targets:
   input:
-    # "norarefy-source/dispersion-survey/dispersion_pds.html",
-    # "norarefy-source/minimal-rarefy-example/minimal-rarefy-example_pds.html",
-    # "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server_pds.html",
-    # "norarefy-source/simulation-differential-abundance/simulation-differential-abundance-server_pds.html",
-    #
-    "submission/manuscript.pdf"
+    "figures.pdf"
+#    "submission/manuscript.pdf"
 
 
 rule s1_download_archive:
@@ -335,6 +331,54 @@ rule sim_adonis_distances:
     {input.R} {input.rds}
     """
 
+rule get_deseq_negative_values:
+  input:
+    R="workflow/scripts/get_deseq_negative_values.R",
+    sim=expand("data/{model}/{distribution}/{frac}_{depth}.{preproc}.deseq.RDS",
+                model = models, distribution = distributions,
+                frac = effect_sizes, depth = depths,
+                preproc = preprocs),
+  conda:
+    "envs/nr-s1.yml"
+  output:
+    "data/deseq_negative_values.tsv.gz"
+  shell:
+    """
+    {input.R}
+    """
+
+rule template_overlap_analysis:
+  input:
+    R="workflow/scripts/template_overlap_analysis.R"
+  conda:
+    "envs/nr-s1.yml"
+  resources:
+    mem_mb=8000
+  output:
+    "data/rarefy_ocean_feces.tsv.gz"
+  shell:
+    """
+    {input.R}
+    """
+
+rule simulated_nseqs_distros:
+  input:
+    R="workflow/scripts/get_simulated_nseqs_distros.R",
+  conda:
+    "envs/nr-s1.yml"
+  output:
+    "data/simulated_nseqs_distros.tsv"
+  shell:
+    """
+    {input.R}
+    """
+
+##############################################################################
+#
+# pool data files
+#
+##############################################################################
+
 rule sim_alpha:
   input:
     R="workflow/scripts/alpha.R",
@@ -385,35 +429,11 @@ rule sim_pool_alphas:
     {input.R} {output}
     """
 
-rule get_deseq_negative_values:
-  input:
-    R="workflow/scripts/get_deseq_negative_values.R",
-    sim=expand("data/{model}/{distribution}/{frac}_{depth}.{preproc}.deseq.RDS",
-                model = models, distribution = distributions,
-                frac = effect_sizes, depth = depths,
-                preproc = preprocs),
-  conda:
-    "envs/nr-s1.yml"
-  output:
-    "data/deseq_negative_values.tsv.gz"
-  shell:
-    """
-    {input.R}
-    """
-
-rule template_overlap_analysis:
-  input:
-    R="workflow/scripts/template_overlap_analysis.R"
-  conda:
-    "envs/nr-s1.yml"
-  resources:
-    mem_mb=8000
-  output:
-    "data/rarefy_ocean_feces.tsv.gz"
-  shell:
-    """
-    {input.R}
-    """
+##############################################################################
+#
+# plot data
+#
+##############################################################################
 
 rule plot_deseq_negative_values:
   input:
@@ -423,18 +443,6 @@ rule plot_deseq_negative_values:
     "envs/nr-modern.yml"
   output:
     "results/figures/deseq_negative_values.pdf"
-  shell:
-    """
-    {input.R}
-    """
-
-rule simulated_nseqs_distros:
-  input:
-    R="workflow/scripts/get_simulated_nseqs_distros.R",
-  conda:
-    "envs/nr-s1.yml"
-  output:
-    "data/simulated_nseqs_distros.tsv"
   shell:
     """
     {input.R}
@@ -451,6 +459,26 @@ rule plot_distribution_shape:
   shell:
     """
     {input.R}
+    """
+
+rule plot_s1_figure_3:
+  input:
+    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server_pds.html"
+  output:
+    "results/figures/s1_figure_3.pdf"
+  shell:
+    """
+    cp norarefy-source/simulation-cluster-accuracy/Figure_3.pdf {output}
+    """
+
+rule plot_s1_figure_4:
+  input:
+    "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server_pds.html"
+  output:
+    "results/figures/s1_figure_4.pdf"
+  shell:
+    """
+    cp norarefy-source/simulation-cluster-accuracy/Figure_4.pdf {output}
     """
 
 rule plot_my_figure_4:
@@ -583,6 +611,14 @@ rule plot_alpha_compare:
     {input.R}
     """
 
+rule pool_figures:
+  output:
+    "figures.pdf"
+  shell:
+    """
+    pdfunite results/figures/*pdf {output}
+    """
+
 ##############################################################################
 
 # rule figure_1:
@@ -677,14 +713,10 @@ rule write_paper:
     "results/figures/fig5_kmeans_rarefaction_log.pdf",
     "results/figures/fig5_pam_subsample_gp.pdf",
     "results/figures/fig5_pam_subsample_log.pdf",
+    "results/figures/s1_figure_3.pdf",
+    "results/figures/s1_figure_4.pdf",
     "results/figures/subsample_rarefaction_compare.pdf",
     #
-    # "submission/figure_1.pdf",
-    # "submission/figure_2.pdf",
-    # "submission/figure_3.pdf",
-    # "submission/figure_s1.pdf",
-    # "submission/figure_s2.pdf",
-    # "submission/figure_s3.pdf",
   output:
     "submission/manuscript.pdf",
     "submission/manuscript.md",
