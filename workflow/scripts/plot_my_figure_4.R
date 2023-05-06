@@ -26,12 +26,12 @@ pretty_transform <- c(deseq = "DESeq VS",
                     upperquartile = "Upper Quartile Log Fold Change")
 
 
-plot_four <- function(model, cluster_method, transformation, deseq) {
+plot_four <- function(gp_log, cluster_method, transformation, deseq) {
 
   df <- readr::read_tsv("data/simulation_clusters.tsv.gz") %>%
     dplyr::rename(subset = fracCorrectPred,
                   all = fracCorrect) %>%
-    dplyr::filter(model == model, distribution == "random") %>%
+    dplyr::filter(model == gp_log & distribution == "random") %>%
     dplyr::filter(filter == "filter" &
             transform %in% names(pretty_transform) &
             distance %in% names(pretty_distances)) %>%
@@ -109,7 +109,7 @@ plot_four <- function(model, cluster_method, transformation, deseq) {
 
   ggplot2::ggsave(
       paste0("results/figures/",
-            "fig4_", cluster_method, "_", transformation, "_", model,
+            "fig4_", cluster_method, "_", transformation, "_", gp_log,
             "_", deseq, ".pdf"),
       width = 11, height = 10
     )

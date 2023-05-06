@@ -31,8 +31,7 @@ betas = [ "clusters", "adonis" ]
 
 rule all_targets:
   input:
-    "figures.pdf"
-#    "submission/manuscript.pdf"
+    "submission/manuscript.pdf"
 
 
 rule s1_download_archive:
@@ -546,57 +545,32 @@ rule plot_compare_filter_accuracy:
     {input.R}
     """
 
-rule plot_cluster_skew_compare_i:
+rule plot_cluster_skew_compare:
   input:
-    R="workflow/scripts/plot_cluster_skew_compare_i.R",
+    R="workflow/scripts/plot_cluster_skew_compare.R",
     tsv="data/simulation_clusters.tsv.gz"
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/cluster_skew_compare_i.pdf"
+    "results/figures/cluster_skew_compare.pdf"
   shell:
     """
     {input.R}
     """
 
-rule plot_cluster_skew_compare_ii:
+rule plot_adonis_skew_compare:
   input:
-    R="workflow/scripts/plot_cluster_skew_compare_ii.R",
+    R="workflow/scripts/plot_adonis_skew_compare.R",
     tsv="data/simulation_clusters.tsv.gz"
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/cluster_skew_compare_ii.pdf"
+    "results/figures/adonis_skew_compare.pdf"
   shell:
     """
     {input.R}
     """
 
-rule plot_adonis_skew_compare_i:
-  input:
-    R="workflow/scripts/plot_adonis_skew_compare_i.R",
-    tsv="data/simulation_clusters.tsv.gz"
-  conda:
-    "envs/nr-modern.yml"
-  output:
-    "results/figures/adonis_skew_compare_i.pdf"
-  shell:
-    """
-    {input.R}
-    """
-
-rule plot_adonis_skew_compare_ii:
-  input:
-    R="workflow/scripts/plot_adonis_skew_compare_ii.R",
-    tsv="data/simulation_clusters.tsv.gz"
-  conda:
-    "envs/nr-modern.yml"
-  output:
-    "results/figures/adonis_skew_compare_ii.pdf"
-  shell:
-    """
-    {input.R}
-    """
 
 rule plot_alpha_compare:
   input:
@@ -605,10 +579,10 @@ rule plot_alpha_compare:
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/alpha_compare.pdf"
+    "results/figures/alpha_compare_{model}.pdf"
   shell:
     """
-    {input.R}
+    {input.R} {wildcards.model}
     """
 
 rule pool_figures:
@@ -696,11 +670,10 @@ rule write_paper:
     "data/simulation_alpha.tsv.gz",
     "data/rarefy_ocean_feces.tsv.gz",
     #
-    "results/figures/adonis_skew_compare_i.pdf",
-    "results/figures/adonis_skew_compare_ii.pdf",
-    "results/figures/alpha_compare.pdf",
-    "results/figures/cluster_skew_compare_i.pdf",
-    "results/figures/cluster_skew_compare_ii.pdf",
+    "results/figures/adonis_skew_compare.pdf",
+    "results/figures/alpha_compare_gp.pdf",
+    "results/figures/alpha_compare_log.pdf",
+    "results/figures/cluster_skew_compare.pdf",
     "results/figures/compare_cluster_methods.pdf",
     "results/figures/compare_filter_accuracy.pdf",
     "results/figures/deseq_negative_values.pdf",
@@ -708,11 +681,9 @@ rule write_paper:
     "results/figures/fig4_kmeans_rarefaction00_gp_nds.pdf",
     "results/figures/fig4_kmeans_rarefaction00_log_nds.pdf",
     "results/figures/fig4_pam_subsample15_gp_ds.pdf",
-    "results/figures/fig4_pam_subsample15_log_nds.pdf",
     "results/figures/fig5_kmeans_rarefaction_gp.pdf",
     "results/figures/fig5_kmeans_rarefaction_log.pdf",
     "results/figures/fig5_pam_subsample_gp.pdf",
-    "results/figures/fig5_pam_subsample_log.pdf",
     "results/figures/s1_figure_3.pdf",
     "results/figures/s1_figure_4.pdf",
     "results/figures/subsample_rarefaction_compare.pdf",

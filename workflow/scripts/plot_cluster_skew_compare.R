@@ -1,9 +1,8 @@
 #!/usr/bin/env Rscript
 
 library(tidyverse)
+library(ggh4x)
 library(here)
-library(ggtext)
-
 
 set.seed(19760620)
 
@@ -26,39 +25,39 @@ pretty_model <- c(gp = "GlobalPatterns",
 pretty_distribution <- c("random" = "No",
                         "skew" = "Yes")
 
-# need to get global patterns skew for all effect sizes to compare
-# type i/type ii errors
-
 cluster_data <- read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
-  filter(filter == "filter" & method == "kmeans" & fraction == 1.15 &
-            n_seqs == 10000) %>%
-  filter((distance == "bray" &
-            transform %in% c("proportion", "none", "rarefaction00")) |
-          (distance == "euclidean" &
-            transform %in% c("none", "deseq", "rarefaction00")) |
-          (distance == "poisson" &
-            transform %in% c("none", "rarefaction00")) |
-          (distance == "logFC" &
-            transform %in% c("upperquartile", "rarefaction00")) |
-          (distance == "uunifrac" &
-            transform %in% c("proportion", "rarefaction00")) |
-          (distance == "wunifrac" &
-            transform %in% c("none", "proportion", "rarefaction00"))
-          ) %>%
-  group_by(model, distribution, transform, distance) %>%
-  summarize(mean = mean(fracCorrect, na.rm = TRUE),
-            lci = quantile(fracCorrect, 0.025, na.rm = TRUE),
-            uci = quantile(fracCorrect, 0.975, na.rm = TRUE),
-            .groups = "drop") %>%
-  mutate(distance = factor(pretty_distances[distance],
-                          levels = pretty_distances),
-        transform = factor(pretty_transform[transform],
-                            levels = pretty_transform),
-        model = factor(pretty_model[model],
-                            levels = pretty_model),
-        distribution = factor(pretty_distribution[distribution],
-                      levels = pretty_distribution)
-        )
+    filter(filter == "filter") %>%
+    filter(method == "kmeans") %>%
+    filter(fraction == 1 | fraction  ==  1.15) %>%
+    filter(n_seqs == 10000) %>%
+    filter((distance == "bray" &
+              transform %in% c("proportion", "none", "rarefaction00")) |
+            (distance == "euclidean" &
+              transform %in% c("none", "deseq", "rarefaction00")) |
+            (distance == "poisson" &
+              transform %in% c("none", "rarefaction00")) |
+            (distance == "logFC" &
+              transform %in% c("upperquartile", "rarefaction00")) |
+            (distance == "uunifrac" &
+              transform %in% c("proportion", "rarefaction00")) |
+            (distance == "wunifrac" &
+              transform %in% c("none", "proportion", "rarefaction00"))
+            ) %>%
+    group_by(model, fraction, distribution, method, transform, distance) %>%
+    summarize(mean = mean(fracCorrect, na.rm = TRUE),
+              lci = quantile(fracCorrect, 0.025, na.rm = TRUE),
+              uci = quantile(fracCorrect, 0.975, na.rm = TRUE),
+              .groups = "drop") %>%
+    mutate(distance = factor(pretty_distances[distance],
+                            levels = pretty_distances),
+          transform = factor(pretty_transform[transform],
+                              levels = pretty_transform),
+          model = factor(pretty_model[model],
+                              levels = pretty_model),
+          distribution = factor(pretty_distribution[distribution],
+                                levels = pretty_distribution),
+          fraction = paste0("ES = ", format(fraction))
+          )
 
 cluster_data %>%
     ggplot(aes(x = distribution, y = mean, group = transform,
@@ -68,7 +67,12 @@ cluster_data %>%
                   show.legend = FALSE) +
     geom_point(position = position_dodge(width = 0.5),
               size = 2) +
-    facet_grid(model ~ distance) +
+    facet_nested(model + fraction ~ distance,
+                strip = strip_nested(
+                text_y = elem_list_text(colour = c("#000000", "#FFFFFF")),
+                background_y = elem_list_rect(fill = c("#FFFFFF", "grey70")),
+                by_layer_y = TRUE
+              )) +
     scale_y_continuous(expand = c(0, 0)) +
     scale_fill_manual(
       values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")
@@ -95,5 +99,6 @@ cluster_data %>%
           fill = guide_legend(nrow = 1),
           shape = guide_legend(nrow = 1))
 
-  ggsave("results/figures/cluster_skew_compare_ii.pdf",
-         width = 11, height = 5)
+  ggsave("results/figures/cluster_skew_compare.pdf",
+         width = 11, height = 7)
+

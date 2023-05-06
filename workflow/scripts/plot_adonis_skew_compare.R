@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 
 library(tidyverse)
+library(ggh4x)
 library(here)
 
 pretty_distances <- c(bray = "Bray-Curtis",
@@ -23,7 +24,8 @@ pretty_distribution <- c("random" = "No",
                         "skew" = "Yes")
 
 adonis_data <- read_tsv("data/simulation_adonis.tsv.gz") %>%
-  filter(filter == "filter" & fraction == 1 & n_seqs == 10000) %>%
+  filter(filter == "filter" & n_seqs == 10000 &
+          (fraction == 1 | fraction == 1.15)) %>%
   filter((distance == "bray" &
             transform %in% c("proportion", "none", "rarefaction00")) |
           (distance == "euclidean" &
@@ -37,7 +39,7 @@ adonis_data <- read_tsv("data/simulation_adonis.tsv.gz") %>%
           (distance == "wunifrac" &
             transform %in% c("none", "proportion", "rarefaction00"))
           ) %>%
-  group_by(model, distribution, n_seqs, transform, distance) %>%
+  group_by(model, fraction, distribution, transform, distance) %>%
   summarize(p = mean(p_value <= 0.05), .groups = "drop") %>%
   mutate(distance = factor(pretty_distances[distance],
                         levels = pretty_distances),
@@ -46,14 +48,20 @@ adonis_data <- read_tsv("data/simulation_adonis.tsv.gz") %>%
       model = factor(pretty_model[model],
                           levels = pretty_model),
       distribution = factor(pretty_distribution[distribution],
-                          levels = pretty_distribution)
+                          levels = pretty_distribution),
+      fraction = paste0("ES = ", format(fraction))
   )
 
 adonis_data %>%
   ggplot(aes(x = distribution, y = p, color = transform, shape = transform,
             fill = transform)) +
   geom_point(position = position_dodge(width = 0.5), size = 2) +
-  facet_grid(model ~ distance) +
+  facet_nested(model + fraction ~ distance,
+              strip = strip_nested(
+              text_y = elem_list_text(colour = c("#000000", "#FFFFFF")),
+              background_y = elem_list_rect(fill = c("#FFFFFF", "grey70")),
+              by_layer_y = TRUE
+            )) +
 #  scale_y_continuous(expand = c(0, 0)) +
   scale_fill_manual(
     values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")
@@ -80,4 +88,4 @@ adonis_data %>%
         fill = guide_legend(nrow = 1),
         shape = guide_legend(nrow = 1))
 
-ggsave("results/figures/adonis_skew_compare_i.pdf", width = 11, height = 5)
+ggsave("results/figures/adonis_skew_compare.pdf", width = 11, height = 7)

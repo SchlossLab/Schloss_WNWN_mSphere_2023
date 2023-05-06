@@ -24,10 +24,10 @@ pretty_distances <- c(bray = "Bray-Curtis",
                       uunifrac = "Unweighted UniFrac",
                       wunifrac = "Weighted UniFrac")
 
-plot_five <- function(model, cluster_method, transformation){
+plot_five <- function(gp_log, cluster_method, transformation){
 
   clusters <- read_tsv("data/simulation_clusters.tsv.gz") %>%
-    filter(model == model & distribution == "random" & fraction != 1) %>%
+    filter(model == gp_log & distribution == "random" & fraction != 1) %>%
     filter(filter == "filter") %>%
     filter(method == cluster_method) %>%
     filter(distance != "bcv") %>%
@@ -53,10 +53,12 @@ plot_five <- function(model, cluster_method, transformation){
     facet_grid(n_seqs ~ fraction,
               labeller = labeller(fraction = add_es, n_seqs = add_nl)) +
     scale_fill_manual(
-      values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#000000")
+      values = c("#1b9e77", "#d95f02", "#7570b3",
+                "#e7298a", "#66a61e", "#000000")
     ) +
     scale_color_manual(
-      values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#000000")
+      values = c("#1b9e77", "#d95f02", "#7570b3",
+                "#e7298a", "#66a61e", "#000000")
     ) +
     scale_shape_manual(
       values = c(21, 22, 23, 24, 25, 21)
@@ -80,7 +82,7 @@ plot_five <- function(model, cluster_method, transformation){
           shape = guide_legend(nrow = 1))
 
   ggsave(paste0("results/figures/",
-              "fig5_", cluster_method, "_", transformation, "_", model, ".pdf"),
+              "fig5_", cluster_method, "_", transformation, "_", gp_log, ".pdf"),
           width = 11, height = 10)
 
 }
