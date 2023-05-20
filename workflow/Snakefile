@@ -441,7 +441,7 @@ rule plot_deseq_negative_values:
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/deseq_negative_values.pdf"
+    "results/figures/deseq_negative_values.tiff"
   shell:
     """
     {input.R}
@@ -454,7 +454,7 @@ rule plot_distribution_shape:
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/distribution_shape.pdf"
+    "results/figures/distribution_shape.tiff"
   shell:
     """
     {input.R}
@@ -464,20 +464,20 @@ rule plot_s1_figure_3:
   input:
     "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server_pds.html"
   output:
-    "results/figures/s1_figure_3.pdf"
+    "results/figures/s1_figure_3.tiff"
   shell:
     """
-    cp norarefy-source/simulation-cluster-accuracy/Figure_3.pdf {output}
+    magick -density 300 -compress lzw norarefy-source/simulation-cluster-accuracy/Figure_3.pdf {output}
     """
 
 rule plot_s1_figure_4:
   input:
     "norarefy-source/simulation-cluster-accuracy/simulation-cluster-accuracy-server_pds.html"
   output:
-    "results/figures/s1_figure_4.pdf"
+    "results/figures/s1_figure_4.tiff"
   shell:
     """
-    cp norarefy-source/simulation-cluster-accuracy/Figure_4.pdf {output}
+    magick -density 300 -compress lzw norarefy-source/simulation-cluster-accuracy/Figure_4.pdf {output}
     """
 
 rule plot_my_figure_4:
@@ -487,7 +487,7 @@ rule plot_my_figure_4:
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/fig4_{cluster_method}_{transform}_{model}_{ds}.pdf",
+    "results/figures/fig4_{cluster_method}_{transform}_{model}_{ds}.tiff",
   shell:
     """
     {input.R} {wildcards.model} {wildcards.cluster_method} {wildcards.transform} {wildcards.ds}
@@ -500,7 +500,7 @@ rule plot_my_figure_5:
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/fig5_{cluster_method}_{transform}_{model}.pdf"
+    "results/figures/fig5_{cluster_method}_{transform}_{model}.tiff"
   shell:
     """
     {input.R} {wildcards.model} {wildcards.cluster_method} {wildcards.transform}
@@ -513,7 +513,7 @@ rule plot_compare_cluster_methods:
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/compare_cluster_methods.pdf"
+    "results/figures/compare_cluster_methods.tiff"
   shell:
     """
     {input.R}
@@ -526,7 +526,7 @@ rule plot_subsample_rarefaction_compare:
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/subsample_rarefaction_compare.pdf"
+    "results/figures/subsample_rarefaction_compare.tiff"
   shell:
     """
     {input.R}
@@ -539,7 +539,7 @@ rule plot_compare_filter_accuracy:
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/compare_filter_accuracy.pdf"
+    "results/figures/compare_filter_accuracy.tiff"
   shell:
     """
     {input.R}
@@ -552,7 +552,7 @@ rule plot_cluster_skew_compare:
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/cluster_skew_compare.pdf"
+    "results/figures/cluster_skew_compare.tiff"
   shell:
     """
     {input.R}
@@ -561,16 +561,15 @@ rule plot_cluster_skew_compare:
 rule plot_adonis_skew_compare:
   input:
     R="workflow/scripts/plot_adonis_skew_compare.R",
-    tsv="data/simulation_clusters.tsv.gz"
+    tsv="data/simulation_adonis.tsv.gz"
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/adonis_skew_compare.pdf"
+    "results/figures/adonis_skew_compare.tiff"
   shell:
     """
     {input.R}
     """
-
 
 rule plot_alpha_compare:
   input:
@@ -579,81 +578,46 @@ rule plot_alpha_compare:
   conda:
     "envs/nr-modern.yml"
   output:
-    "results/figures/alpha_compare_{model}.pdf"
+    "results/figures/alpha_compare_{model}.tiff"
   shell:
     """
     {input.R} {wildcards.model}
     """
 
-rule pool_figures:
-  output:
-    "figures.pdf"
-  shell:
-    """
-    pdfunite results/figures/*pdf {output}
-    """
+################################################################################
+#
+# Submission related rules
+#
+################################################################################
 
-##############################################################################
+figures_dict = {"01": "results/figures/s1_figure_3.tiff",
+                "02": "results/figures/s1_figure_4.tiff",
+                "03": "results/figures/fig4_pam_subsample15_gp_ds.tiff",
+                "04": "results/figures/fig5_pam_subsample_gp.tiff",
+                "05": "results/figures/deseq_negative_values.tiff",
+                "06": "results/figures/subsample_rarefaction_compare.tiff",
+                "07": "results/figures/compare_cluster_methods.tiff",
+                "08": "results/figures/fig5_kmeans_rarefaction_gp.tiff",
+                "09": "results/figures/fig4_kmeans_rarefaction00_gp_nds.tiff",
+                "10": "results/figures/distribution_shape.tiff",
+                "11": "results/figures/fig4_kmeans_rarefaction00_log_nds.tiff",
+                "12": "results/figures/fig5_kmeans_rarefaction_log.tiff",
+                "13": "results/figures/compare_filter_accuracy.tiff",
+                "14": "results/figures/cluster_skew_compare.tiff",
+                "15": "results/figures/adonis_skew_compare.tiff",
+                "16": "results/figures/alpha_compare_gp.tiff",
+                "17": "results/figures/alpha_compare_log.tiff"
+                }
 
-# rule figure_1:
-#   input:
-#     "results/figures/compare_cluster_methods.pdf"
-#   output:
-#     "subsmission/figure_1.pdf"
-#   shell:
-#     """
-#     cp {input} {output}
-#     """
-
-# rule figure_s1:
-#   input:
-#     "results/figures/globalpatterns_distribution.pdf"
-#   output:
-#     "submission/figure_s1.pdf"
-#   shell:
-#     """
-#     cp {input} {output}
-#     """
-
-# rule figure_s2:
-#   input:
-#     "norarefy-source/simulation-cluster-accuracy/Figure_3.pdf"
-#   output:
-#     "submission/figure_s2.pdf"
-#   shell:
-#     """
-#     cp {input} {output}
-#     """
-
-# rule figure_s3:
-#   input:
-#     "norarefy-source/simulation-cluster-accuracy/Figure_4.pdf"
-#   output:
-#     "submission/figure_s3.pdf"
-#   shell:
-#     """
-#     cp {input} {output}
-#     """
-
-# rule figure_s4:
-#   input:
-#     "results/figures/my_figure_4.pdf"
-#   output:
-#     "submission/figure_s4.pdf"
-#   shell:
-#     """
-#     cp {input} {output}
-#     """
-  
-# rule figure_s5:
-#   input:
-#     "results/figures/my_figure_5.pdf"
-#   output:
-#     "submission/figure_s5.pdf"
-#   shell:
-#     """
-#     cp {input} {output}
-#     """
+rule convert_tiff_to_png:
+    input:
+        tiff=lambda wildcards: figures_dict[wildcards.fig_num],
+    output:
+        png="submission/figure_{fig_num}.png"
+    shell:
+        """
+        convert {input.tiff} {output.png}
+        """
 
 
 
@@ -670,23 +634,8 @@ rule write_paper:
     "data/simulation_alpha.tsv.gz",
     "data/rarefy_ocean_feces.tsv.gz",
     #
-    "results/figures/adonis_skew_compare.pdf",
-    "results/figures/alpha_compare_gp.pdf",
-    "results/figures/alpha_compare_log.pdf",
-    "results/figures/cluster_skew_compare.pdf",
-    "results/figures/compare_cluster_methods.pdf",
-    "results/figures/compare_filter_accuracy.pdf",
-    "results/figures/deseq_negative_values.pdf",
-    "results/figures/distribution_shape.pdf",
-    "results/figures/fig4_kmeans_rarefaction00_gp_nds.pdf",
-    "results/figures/fig4_kmeans_rarefaction00_log_nds.pdf",
-    "results/figures/fig4_pam_subsample15_gp_ds.pdf",
-    "results/figures/fig5_kmeans_rarefaction_gp.pdf",
-    "results/figures/fig5_kmeans_rarefaction_log.pdf",
-    "results/figures/fig5_pam_subsample_gp.pdf",
-    "results/figures/s1_figure_3.pdf",
-    "results/figures/s1_figure_4.pdf",
-    "results/figures/subsample_rarefaction_compare.pdf",
+    expand("submission/figure_0{fig_number}.png", fig_number = list(range(1,10))),
+    expand("submission/figure_{fig_number}.png", fig_number = list(range(10,18))),
     #
   output:
     "submission/manuscript.pdf",
@@ -697,4 +646,5 @@ rule write_paper:
   shell: 
     """
     workflow/scripts/render_manuscript.R
+    rm -f submission/manuscript.log
     """

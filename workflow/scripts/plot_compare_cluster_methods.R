@@ -95,11 +95,12 @@ best_method %>%
     values = c(21, 22, 23, 24, 25, 21)
   ) +
   coord_cartesian(ylim = c(0, 100)) +
-  labs(x = "Clustering Method",
+  labs(x = NULL, #"Clustering Method",
       y = "Percentage of Simulations (N=100)",
-      color = "Normalization Method:",
-      fill = "Normalization Method:",
-      shape = "Normalization Method:") +
+      color = NULL, #"Normalization Method:",
+      fill = NULL, #"Normalization Method:",
+      shape = NULL #"Normalization Method:"
+      ) +
   theme_light() +
   theme(
     legend.position = "top",
@@ -111,4 +112,6 @@ best_method %>%
         fill = guide_legend(nrow = 1),
         shape = guide_legend(nrow = 1))
 
-ggsave("results/figures/compare_cluster_methods.pdf", height = 10, width = 11)
+ggsave("results/figures/compare_cluster_methods.tiff",
+      height = 10, width = 11,
+      compression = "lzw+p")

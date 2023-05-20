@@ -10,15 +10,15 @@ add_nl <- function(x) {
 }
 
 pretty_metric <- c(
-    mean = "Mean fraction of negative\ndistances for each simulation",
-    has_negative = "Fraction of simulations\nwith a negative distance"
+    median = "Median fraction of negative\nOTU counts for each simulation",
+    has_negative = "Fraction of simulations\nwith a negative OTU count"
     )
 
 read_tsv("data/deseq_negative_values.tsv.gz") %>%
   filter(filter == "filter") %>%
   filter(model == "gp") %>%
   filter(distribution == "random") %>%
-  pivot_longer(c(mean, has_negative),
+  pivot_longer(c(median, has_negative),
               names_to = "metric", values_to = "value") %>%
   mutate(lci = if_else(metric == "has_negative", 0, lci),
         uci = if_else(metric == "has_negative", 0, uci),
@@ -40,4 +40,6 @@ read_tsv("data/deseq_negative_values.tsv.gz") %>%
     strip.background.y = element_blank()
   )
 
-ggsave("results/figures/deseq_negative_values.pdf", width = 8, height = 5)
+ggsave("results/figures/deseq_negative_values.tiff",
+      width = 8, height = 4,
+      compression = "lzw+p")

@@ -6,3 +6,4 @@ dependencies:
   - snakemake=7.24.0
   - coreutils=9.3
   - poppler=23.04.0
+  - imagemagick=7.1.1_9

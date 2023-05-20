@@ -67,9 +67,10 @@ plot_five <- function(gp_log, cluster_method, transformation){
                     xlim = c(0, 40)) +
     labs(x = "Library Size Minimum Quantile (%)",
         y = "Accuracy",
-        color = "Distance Calculation:",
-        fill = "Distance Calculation:",
-        shape = "Distance Calculation:") +
+        color = NULL, #"Distance Calculation:",
+        fill = NULL, #"Distance Calculation:",
+        shape = NULL #"Distance Calculation:"
+        ) +
     theme_light() +
     theme(
       legend.position = "top",
@@ -82,8 +83,9 @@ plot_five <- function(gp_log, cluster_method, transformation){
           shape = guide_legend(nrow = 1))
 
   ggsave(paste0("results/figures/",
-              "fig5_", cluster_method, "_", transformation, "_", gp_log, ".pdf"),
-          width = 11, height = 10)
+              "fig5_", cluster_method, "_", transformation, "_", gp_log, ".tiff"),
+          width = 11, height = 10,
+          compression = "lzw+p")
 
 }
 

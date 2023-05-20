@@ -20,6 +20,8 @@ pretty_transform <- c(deseq = "DESeq VS",
                     rarefaction00 = "Rarefaction",
                     upperquartile = "Upper Quartile Log Fold Change")
 
+pretty_distro <- c(random = "Randomized",
+                  skew = "Confounded")
 
 
 plot_alpha_compare <- function(gp_log) {
@@ -45,7 +47,8 @@ plot_alpha_compare <- function(gp_log) {
     geom_point(position = position_dodge(width = 0.075),
               size = 2) +
     facet_nested(n_seqs ~ name + distribution,
-                labeller = labeller(name = pretty_alpha, n_seqs = add_nl),
+                labeller = labeller(name = pretty_alpha, n_seqs = add_nl,
+                            distribution = pretty_distro),
                 strip = strip_nested(
                   text_x = elem_list_text(colour = c("#000000", "#FFFFFF")),
                   background_x = elem_list_rect(fill = c("#FFFFFF", "grey70")),
@@ -63,9 +66,10 @@ plot_alpha_compare <- function(gp_log) {
     scale_x_continuous(breaks = c(1, 2, 3)) +
     labs(x = "Effect Size",
         y = "Fraction of significant tests",
-        color = "Normalization Method:",
-        fill = "Normalization Method:",
-        shape = "Normalization Method:") +
+        color = NULL, #"Normalization Method:",
+        fill = NULL, #"Normalization Method:",
+        shape = NULL #"Normalization Method:"
+        ) +
     theme_light() +
     theme(
       legend.position = "top",
@@ -77,8 +81,9 @@ plot_alpha_compare <- function(gp_log) {
           fill = guide_legend(nrow = 2),
           shape = guide_legend(nrow = 2))
 
-  ggsave(paste0("results/figures/alpha_compare_", gp_log, ".pdf"),
-        width = 6, height = 8)
+  ggsave(paste0("results/figures/alpha_compare_", gp_log, ".tiff"),
+        width = 6, height = 8,
+        compression = "lzw+p")
 }
 
 args <- commandArgs(trailingOnly = TRUE)

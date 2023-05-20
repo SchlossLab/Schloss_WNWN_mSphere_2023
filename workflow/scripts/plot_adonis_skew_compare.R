@@ -18,7 +18,7 @@ pretty_transform <- c(deseq = "DESeq VS",
                     upperquartile = "Upper Quartile Log Fold Change")
 
 pretty_model <- c(gp = "GlobalPatterns",
-                  log = "Log-distributed")
+                  log = "Log-scaled")
 
 pretty_distribution <- c("random" = "No",
                         "skew" = "Yes")
@@ -56,7 +56,7 @@ adonis_data %>%
   ggplot(aes(x = distribution, y = p, color = transform, shape = transform,
             fill = transform)) +
   geom_point(position = position_dodge(width = 0.5), size = 2) +
-  facet_nested(model + fraction ~ distance,
+  facet_nested(fraction + model ~ distance,
               strip = strip_nested(
               text_y = elem_list_text(colour = c("#000000", "#FFFFFF")),
               background_y = elem_list_rect(fill = c("#FFFFFF", "grey70")),
@@ -75,9 +75,10 @@ adonis_data %>%
   coord_cartesian(ylim = c(0, 1.05)) +
   labs(x = "Confounded by sample size",
       y = "Fraction of significant tests",
-      color = "Normalization Method:",
-      fill = "Normalization Method:",
-      shape = "Normalization Method:") +
+      color = NULL, #"Normalization Method:",
+      fill = NULL, #"Normalization Method:",
+      shape = NULL #"Normalization Method:"
+      ) +
   theme_light() +
   theme(
     legend.position = "top",
@@ -88,4 +89,6 @@ adonis_data %>%
         fill = guide_legend(nrow = 1),
         shape = guide_legend(nrow = 1))
 
-ggsave("results/figures/adonis_skew_compare.pdf", width = 11, height = 7)
+ggsave("results/figures/adonis_skew_compare.tiff",
+      width = 11, height = 7,
+      compression = "lzw+p")

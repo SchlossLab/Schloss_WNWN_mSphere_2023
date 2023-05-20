@@ -65,9 +65,10 @@ rare_sub %>%
   coord_cartesian(xlim = c(1, 3.5)) +
   labs(x = "Effect Size",
       y = NULL,
-      color = "Distance Calculation:",
-      fill = "Distance Calculation:",
-      shape = "Distance Calculation:") +
+      color = NULL, #"Distance Calculation:",
+      fill = NULL, #"Distance Calculation:",
+      shape = NULL #"Distance Calculation:"
+      ) +
   theme_light() +
   theme(
     legend.position = "top",
@@ -82,5 +83,6 @@ rare_sub %>%
         fill = guide_legend(nrow = 1),
         shape = guide_legend(nrow = 1))
 
-ggsave("results/figures/subsample_rarefaction_compare.pdf",
-      width = 11, height = 6)
+ggsave("results/figures/subsample_rarefaction_compare.tiff",
+      width = 11, height = 5,
+      compression = "lzw+p")

@@ -51,7 +51,7 @@ plot_four <- function(gp_log, cluster_method, transformation, deseq) {
               transform %in% c(transformation, "none", "proportion", "deseq"))
           ) %>%
     dplyr::group_by(fraction, n_seqs, transform, distance) %>%
-    dplyr:: summarize(mean = mean(all, na.rm = TRUE),
+    dplyr:: summarize(median = median(all, na.rm = TRUE),
                       lci = quantile(all, 0.025, na.rm = TRUE),
                       uci = quantile(all, 0.975, na.rm = TRUE),
                       .groups = "drop")
@@ -68,7 +68,7 @@ plot_four <- function(gp_log, cluster_method, transformation, deseq) {
                             levels = pretty_distances),
           transform = factor(pretty_transform[transform],
                               levels = pretty_transform)) %>%
-    ggplot2::ggplot(ggplot2::aes(x = fraction, y = mean,
+    ggplot2::ggplot(ggplot2::aes(x = fraction, y = median,
                                 group = transform, color = transform,
                                 shape = transform, fill = transform)) +
     ggplot2::geom_line(position = position_dodge(width = 0.075)) +
@@ -92,9 +92,10 @@ plot_four <- function(gp_log, cluster_method, transformation, deseq) {
     ggplot2::coord_cartesian(ylim = c(0.4, 1.05)) +
     ggplot2::labs(x = "Effect Size",
         y = "Accuracy",
-        color = "Normalization Method:",
-        fill = "Normalization Method:",
-        shape = "Normalization Method:") +
+        color = NULL, #"Normalization Method:",
+        fill = NULL, #"Normalization Method:",
+        shape = NULL #"Normalization Method:"
+        ) +
     ggplot2::theme_light() +
     ggplot2::theme(
       legend.position = "top",
@@ -110,8 +111,9 @@ plot_four <- function(gp_log, cluster_method, transformation, deseq) {
   ggplot2::ggsave(
       paste0("results/figures/",
             "fig4_", cluster_method, "_", transformation, "_", gp_log,
-            "_", deseq, ".pdf"),
-      width = 11, height = 10
+            "_", deseq, ".tiff"),
+      width = 11, height = 10,
+      compression = "lzw+p"
     )
 
 }

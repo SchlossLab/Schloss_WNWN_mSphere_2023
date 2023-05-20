@@ -42,7 +42,7 @@ driver <- function(rds) {
   negatives <- mean(sapply(phyloseq_objects, is_neg_matrix))
 
   list(rds = rds,
-    mean = mean(fractions),
+    median = median(fractions),
     lci = quantile(fractions, prob = 0.025),
     uci = quantile(fractions, prob = 0.975),
     has_negative = negatives
@@ -56,7 +56,7 @@ data <- merge(conditions, results, by = "rds")
 data$model <- gsub("data/(.*)/.*", "\\1", data$path)
 data$distribution <- gsub("data/.*/(.*)", "\\1", data$path)
 data <- data[, !(colnames(data) %in% c("path", "rds"))]
-data$mean <- as.numeric(data$mean)
+data$median <- as.numeric(data$median)
 data$lci <- as.numeric(data$lci)
 data$uci <- as.numeric(data$uci)
 data$has_negative <- as.numeric(data$has_negative)

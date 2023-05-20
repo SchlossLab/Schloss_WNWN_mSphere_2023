@@ -11,3 +11,4 @@ dependencies:
   - r-vegan=2.6-4
   - r-ggtext=0.1.2
   - r-ggh4x=0.2.4
+  - r-tinytex

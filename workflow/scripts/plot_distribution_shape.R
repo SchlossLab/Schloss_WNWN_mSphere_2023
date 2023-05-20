@@ -23,5 +23,6 @@ read_tsv(here("data/simulated_nseqs_distros.tsv")) %>%
         axis.title.x = element_markdown()
         )
 
-ggsave("results/figures/distribution_shape.pdf",
-        width = 4, height = 2)
+ggsave("results/figures/distribution_shape.tiff",
+        width = 4, height = 2,
+        compression = "lzw+p")

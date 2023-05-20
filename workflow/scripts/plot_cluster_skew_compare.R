@@ -20,7 +20,7 @@ pretty_transform <- c(deseq = "DESeq VS",
                     upperquartile = "Upper Quartile Log Fold Change")
 
 pretty_model <- c(gp = "GlobalPatterns",
-                  log = "Log-distributed")
+                  log = "Log-scaled")
 
 pretty_distribution <- c("random" = "No",
                         "skew" = "Yes")
@@ -44,7 +44,7 @@ cluster_data <- read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
               transform %in% c("none", "proportion", "rarefaction00"))
             ) %>%
     group_by(model, fraction, distribution, method, transform, distance) %>%
-    summarize(mean = mean(fracCorrect, na.rm = TRUE),
+    summarize(median = median(fracCorrect, na.rm = TRUE),
               lci = quantile(fracCorrect, 0.025, na.rm = TRUE),
               uci = quantile(fracCorrect, 0.975, na.rm = TRUE),
               .groups = "drop") %>%
@@ -60,14 +60,14 @@ cluster_data <- read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
           )
 
 cluster_data %>%
-    ggplot(aes(x = distribution, y = mean, group = transform,
+    ggplot(aes(x = distribution, y = median, group = transform,
               color = transform, shape = transform, fill = transform)) +
     geom_linerange(aes(ymin = lci, ymax = uci),
                   alpha = 0.6, position = position_dodge(width = 0.5),
                   show.legend = FALSE) +
     geom_point(position = position_dodge(width = 0.5),
               size = 2) +
-    facet_nested(model + fraction ~ distance,
+    facet_nested(fraction + model ~ distance,
                 strip = strip_nested(
                 text_y = elem_list_text(colour = c("#000000", "#FFFFFF")),
                 background_y = elem_list_rect(fill = c("#FFFFFF", "grey70")),
@@ -86,9 +86,10 @@ cluster_data %>%
     coord_cartesian(ylim = c(0.4, 1.05)) +
     labs(x = "Confounded by sample size",
         y = "Accuracy",
-        color = "Normalization Method:",
-        fill = "Normalization Method:",
-        shape = "Normalization Method:") +
+        color = NULL, #"Normalization Method:",
+        fill = NULL, #"Normalization Method:",
+        shape = NULL #"Normalization Method:"
+        ) +
     theme_light() +
     theme(
       legend.position = "top",
@@ -99,6 +100,7 @@ cluster_data %>%
           fill = guide_legend(nrow = 1),
           shape = guide_legend(nrow = 1))
 
-  ggsave("results/figures/cluster_skew_compare.pdf",
-         width = 11, height = 7)
+  ggsave("results/figures/cluster_skew_compare.tiff",
+         width = 11, height = 7,
+         compression = "lzw+p")
 
