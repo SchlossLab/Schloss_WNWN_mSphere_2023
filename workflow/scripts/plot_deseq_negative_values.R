@@ -10,8 +10,8 @@ add_nl <- function(x) {
 }
 
 pretty_metric <- c(
-    median = "Median fraction of negative\nOTU counts for each simulation",
-    has_negative = "Fraction of simulations\nwith a negative OTU count"
+    median = "Median fraction of\nnegative OTU counts\nfor each simulation",
+    has_negative = "Fraction of simulations\nwith a negative\nOTU count"
     )
 
 read_tsv("data/deseq_negative_values.tsv.gz") %>%

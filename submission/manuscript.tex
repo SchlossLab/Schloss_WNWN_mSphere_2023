@@ -131,7 +131,7 @@ Patrick D. Schloss\({^\dagger}\)
 
 \vspace{40mm}
 
-\({\dagger}\) To whom corresponsdence should be addressed:
+\({\dagger}\) To whom correspondence should be addressed:
 
 \href{mailto:pschloss@umich.edu}{pschloss@umich.edu}
 
@@ -150,6 +150,47 @@ Ann Arbor, MI 48109
 \hypertarget{abstract}{%
 \subsection{Abstract}\label{abstract}}
 
+In 2014, McMurdie and Holmes published the provocatively titled, ``Waste
+not, want not: why rarefying microbiome data is inadmissible''. The
+claims of their study have significantly altered how microbiome
+researchers control for the unavoidable uneven sequencing depths that
+are inherent in modern 16S rRNA gene sequencing. Confusion over the
+distinction between the definitions of rarefying and rarefaction
+continues to cloud the interpretation of their results. More
+importantly, the authors made a variety of choices in designing and
+analyzing their simulations that were potentially problematic. I
+identified 11 factors that could have compromised the results of the
+original study. I reproduced the original simulation results and
+assessed the impact of those 11 factors on the underlying conclusion
+that rarefying data is inadmissible. Throughout, the design of the
+original study made choices that caused rarefying and rarefaction to
+appear to perform worse than they truly did. Most important were the
+approaches used to assess ecological distances, the removal of samples
+with low sequencing depth, and not accounting for conditions where
+sampling effort is confounded with treatment group. Although the
+original study criticized rarefying for the arbitrary removal of valid
+data, repeatedly rarefying data many times (i.e., rarefaction)
+incorporates all the data. In contrast, it is the removal of rare taxa
+that would appear to remove valid data. Overall, I show that rarefaction
+is the most robust approach to control for uneven sampling effort when
+considered across a variety of alpha and beta diversity metrics.
+
+\hypertarget{importance}{%
+\subsubsection{Importance}\label{importance}}
+
+Over the past 10 years, the best method of normalizing the sequencing
+depth of samples characterized by 16S rRNA gene sequencing has been
+contentious. An often cited paper by McMurdie and Holmes forcefully
+argued that rarefying the number of sequence counts was ``inadmissible''
+and should not be employed. However, I identified a number of problems
+with the design of their simulations and analysis that could compromise
+their results. In fact, when I reproduced and expanded upon their
+analysis, it was clear that rarefaction was actually the most robust
+approach for controlling for uneven sequencing effort across samples.
+Rarefaction limits the rate of falsely detecting and rejecting
+differences between treatment groups. Far from being ``inadmissible'',
+rarefaction is a valuable tool for analyzing microbiome sequence data.
+
 \newpage
 
 \hypertarget{introduction}{%
@@ -157,41 +198,39 @@ Ann Arbor, MI 48109
 
 Microbiome studies that use amplicon sequencing to characterize multiple
 samples use PCR to amplify 16S rRNA gene fragments using primers with
-distinct barcodes or index sequences {[}(1); \textbf{XXXXX}{]}. These
-barcodes allow researchers to pool PCR products and then deconvolute the
-resulting sequence data based on the barcode sequences. Despite their
-best efforts to generate equimolar pools of PCR products, it is common
-to observe more than 10-fold variation in the number of sequences per
-sample {[}\textbf{XXXXX}{]}. Researchers desire strategies to minimize
-uneven sequencing depth and thus need methods to control for this
-uneveness in their analyses. Of course, uneven sampling is not unique to
-microbiome research and is a challenge faced by all community ecologists
-{[}\textbf{XXXXX}{]}. Common approaches to controlling uneven sampling
-efforts include use of proportional abundance (i.e., relative
-abundance), scaling of counts, parameter estimation, and rarefaction
-{[}\textbf{XXXXX}{]}.
+distinct barcodes or index sequences (1--3). These barcodes allow
+researchers to pool PCR products and then deconvolute the resulting
+sequence data based on the barcode sequences. Despite researchers' best
+efforts to generate equimolar pools of PCR products, it is common to
+observe more than 10-fold variation in the number of sequences per
+sample (4). Researchers desire strategies to minimize uneven sequencing
+depth and thus need methods to control for this unevenness in their
+analyses. Of course, uneven sampling is not unique to microbiome
+research and is a challenge faced by all community ecologists (5, 6).
+Common approaches to control for the effects of uneven sequencing depths
+include use of proportional abundance (i.e., relative abundance),
+scaling of counts, parameter estimation, and rarefaction (7--23).
 
 In 2014 Paul McMurdie and Susan Holmes published ``Waste not, want not:
 why rarefying microbiome data is inadmissible'' (WNWN) in \emph{PLOS
-Computational Biology} (2). Their paper has had a significant impact on
+Computational Biology} (24). Their paper has had a significant impact on
 the approaches that microbiome researchers use to analyze 16S rRNA gene
 sequence data. According to Google Scholar, this paper has been cited
-more than 2,400 times as of June 2023. There has been a rebuttal of WNWN
-that actually showed how rarefaction could be beneficial (3).
-Anecdotely, I have received correspondence from researchers over the
-past 10 years asking how to address critiques from reviewers who
-criticize my correspondents' analysis for using rarefaction (e.g., see
-\href{https://twitter.com/inanna_nalytica/status/1264299305067786242}{this
-Twitter thread}). I have also received similar comments from reviewers
-regarding my own work. Most recently, I received the critique for a
-preprint that I posted in 2020 that analyzed the practice of removing
-rare taxa from microbiome analyses {[}see comments linked to
-\textbf{XXXXX};
+more than 2,400 times as of May 2023. There has been a rebuttal of WNWN
+that showed how rarefaction is beneficial in some cases (25). I have
+received correspondence from researchers over the past 10 years asking
+how to address critiques from reviewers who criticize my correspondents'
+analysis for using rarefaction (e.g., see
+\url{https://twitter.com/inanna_nalytica/status/1264299305067786242}). I
+have also received similar comments from reviewers regarding my own
+work. For example, I received the critique for a preprint that I posted
+in 2020 that analyzed the practice of removing rare taxa from microbiome
+analyses {[}see comments linked to (4);
 \url{https://web.archive.org/web/20230308191505/http://dalmug.org/filter-review/}{]}.
 In the process of responding to these reviewers' comments and preparing
 a manuscript investigating rarefaction and other approaches to control
-for uneven sequencing effort, I grew to appreaciate that there is
-signifcant confusion in the field over what is meant by ``rarefying''
+for uneven sequencing effort, I grew to appreciate that there is
+significant confusion in the field over what is meant by ``rarefying''
 and ``rarefaction''.
 
 McMurdie and Holmes discussed and defined ``rarefying'' in WNWN
@@ -201,25 +240,26 @@ study):
 \begin{quote}
 ``Instead, microbiome analysis workflows often begin with an ad hoc
 library size normalization by random subsampling without replacement, or
-so-called rarefying (4--6). There is confusion in the literature
+so-called rarefying (13, 26, 27). There is confusion in the literature
 regarding terminology, and sometimes this normalization approach is
 conflated with a non-parametric resampling technique --- called
-rarefaction (7), or individual-based taxon re-sampling curves (8) ---
+rarefaction (5), or individual-based taxon re-sampling curves (28) ---
 that can be justified for coverage analysis or species richness
-estimation in some settings (8), though in other settings it can perform
-worse than parametric methods (9). Here we emphasize the distinction
-between taxon re-sampling curves and normalization by strictly adhering
-to the terms rarefying or rarefied counts when referring to the
-normalization procedure, respecting the original definition for
-rarefaction. Rarefying is most often defined by the following steps (5).
+estimation in some settings (28), though in other settings it can
+perform worse than parametric methods (29). Here we emphasize the
+distinction between taxon re-sampling curves and normalization by
+strictly adhering to the terms rarefying or rarefied counts when
+referring to the normalization procedure, respecting the original
+definition for rarefaction. Rarefying is most often defined by the
+following steps (13).
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
   Select a minimum library size, N\textsubscript{L,m}. This has also
-  been called the rarefaction level (4), though we will not use the term
-  here.
+  been called the rarefaction level (26), though we will not use the
+  term here.
 \item
   Discard libraries (microbiome samples) that have fewer reads than
   N\textsubscript{L,m}.
@@ -237,21 +277,21 @@ seed/process --- both of which are essential for reproducibility.''
 \end{quote}
 
 It was unfortunate that McMurdie and Holmes used the term ``rarefying''
-here and throughout their manuscript. The authors were correct to state
-that the distinction between ``rarefying'' and ``rarefaction'' is
-confusing and leads to their conflation. Adding to the confusion is that
-the papers cited in the first sentence of this quote (i.e., (4--6))
-either do not use the words ``rarefy'' or ``rarefying'' or use them
-interchangably with ``rarefaction''. For example, Hughes and Hellman did
-not use ``rarefy'' and use ``rarefaction'' in the traditional sense with
-multiple subsamplings (5). Meanwhile, the QIIME-based literature appears
-to use ``rarefy'' and ``rarefaction'' interchangibly meaning only a
-single subsampling ((4, 6)). Subsequent researchers have continued to
-conflate the results of this study of the effects of rarefying data with
-that of traditional rarefaction of data (\textbf{Supplemental Text}). An
-exemplar of the confusion is the creation of a technique that uses
-``repeatedly rarefying'' as an approach distinct from rarefaction when
-they are actually the same thing (10).
+in this quote and throughout their manuscript. The authors were correct
+to state that the distinction between ``rarefying'' and ``rarefaction''
+is confusing and leads to their conflation. Adding to the confusion is
+that the papers cited in the first sentence of this quote (i.e., (13,
+26, 27)) either do not use the words ``rarefy'' or ``rarefying'' or use
+them interchangeably with ``rarefaction''. For example, Hughes and
+Hellman did not use ``rarefy'' and use ``rarefaction'' in the
+traditional sense with multiple subsamplings (13). Meanwhile, the
+QIIME-based literature appears to use ``rarefy'' and ``rarefaction''
+interchangeably to mean only a single subsampling (26, 27). Subsequent
+researchers have continued to conflate the terms when citing WNWN
+(\textbf{Supplemental Text}). An exemplar of the confusion is the
+creation of a technique that uses ``repeatedly rarefying'' as an
+approach distinct from rarefaction when they were re-proposing
+traditional rarefaction (30).
 
 As shown in the quoted text from WNWN, McMurdie and Holmes did emphasize
 the distinction between rarefying and rarefaction. However, because they
@@ -259,11 +299,11 @@ seem to have coined a new definition for rarefying, they added to the
 confusion by using the generally used verb form of rarefaction. Further
 confusion comes from the author's admonition in the final sentence of
 the above quoted text that some researchers have failed to repeat the
-subsampling step. Classically, repeating the subsampling step is
-rarefaction {[}\textbf{XXXXX}{]}. In other words, subsampling is
-rarefaction, but with a single randomization. To minimize confusion, I
-will use ``subsamping'' in place of ``rarefying'' thorugh the remainder
-of this study.
+subsampling step. Traditionally, repeating the subsampling step a large
+number of times and averaging the result is rarefaction (12, 13, 28). In
+other words, rarefying or subsampling is rarefaction, but with a single
+randomization. To minimize confusion, I will use ``subsampling'' in
+place of ``rarefying'' through the remainder of this study.
 
 For clarity, I will use the following definition of rarefaction:
 
@@ -282,8 +322,8 @@ For clarity, I will use the following definition of rarefaction:
   Compute the desired metric (e.g., richness, Shannon diversity,
   Bray-Curtis distances) using the subsampled data
 \item
-  Repeat steps 3 and 4 a large number of iterations (e.g, 100 or 1,000).
-  Researchers are encouraged to report the number of iterations.
+  Repeat steps 3 and 4 a large number of iterations (typically 100 or
+  1,000). Researchers are encouraged to report the number of iterations.
 \item
   Compute summary statistics (e.g., the mean) using the values from step
   4.
@@ -291,12 +331,12 @@ For clarity, I will use the following definition of rarefaction:
 
 This definition aligns with how rarefaction was originally defined for
 comparing richness (i.e., the number of taxa in a community) across
-communities when communities are sampled to different depths
-{[}\textbf{XXXXX}{]}. With this more general approach to the definition
-of rarefaction, rarefaction can be performed using any alpha or beta
-diversity metric. This strategy has been widely used by my research
-group and others and is available in the mothur software package using
-commands such as \texttt{summary.single}, \texttt{rarefaction.single},
+communities when communities are sampled to different depths (5, 6).
+With this more general approach to the definition of rarefaction,
+rarefaction can be performed using any alpha or beta diversity metric.
+This strategy has been widely used by my research group and others and
+is available in the mothur software package using commands such as
+\texttt{summary.single}, \texttt{rarefaction.single},
 \texttt{phylo.diversity}, and \texttt{dist.shared}. The procedure
 outlined above could also be used for hypothesis tests of differential
 abundance; however, consideration is needed to synthesize the results of
@@ -308,8 +348,8 @@ WNWN}\label{description-and-critique-of-simulation-a-from-wnwn}}
 
 McMurdie and Holmes analyzed the effect of subsampling and other
 approaches on clustering accuracy using what they called ``Simulation
-A'' in their Figure 2A and elsewhere in their paper. In Simulation A,
-they investigated the ability to correctly assign simulated microbiome
+A'' in their Figure 2A and elsewhere in WNWN. In Simulation A, they
+investigated the ability to correctly assign simulated microbiome
 samples to one of two clusters representing two simulated treatment
 groups. Thankfully, the R code for Simulation A was provided by the
 authors in the
@@ -320,25 +360,25 @@ numbers from their R-flavored markdown file with ``L'' as a prefix.
 
 For the WNWN cluster analysis, sampling distributions for the two
 treatment groups were generated using human fecal and ocean data
-originally take from the GlobalPaterns dataset (L129) (1). To generate a
-fecal and ocean distribution, the authors included any operational
+originally take from the GlobalPatterns dataset (L129) (2). To generate
+the fecal and ocean distributions, the authors included any operational
 taxonomic unit (OTU) that appeared in more than one of the 4 fecal and 3
 ocean samples (L60 and L137). The OTUs were sorted by how many of the 7
 samples the OTUs were observed in followed by their total abundance
-across all 7 samples (L139). From this sorted list they identified the
+across all 7 samples (L139). From this sorted list they obtained the
 identifiers of the first 2,000 OTUs (L66). Returning to the 7 samples
 they selected the data for the corresponding 2,000 OTUs and pooled the
 OTU abundances of the fecal and ocean samples separately to create two
 sampling distributions (L144, L159-160, L197-198). Next, the fecal and
 ocean distributions were mixed in 8 different fractions to generate two
-community types that differend by varying effect sizes (i.e., 1.0, 1.15,
-1.25, 1.5, 1.75, 2, 2.5, and 3.5; L170-195, L220); an effect size of 1.0
-generated a null model with no difference between the treatment groups.
-To simulate the variation in sequencing depth across the 80 samples,
-they normalized the number of sequences from each of the 26 samples in
-the GlobalPatterns dataset so that the median number of sequences
-(Ñ\textsubscript{L}) across the samples had 1,000, 2,000, 5,000, or
-10,000 sequences (L324-325). They then randomly sampled the 26
+community types that differed by varying effect sizes (i.e., 1.00, 1.15,
+1.25, 1.50, 1.75, 2.00, 2.50, and 3.50; L170-195, L220); an effect size
+of 1.00 generated a null model with no difference between the treatment
+groups. To simulate the variation in sequencing depth across the 80
+samples, they normalized the number of sequences from each of the 26
+samples in the GlobalPatterns dataset so that the median number of
+sequences (Ñ\textsubscript{L}) across the samples had 1,000, 2,000,
+5,000, or 10,000 sequences (L324-325). They then randomly sampled the 26
 normalized sequencing depths, with replacement, to generate 80 sampling
 depths. From each community type, they simulated 40 samples by sampling
 to the desired number of sequences (L73, L230-233 and L326-327). Each
@@ -358,39 +398,44 @@ applied several normalization methods, distance calculations, and
 clustering algorithms to the data. To normalize the OTU data the WNWN
 analysis either applied no normalization procedure (L559), calculated
 OTU relative abundances (L392-401, L562-563), subsampled the data
-(L409-416, L566-569), performed variance stabilization using the DESeq R
-package (L478-504, L580-583), or performed Upper-Quartile log-fold
-change normalization using the edgeR R package (L425-457, L576-577,
-L622-721). In subsampling the data, the authors either included all of
-the samples or removed samples whose sequencing depth fell below the 5,
-10, 15, 20, 25, and 40 percentile across all 80 samples (L96,
-L1065-1077). Non-normalized data were used to calculate Bray-Curtis,
-Euclidean, Poisson, and Weighted UniFrac distances (L793-798, L801-806).
-Relative abundance data were used to calculate Bray-Curtis, Unweigthed
-UniFrac, and Weighted UniFrac distances (L760-767). Subsampled data were
-then used as input to calculate distances between samples using
-Bray-Curtis, Euclidean, Unweighted UniFrac, and Weighted Unifrac
-distances as implemented in the Phyloseq R package, Poisson distances as
-implemented in the PoiClaClu R package, and top-mean squared difference
-as implemented in the edgeR R package (L769-775, L793-798, L801-806).
-DESeq variance stabilization normalized data were used to calculate
-Bray-Curtis, Euclidean, and Weighted Unifrac distances (L793-798). The
-Upper-Quartile log-fold change normalized data were only used to
-calculate top-mean squared difference distances (L801-806). The
-resulting distance matrices were used to cluster the 80 samples into one
-of two clusters using partitioning around the medoid (PAM), K-means
-clustering, and hierarchical clustering (L865-879). Although data for
-all three methods were presented in the supplementary Protocol S1, only
-the PAM data are presented in the main manuscript. The accuracy of the
-clustering assignments was quantified as the fraction of the 80 samples
-that were assigned to the correct cluster (L887-908). Since some of the
-subsampling conditions removed samples below a minimum sequencing depth
-threshold, those samples were counted as mis-clustered samples yielding
-minimum accuracies below 50\%.
+(L409-416, L566-569), performed Variance Stabilization using the
+\texttt{DESeq} R package (L478-504, L580-583)(7), or performed
+Upper-Quartile Log-Fold Change normalization using the \texttt{edgeR} R
+package (L425-457, L576-577, L622-721) (19). In subsampling the data,
+the authors either included all of the samples or removed samples whose
+sequencing depth fell below the 5, 10, 15, 20, 25, and 40 percentile
+across all 80 samples (L96, L1065-1077).
+
+Non-normalized data were used to calculate Bray-Curtis, Euclidean,
+Poisson, and Weighted UniFrac distances (L793-798, L801-806). Relative
+abundance data were used to calculate Bray-Curtis, Unweighted UniFrac ,
+and Weighted UniFrac distances (L760-767). Subsampled data were used as
+input to calculate distances between samples using Bray-Curtis,
+Euclidean, Unweighted UniFrac, Weighted UniFrac distances, Poisson
+distances, and top-Mean Squared Difference (L769-775, L793-798,
+L801-806). DESeq Variance Stabilization normalized data were used to
+calculate Bray-Curtis, Euclidean, and Weighted Unifrac distances
+(L793-798). The Upper-Quartile Log-Fold Change normalized data were only
+used to calculate top-mean squared difference distances (L801-806). WNWN
+calculated Bray-Curtis (31), Euclidean (31), Unweighted UniFrac (32),
+and Weighted UniFrac distances (33) using the \texttt{Phyloseq} R
+package (34). They calculated Poisson distances using the
+\texttt{PoiClaClu} R package (35). The top-mean squared difference was
+calculated using the \texttt{edgeR} R package (19). The resulting
+distance matrices were used to cluster the 80 samples into one of two
+clusters using partitioning around the medoid (PAM), K-means clustering,
+and hierarchical clustering (L865-879). Although data for all three
+methods were presented in Protocol S1, only the PAM data were presented
+in the main manuscript. The accuracy of the clustering assignments was
+quantified as the fraction of the 80 samples that were assigned to the
+correct cluster (L887-908). Since some of the subsampling conditions
+removed samples below a minimum sequencing depth threshold, those
+samples were counted as mis-clustered samples yielding minimum
+accuracies below 50\%.
 
 Although all simulations represent an artificial representation of
-reality and can be critiqued, eleven elements of the design of
-Simulation A warrant further review.
+reality and can be critiqued, I have identified eleven elements of the
+design of Simulation A that warranted further review.
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -403,9 +448,9 @@ Simulation A warrant further review.
   The average sizes of the libraries were small by modern standards,
   which may limit the generalizability of the results
 \item
-  DESeq-based variance stabilization was used with distance calculation
-  methods that are sensitive to negative values, which likely led to
-  nonsense distances and clusters
+  DESeq-based Variance Stabilization generates negative values and was
+  used with distance calculation methods that are sensitive to negative
+  values, which likely led to nonsense distances and clusters
 \item
   A single subsampling of each dataset was evaluated rather than using
   rarefaction, which likely resulted in noisier data
@@ -438,8 +483,8 @@ Simulation A warrant further review.
   rarefaction
 \end{enumerate}
 
-After replicating the original WNWN simulations, these points will be
-evaluated to reassess whether subsampling or rarefaction are
+Below, I replicated the original WNWN simulations and evaluated these
+points to reassess whether subsampling or rarefaction are
 ``inadmissible''.
 
 \hypertarget{results}{%
@@ -475,7 +520,7 @@ the random number generator
 seed}\label{simulated-conditions-were-only-replicated-5-times-each-potentially-increasing-the-sensitivity-of-results-to-the-choice-of-the-random-number-generator-seed}}
 
 Each simulated condition was replicated 5 times in WNWN and the paper
-reports the mean and standard deviation of the replicate clustering
+reported the mean and standard deviation of the replicate clustering
 accuracies. The relatively small number of replicates accounts for the
 jerkiness of the lines in WNWN's Figures 4 and 5 (e.g.~the Bray-Curtis
 distances calculated on the DESeqVS normalized data). A better approach
@@ -483,9 +528,9 @@ would have been to use 100 replicates as this would reduce the
 dependency of the results on the random number generator's seed. By
 increasing the number of replicates it was also possible to compare the
 probability of falsely and correctly clustering samples from the same
-and different treatment groups together (see points 9-11, below).
+and different treatment groups together (see points 10 and 11, below).
 Because the accuracies were not symmetric around the mean accuracy
-values the median and 95\% confidence intervals or intraquartile range
+values the median and 95\% confidence intervals or interquartile range
 should have been reported. To test the effect of increasing the number
 of replicates, I pulled apart the code in
 \texttt{simulation-cluster-accuracy/simulation-cluster-accuracy-server.Rmd}
@@ -494,11 +539,11 @@ workflow with the same Conda environment I used above. This was
 necessary since the number of simulated conditions increased 20-fold
 with the additional replicates. Such intense data processing was not
 practical within a single R-flavored markdown document. Again, the
-observed results were qualitiatively similar to those generated using
-the single R-flavored markdown file (Figures 3 and 4). The increased
-number of replications resulted in smoother lines and allowed me to
-present empirical 95\% confidence intervals. For all analyses in the
-remainder of this paper, I used 100 randomized replicates per condition.
+observed results were qualitatively similar to those generated using the
+single R-flavored markdown file (Figures 3 and 4). The increased number
+of replications resulted in smoother lines and allowed me to present
+empirical 95\% confidence intervals. For all analyses in the remainder
+of this paper, I used 100 randomized replicates per condition.
 
 \hypertarget{the-average-sizes-of-the-libraries-were-small-by-modern-standards-which-may-limit-the-generalizability-of-the-results}{%
 \subsubsection{2. The average sizes of the libraries were small by
@@ -508,38 +553,39 @@ results}\label{the-average-sizes-of-the-libraries-were-small-by-modern-standards
 In the 10 years since WNWN was published, sequencing technology has
 advanced and sequence collections have grown considerably. For more
 modern datasets, it would be reasonable to expect a median number of
-sequences larger than 10,000 (see Table 1 of (11)). Therefore, I
-included an additional median depth of sampling value of 50,000
-sequences with WNWN's four median sequencing sampling depths (i.e.,
-1,000, 2,000, 5,000, 10,000). Additional sequencing coverage would be
-expected to result in more robust distance values since there would be
-more information represented in the data. Indeed, the added sampling
-depth showed higher accuracy values at lower effect sizes for the
-combinations of normalization methods and distance calculations (Figure
-3). Increased sequencing coverage also resulted in improved clustering
-accuracy for lower effect sizes when the library size minimum quantile
-was decreased (Figure 4). I will revisit the choice of the library size
-minimum quantile below.
+sequences larger than 10,000 (see Table 1 of (4)). Therefore, I included
+an additional median depth of sampling value of 50,000 sequences with
+WNWN's four median sequencing sampling depths (i.e., 1,000, 2,000,
+5,000, 10,000). Additional sequencing coverage would be expected to
+result in more robust distance values since there would be more
+information represented in the data. Indeed, the added sampling depth
+showed higher accuracy values at lower effect sizes for the combinations
+of normalization methods and distance calculations (Figure 3). Increased
+sequencing coverage also resulted in improved clustering accuracy for
+lower effect sizes when the library size minimum quantile was decreased
+(Figure 4). I will revisit the choice of the library size minimum
+quantile below.
 
-\hypertarget{deseq-based-variance-stabilization-was-used-with-distance-calculation-methods-that-are-sensitive-to-negative-values-which-likely-led-to-nonsense-distances-and-clusters}{%
-\subsubsection{3. DESeq-based variance stabilization was used with
-distance calculation methods that are sensitive to negative values,
-which likely led to nonsense distances and
-clusters}\label{deseq-based-variance-stabilization-was-used-with-distance-calculation-methods-that-are-sensitive-to-negative-values-which-likely-led-to-nonsense-distances-and-clusters}}
+\hypertarget{deseq-based-variance-stabilization-generates-negative-values-and-was-used-with-distance-calculation-methods-that-are-sensitive-to-negative-values-which-likely-led-to-nonsense-distances-and-clusters}{%
+\subsubsection{3. DESeq-based Variance Stabilization generates negative
+values and was used with distance calculation methods that are sensitive
+to negative values, which likely led to nonsense distances and
+clusters}\label{deseq-based-variance-stabilization-generates-negative-values-and-was-used-with-distance-calculation-methods-that-are-sensitive-to-negative-values-which-likely-led-to-nonsense-distances-and-clusters}}
 
 Close comparison of WNWN's Figure 4 and my version (Figure 3) revealed
 several difference between the two plots. First, in the WNWN analysis,
 the accuracies for the Weighted UniFrac distances at the largest effect
-size (i.e., 3.5) were 1.0 for median sequencing depths of 1,000, 2,000,
+size (i.e., 3.5) were 1.00 for median sequencing depths of 1,000, 2,000,
 and 10,000. In my version of the analysis, the values for the same
 sequencing depths were 1.00, 1.00, and 1.00, respectively. The 95\%
-confidence interval for these accuracies spaned between 0.51 and 1.00.
-Second, the Bray-Curtis and Weigthed UniFrac distances calculated using
-DESeq normalized OTU counts were different between the original and my
-simultion at smaller effect sizes and had wide confidence intervals.
-Inspection of the DESeq normalized OTU counts revealed that the method
+confidence interval for these accuracies spanned between 0.51 and 1.00.
+Second, clustering accuracy for Bray-Curtis and Weighted UniFrac
+distances calculated using DESeq Variance Stabilization normalized OTU
+counts were different between the original and my simulation at smaller
+effect sizes and had wide confidence intervals. Inspection of the DESeq
+Variance Stabilization normalized OTU counts revealed that the method
 resulted in negative values. It has been suggested that WNWW turned
-negative DESeq normalized counts to zero (3); however, I was unable to
+negative DESeq normalized counts to zero (25); however, I was unable to
 find code in \texttt{simulation-cluster-accuracy-server.Rmd} that made
 this transformation. In fact, rendering the R-flavored markdown files in
 WNWN's Protocol S1 generated warning messages when passing the DESeq
@@ -553,19 +599,19 @@ being compared. In contrast, a Euclidean distance does not use a similar
 sum, but sums the square of the difference between the OTU abundance in
 each sample. Even if negative values were converted to zeroes, this
 would effectively the same as removing rare taxa, which could have a
-significant impact on the shape of the communities (11). To assess the
+significant impact on the shape of the communities (4). To assess the
 prevalence of negative counts in the simulated data, I quantified the
 fraction of negative values in the OTU matrix from each simulation and
 counted the number of simulations where the normalized OTU table had at
 least one negative value (Figure 5). In general the fraction of negative
 OTU counts increased with effect size, but decreased with sequencing
-effort. The fraction of simulations with at least onee negative value
+effort. The fraction of simulations with at least one negative value
 increased with effect size and sequencing effort. The high frequency of
 negative OTU counts resulted in highly variable Bray-Curtis and Weighted
 UniFrac values. It is likely that because the WNWN analysis only used 5
 replicates that the large variation in accuracies at high effect sizes
 was missed initially. For the rest of this reanalysis study, I will only
-report results using the DESeq-based variance stabilization
+report results using the DESeq-based Variance Stabilization
 normalization with the Euclidean distance.
 
 \hypertarget{a-single-subsampling-of-each-dataset-was-evaluated-rather-than-using-rarefaction-which-likely-resulted-in-noisier-data}{%
@@ -573,13 +619,12 @@ normalization with the Euclidean distance.
 rather than using rarefaction, which likely resulted in noisier
 data}\label{a-single-subsampling-of-each-dataset-was-evaluated-rather-than-using-rarefaction-which-likely-resulted-in-noisier-data}}
 
-As noted above, the jargon used in WNWN was confusing to many who
-conflated rarefying/subsampling with rarefaction. A more robust analysis
-would have used rarefaction since it would have averaged across a large
-number of random subsamplings (e.g., 100 or 1,000). By using a large
-number of subsampligns the likelihood of incorporating all of the OTUs
-would have increased. Rather than being guilty of ``omission of
-available valid data'' as claimed in WNWN, true rarefaction uses all of
+A more robust analysis would have used rarefaction since it would have
+averaged across a large number of random subsamplings (e.g., 100 or
+1,000). By using a large number of subsamplings the likelihood of
+incorporating all of the OTUs would have increased. Rather than being
+guilty of ``omission of available valid data'' as claimed in WNWN, with
+a sufficient number of subsamplings, traditional rarefaction uses all of
 the available data. To fairly compare subsampling, as employed in WNWN,
 and rarefaction, I removed the 15\% of samples with the lowest number of
 sequences and compared the clustering accuracies from a single
@@ -589,7 +634,7 @@ generated by rarefaction was always at least as large as those from a
 single subsample (Figure 6). The difference was most pronounced for
 smaller average library sizes and at smaller effect sizes. The
 Unweighted UniFrac distances were most impacted by the use of
-rarefaction over subsampling. Second, the intraquartile ranges in
+rarefaction over subsampling. Second, the interquartile ranges in
 clustering accuracy by rarefaction were generally smaller than those by
 subsampling and showed similar trends to the difference in the median
 distances (Figure 6). Because rarefaction incorporates more of the data
@@ -605,7 +650,7 @@ conditions}\label{results-using-pam-clustering-were-not-directly-compared-to-tho
 
 The clustering accuracy measurements reported in the body of WNWN were
 determined using PAM-based clusters while Protocol S1 also includes
-K-means and hierarchichal clustering. Although the data were not
+K-means and hierarchical clustering. Although the data were not
 displayed in a manner that lent itself to direct comparison in Protocol
 S1, close inspection of the rendered figures suggested that PAM may not
 have been the optimal choice in all situations. Rather, K-means
@@ -616,11 +661,11 @@ simulated datasets, I compared the clustering accuracy across clustering
 methods to see how often each clustering method resulted in the highest
 accuracy (Figure 7). Indeed, K-means clustering performed better than
 the other methods. Among all combinations of normalization methods,
-distance calculations, and read depths, PAM clustering resulted in
-clustering accuracies as good or better than the other methods in
-49.92\% of the randomizations (Figure 7). K-means clustering was at
-least as good as the other methods in 74.39\% of the randomizations.
-Hierarchical clustering (HClust) was at least as good as the other
+distance calculations, and read depths, K-means clustering was at least
+as good as the other methods in 74.39\% of the randomizations (Figure
+7); PAM clustering resulted in clustering accuracies as good or better
+than the other methods in 49.92\% of the randomizations; and
+hierarchical clustering (HClust) was at least as good as the other
 methods for 44.32\% of the randomizations. Finally, I specifically
 compared the clustering accuracies using rarefaction for each of the
 distance calculations methods using PAM and K-means clustering. Among
@@ -664,8 +709,7 @@ K-means clustering resulted in accuracies that were better than those
 observed when removing the smallest 15\% of the samples from each
 simulated dataset. When the WNWN Figure 4 was recast with these
 approaches, rarefaction performed at least as well as any of the other
-tranformations with each distance calculation, except when used with the
-Poisson distance (Figure 9).
+transformations with each distance calculation (Figure 9).
 
 \hypertarget{the-distribution-of-library-sizes-was-not-typical-of-those-commonly-seen-in-microbiome-analyses-which-may-limit-the-generalizability-of-the-results}{%
 \subsubsection{7. The distribution of library sizes was not typical of
@@ -681,7 +725,7 @@ of 1,106,849 sequences per dataset (Figure 10). The datasets ranged in
 sequencing depth between 58,688 and 2,357,181 sequences for a 40.16-fold
 difference. Rather than representing a typically observed distribution
 of sequencing depths that would be skewed right (see Figure S1 from
-(11)), the sampling distribution was normally distributed (Shapiro-Wilk
+(4)), the sampling distribution was normally distributed (Shapiro-Wilk
 test of normality, P=0.57). From these simulations it is unclear how
 sensitive the various normalizations and distance calculations were to a
 more realistic skewed distribution. A second limitation of this sampling
@@ -719,12 +763,12 @@ omission of available valid data'' (emphasis in original). Thus it is
 strange that they argue against removing data when
 rarefying/subsampling, but accept removing rare and low-prevalence OTUs
 prior to normalizing their counts. This practice has become common in
-microbiome studies and is the standard approach in tools such as dada2,
-unoise, and deblur {[}\textbf{XXXXX}{]}. However, my previous work has
-shown that rare sequences from a poorly sequenced sample often appear in
-more deeply sequened samples suggesting that they are not necessarily
-artifacts. Furthermore, removing rare sequences alters the structure of
-communities and has undesirable effects on downstream analyses (11).
+microbiome studies and is the standard approach in tools such as Dada2,
+Unoise, and Deblur (36--39). However, my previous work has shown that
+rare sequences from a poorly sequenced sample often appear in more
+deeply sequenced samples suggesting that they are not necessarily
+artifacts (4). Furthermore, removing rare sequences alters the structure
+of communities and has undesirable effects on downstream analyses.
 Although my previous work does an extensive analysis of the effects of
 removing rare sequences, I wanted to explore the effect of filtering in
 the context of the WNWN simulation framework. For each of the filtered
@@ -735,15 +779,12 @@ median difference in accuracies (i.e.~clustering accuracies with
 filtered data minus those without filtering) did not deviate
 meaningfully from zero. However, the 95\% confidence intervals were most
 pronounced at large effect sizes when using raw counts, DESeq Variance
-Stabilization and Upper Quartile Log Fold Change and at smaller effect
-sizes when using rarefaction and relative abundances. I addressed the
-issue of removing rare taxa from datasets in greater detail and observed
-that removing these taxa significantly alters the shape of the
-communities and inferences that can be drawn between them (11). Given my
-previous work and the large variation caused by removing rare taxa, OTU
+Stabilization and Upper-Quartile Log-Fold Change and at smaller effect
+sizes when using rarefaction and relative abundances. Given the large
+variation caused by removing rare taxa and my previous work, OTU
 filtering should not be performed in microbiome analyses. Considering
 the minimal effect that removing rare OTUs had on the median difference
-in clusterin accuracy in the current simulation framework, I have used
+in clustering accuracy in the current simulation framework, I have used
 the filtered datasets throughout the current study.
 
 \hypertarget{there-was-no-accounting-for-differences-in-performance-when-library-sizes-are-confounded-with-treatment-group}{%
@@ -752,39 +793,41 @@ when library sizes are confounded with treatment
 group}\label{there-was-no-accounting-for-differences-in-performance-when-library-sizes-are-confounded-with-treatment-group}}
 
 I and others have observed that not using rarefaction can lead to
-falsely detecing differences between communities when sampling effort is
-confounded with the treatment group (3). Such situations have been
-observed when comparing communities at different body parts where one
-site is more likely to generate contaminating sequence reads from the
-host (12). Previous analyses showed that rarefaction did the best job of
+falsely detecting differences between communities when sampling effort
+is confounded with the treatment group (25, 40). Previous analyses
+showed that in these situations rarefaction did the best job of
 controlling the rates of false detection (i.e., Type I errors) and
 maintaining the statistical power to detect differences (i.e., 1-rate of
-Type II errors) of differences between groups of samples. To determine
-whether this result was replicated with the WNWN simulation framework, I
-created a sampling distribution where sequencing depth was fully
-confounded with the treatment group using both the GlobalPatterns and
-Log-scaled sequence distributions. To confound the sequencing depth,
-sequencing depths from one treatment group were drawn from below the
-median number of sequences of the sampling distribution and those for
-the second treatment group were from above the median. To assess Type I
-errors, I compared the clustering accuracies using an effect size of 1.0
-using both the confounded and randomized sampling distributions (see
-rows 1 and 2 of Figure 14). The samples should have only been assigned
-to one cluster; however, each of the clustering methods forced the
-samples into two clusters. So, when there are two groups of 40 samples
-that do not differ, the best a method could do would be to correctly
-assign 41 of the 80 samples for an accuracy of 0.51. The Type I error
-did not vary by method when the sequencing depth was randomized across
-treatment groups. Yet, when the sequencing depth was confounded with
-treatment group, rarefaction was the most consistent normalization
-method for controlling Type I errors. At larger effect sizes the power
-to detect differences increased when the sequencing depth was confounded
-with treatment group (Figure 14). At the effect size of 1.15, the
-rarefied data generated the highest accuracy clusters regardless of
-whether the sequencing depths were confounded. Although the level of
-confounding in this simulation was extreme, it highlights the ability of
-rarefaction to control Type I errors while maintaining high power and
-the sensitivity of the other normalization methods.
+Type II errors) of differences between groups of samples. Such
+situations have been observed when comparing communities at different
+body parts where one site is more likely to generate contaminating
+sequence reads from the host (41). To determine whether this result was
+replicated with the WNWN simulation framework, I created a sampling
+distribution where sequencing depth was fully confounded with the
+treatment group using both the GlobalPatterns and Log-scaled sequence
+distributions. To confound the sequencing depth, sequencing depths from
+one treatment group were drawn from below the median number of sequences
+of the sampling distribution and those for the second treatment group
+were from above the median. To assess the risk of falsely detecting
+clusters, I compared the clustering accuracies using an effect size of
+1.00 using both the confounded and randomized sampling distributions
+(see rows 1 and 2 of Figure 14). The samples should have only been
+assigned to one cluster; however, each of the clustering methods forced
+the samples into two clusters. So, when there are two groups of 40
+samples that do not differ, the best a method could do would be to
+correctly assign 41 of the 80 samples for an accuracy of 0.51. The false
+detection risk did not vary by method when the sequencing depth was
+randomized across treatment groups. Yet, when the sequencing depth was
+confounded with treatment group, rarefaction was the most consistent
+normalization method for controlling the generation of spurious
+clusters. At larger effect sizes the ability to correctly identify two
+clusters increased when the sequencing depth was confounded with
+treatment group (Figure 14). At the effect size of 1.15, the rarefied
+data generated the highest accuracy clusters regardless of whether the
+sequencing depths were confounded. Although the level of confounding in
+this simulation was extreme, it highlights the ability of rarefaction to
+control the false detection rate and the ability to correctly detect
+clusters relative to the other normalization methods.
 
 \hypertarget{clustering-accuracy-was-used-rather-than-the-more-direct-and-frequently-applied-comparisons-of-beta-diversity-using-permutation-tests}{%
 \subsubsection{10. Clustering accuracy was used rather than the more
@@ -796,32 +839,26 @@ Since WNWN was published, there has been controversy over the use of
 clustering methods to group samples (i.e., enterotypes). Concerns have
 been raised including whether such clustering should be done on
 ecological distances or sequence counts and the biological
-interpretation of such clusters {[}\textbf{XXXXX}{]}. As described in
-the previous point, one notable challenge with using clustering accuracy
-as the dependent variable is that the clustering methods force the
-samples into one of two clusters. For the case where the effect size was
-1.0, it was impossible for all 80 samples to be assigned to a single
-cluster. As has already been described in point 5, an additional problem
-with clustering is the variation in the relative performance of a method
-across conditions. A more commonly used approach for analyzing distance
-matrices is to use a non-parametric analysis of variance test of the
-various distance matrices (i.e., AMOVA, PERMANOVA,
-NP-ANOVA){[}\textbf{XXXXX}{]}. I subjected each of the distance matrices
-to such a test using \texttt{adonis2}, a function from the vegan R
-package that implements this test to assess the effects of each
-normalization and distance calculation method on the Type I errors and
-statistical power (13). As was seen above, when sequencing depths were
-randomly distributed across the two treatment groups, the Type I error
-did not meaningfully deviate from the expected 5\% (Figure 15
-\textbf{adonis\_skew\_compare.pdf}). Again, when sequencing depths were
+interpretation of such clusters (27, 42, 43). As described in the
+previous point, one notable challenge with using clustering accuracy as
+the dependent variable is that the clustering methods force the samples
+into one of two clusters. For the case where the effect size was 1.00,
+it was impossible for all 80 samples to be assigned to a single cluster.
+A more commonly used approach for analyzing distance matrices is to use
+a non-parametric analysis of variance test (i.e., AMOVA, PERMANOVA,
+NP-ANOVA)(44). I subjected each of the distance matrices to such a test
+using \texttt{adonis2}, a function from the \texttt{vegan} R package
+that implements this test to assess the effects of each normalization
+and distance calculation method on the Type I errors and statistical
+power (45). When sequencing depths were randomly distributed across the
+two treatment groups, the Type I error did not meaningfully deviate from
+the expected 5\% (Figure 15). However, when sequencing depths were
 confounded with treatment group, rarefaction was the only normalization
 approach to control the Type I error. Similar to the clustering accuracy
 results, when distances were calculated using rarefaction, the tests
-consistently had the best statistical power (Figure 15
-\textbf{adonis\_skew\_compare.pdf}). When considering both Type I error
-and power, rarefaction performed the best among the different
-normalizations. It is also worth noting that directly comparing the
-distances performed better than a clsuter-based analysis.
+consistently had the best statistical power (Figure 15). When
+considering both Type I error and power, rarefaction performed the best
+among the different normalizations.
 
 \hypertarget{there-was-no-consideration-of-effects-of-normalization-methods-on-alpha-diversity-metrics-which-is-the-traditional-application-of-rarefaction}{%
 \subsubsection{11. There was no consideration of effects of
@@ -830,115 +867,118 @@ traditional application of
 rarefaction}\label{there-was-no-consideration-of-effects-of-normalization-methods-on-alpha-diversity-metrics-which-is-the-traditional-application-of-rarefaction}}
 
 Rarefaction was originally proposed as a method for controlling uneven
-sampling effort when comparing community richness values
-{[}\textbf{XXXXX}{]}. Thus it was surprising that WNWN did not consider
-the effect of the proposed normalizations on alpha-diversity metrics
-such as richness or Shannon diversity. Therefore, for each of the
-normalizations, I compared the richness and diversity of the two
-treatment groups. The DESeq normalized data were not included because
-the normalization produced negative values which were not compatible
-with calculations of richness or Shannon diversity. Also, data from the
-Upper Quartile Log Fold Change normalization were not used for richness
+sampling effort when comparing community richness values (5, 6). Thus it
+was surprising that WNWN did not consider the effect of the proposed
+normalizations on alpha-diversity metrics such as richness or Shannon
+diversity. Therefore, for each of the normalizations, I compared the
+richness and diversity of the two treatment groups. The DESeq Variance
+Stabilization normalized data were not included because the
+normalization produced negative values which were not compatible with
+calculations of richness or Shannon diversity. Also, data from the
+Upper-Quartile Log-Fold Change normalization were not used for richness
 calculations since the normalization returned the same richness values
-for each sample regardless of the treatment group. I assessed
-significance for each iteration using the non-parametric Wilcoxon
-two-sampled test. I compared the risk of committing Type I errors and
-the power to detect differences by the different normalizations (Figures
-16 and 17). For these analyses, I used the GlobalPatterns data with the
-random and confounded distribution of sequencing depths. Similar to the
-results in points 9 and 10, with the exception of rarefaction, the
-simulations using a confounded sequence depth distribution resulted in
-all of the replicates having a significant test. The power to detect
-differences in richness and diversity at effect sizes of 1.15 and
-greater with rarefaction was at least as high as any of the other
-normalizations.
+for each sample regardless of the treatment group. I assessed whether
+the alpha diversity was significantly differente between the treatment
+groups for each iteration using the non-parametric Wilcoxon two-sampled
+test. I compared the risk of committing Type I errors and the power to
+detect differences by the different normalizations (Figures 16 and 17).
+For these analyses, I used the GlobalPatterns data with the random and
+confounded distribution of sequencing depths. Similar to the results in
+points 9 and 10, with the exception of rarefaction, the simulations
+using a confounded sequence depth distribution resulted in all of the
+replicates having a significant test. The power to detect differences in
+richness and diversity at effect sizes of 1.15 and greater with
+rarefaction was at least as high as any of the other normalizations.
 
 One odd result from this analysis was that the power to detect
 differences in richness at small effect sizes increased between 1,000 to
-2,000 sequences with values of 91 and 100, respectively. The power then
-decreased with increasing sequencing effort to 56 with 50,000 sequences.
-This appeared to be because although the parent distributions had very
-different shapes, they shared a large number of rare taxa. When using
-rarefaction to compare the distributions at the size of the smallest
-distribution (i.e., 3,598,077 sequences), the Feces parent distribution
-had and average of 1,559.65 OTUs and the Ocean had an average of
-1,335.00 OTUs; they shared an average of 894.66 OTUs. However, when
-comparing the distributions at 1,000 and 50,000 sequences, the Ocean
-distribution had greater richness than the Feces distribution by 43.76
-and 6.05, respectively. Therefore, although more replicates at lower
-effect sizes yielded a small p-value at shallow rather than deeper
-sequencing depths for richness, the direction of the difference in
-richness was incorrect. This result underscores the challenges of using
-metrics based on presence-absence data like richness and Jaccard and
-Unweighted UniFrac distances to compare microbial communities.
+2,000 sequences with values of 0.91 and 1.00, respectively. The power
+then decreased with increasing sequencing effort to 0.57 with 50,000
+sequences. This appeared to be because although the parent distributions
+had very different shapes, they shared a large number of rare taxa. When
+using rarefaction to compare the distributions at the size of the
+smallest distribution (i.e., 3,598,077 sequences), the feces parent
+distribution had and average of 1,559.65 OTUs and the ocean had an
+average of 1,335.00 OTUs; they shared an average of 894.66 OTUs.
+However, when comparing the distributions at 1,000 and 50,000 sequences,
+the Ocean distribution had greater richness than the feces distribution
+by 43.76 and 6.05, respectively. Therefore, although more replicates at
+lower effect sizes yielded a significant p-value at shallow rather than
+deeper sequencing depths for richness, the direction of the difference
+in richness was incorrect. This result underscores the challenges of
+using metrics based on presence-absence data like richness and Jaccard
+and Unweighted UniFrac distances to compare microbial communities.
 
 \hypertarget{discussion}{%
 \subsection{Discussion}\label{discussion}}
 
-The conclusions from McMurdie and Holmes's study have had a lasting
-impact on how researchers analyze microbiome sequence data. As I have
-demonstrated using WNWN's simulation approach their claims are not
-supported. The most important points that lead to the difference in our
-conclusions include the choice of clustering algorithm and arbitrarily
-selecting a sequencing effort threshold that was used to remove samples.
-Furthermore the decision to evaluate the effectiveness of normalization
-methods based on clustering samples adds a layer of analysis that has
-been controversial and not widely used. Ultimately, the authors choice
-of the word ``rarefying'' has sewn confusion in the field because it is
-often used in place of the word ``rarefaction''. As I have demonstrated
-there were numerous choices throughout the orininal study that made
-rarefying/rarefaction look worse than it truly was. In fact, when the
-data are taken as a whole, rarefaction is the preferred approach. Short
+The conclusions from WNWN have had a lasting impact on how researchers
+analyze microbiome sequence data. As I have demonstrated using WNWN's
+simulation framework, their claims are not supported. The most important
+points that lead to the difference in our conclusions include the choice
+of clustering algorithm and arbitrarily selecting a sequencing effort
+threshold that was used to remove samples. Furthermore, the decision to
+evaluate the effectiveness of normalization methods based on clustering
+samples adds a layer of analysis that has been controversial and not
+widely used. Ultimately, the authors choice of the word ``rarefying''
+has sewn confusion in the field because it is often used in place of the
+word ``rarefaction''. As I have demonstrated there were numerous choices
+throughout the original study that resulted in rarefying/subsampling
+looking worse than it truly is. In fact, when the data of the current
+study are taken as a whole, rarefaction is the preferred approach. Short
 of obtaining the exact same number of sequences from each sample,
 rarefaction remains the best approach to control for uneven sampling
-effort when analyzing alpha and beta diversity metrics.
+effort when analyzing alpha and beta diversity metrics. Although beyond
+the scope of the current study, the same principles would support using
+rarefaction to control for uneven sampling effort in shotgun metagenomic
+sequencing analyses.
 
 Beyond the discussion of whether rarefaction is appropriate for
-analyzing microbiome data it is worth commenting on McMurdie and
-Holmes's advice to use DESeq's Variance Stabilization or edgeR's Upper
-Quartile Log-fold Change normalization strategies. These methods have
-been adopted from gene expression analysis to microbiome analysis. Gene
-expression analysis implicitly assumes that all samples have the same
-genes since. While this might work in comparing healthy and diseased
-tissues from a cohort of patients, it does not generalize to those
-patients' microbiota. Microbial populations are highly patchy in their
-distribution. Thus, a zero count for gene expression is more likely to
-represent a gene below the limit of detection whereas a zero count for a
-microbiome analysis is more likely to represent the true absense of the
-OTU. An example of where this is relevant is the necessity of adding a
-pseudocount to all OTUs to perform both the edgeR and DESeq-based
-normalizations (L443 and L487, respectively). In WNWN, a pseudocount of
-1 was used. However, this value is arbitrary and the sensitivity of the
-results can vary based on the patchiness of the communties being
-analyzed. Since WNWN was published, compositional approaches have been
-proposed to account for uneven sampling and to provide improved
-interpretability {[}\textbf{XXXXX}{]}. However, these methods also often
-require the use of pseudocounts and are not actually insensitive to
-uneven sampling {[}\textbf{XXXXX}{]}. Rarefaction is preferred to these
-alternatives.
+analyzing microbiome data it is worth commenting on WNWN's advice to use
+DESeq's Variance Stabilization or edgeR's Upper-Quartile Log-fold Change
+normalization strategies. These methods have been adopted from gene
+expression analysis to microbiome analysis. Gene expression analysis
+implicitly assumes that all samples have the same genes since. While
+this might work in comparing healthy and diseased tissues from a cohort
+of patients, it does not generalize to those patients' microbiota.
+Microbial populations are highly patchy in their distribution. Thus, a
+zero count for gene expression is more likely to represent a gene below
+the limit of detection whereas a zero count for a microbiome analysis is
+more likely to represent the true absence of the OTU. In fact, zeroes
+are less common in gene expression analyses. But because microbiome
+studies have so many zeroes, it is necessary to add a pseudo-count to
+all OTUs for both the edgeR and DESeq-based normalizations (L443 and
+L487, respectively). In WNWN, a pseudo-count of 1 was used. However,
+this value is arbitrary and the results can vary based on the choice of
+pseudo-count and the patchiness of the communities being analyzed. Since
+WNWN was published, compositional approaches have been proposed to
+account for uneven sampling and to provide improved interpretability
+(14, 16--18, 46, 47). However, these methods also often require the use
+of pseudo-counts and are not actually insensitive to uneven sampling
+(40). Rarefaction is preferred to these alternatives.
 
 The choice of distance metric is a complicated question and the use of
-six different metrics in WNWN illustrates the challenges. Within the
-ecology literature, Euclidean distances are widely avoided because joint
-absense is weighted the same as joint presence of taxa (14). As
-discussed in point 11, metrics that are based on community membership
-(i.e., the presence or absense of taxa) performed worse than those than
-those that were based on community structure (i.e., their relative
-abundance). For this reason, the Unweighted UniFrac and other metrics
-like the Jaccard or Sorenson distance coefficients should likely be
-avoided. The Poisson distance metric is largely novel to the microbial
-ecology literature and performed no better than the more traditional
-metrics. In the current analysis, the phylogenetic Weighted UniFrac
-distance performed comparably to Bray-Cutis distances for clustering or
-differentiating between communities with adonis. Regardless of the
-distance caluclation employed, they all performed best when using
-rarefaction relative to the other normalization methods.
+six different metrics in WNWN illustrates the challenges of selecting
+one. Within the ecology literature, Euclidean distances are widely
+avoided because joint absence is weighted the same as joint presence of
+taxa (31). As discussed in point 11, metrics that are based on community
+membership (i.e., the presence or absence of taxa) performed worse than
+those than those that were based on community structure (i.e., their
+relative abundance). For this reason, the Unweighted UniFrac and other
+metrics like the Jaccard or Sorenson distance coefficients should likely
+be avoided. The Poisson distance metric is largely novel to the
+microbial ecology literature and performed no better than the more
+traditional metrics. In the current analysis, the phylogenetic Weighted
+UniFrac distance performed comparably to Bray-Cutis distances for
+clustering or differentiating between communities with adonis.
+Regardless of the distance calculation employed, they all performed best
+when using rarefaction relative to the other normalization methods.
 
 Although the authors claim that ``Rarefying counts requires an arbitrary
 selection of a library size minimum that affects downstream inference''
-(page 8, column 1, point 3), in acutal microbiome studies the selection
+(page 8, column 1, point 3), in actual microbiome studies the selection
 of a sampling depth is not as arbitrary as the authors claim. Rather, to
-avoid ``p-hacking'', researchers pick a set of criteria where they will
+avoid ``P-hacking'', researchers pick a set of criteria where they will
 include or exclude samples prior to testing their data. Examples of
 criteria might include the presence of a large gap in the sequencing
 effort distribution, a desire to include poorly sequenced controls, or
@@ -950,29 +990,29 @@ selected.
 WNWN performed a second set of simulations to address the effect of
 normalization method on the ability to correctly detect differential
 abundance of OTUs that were randomly selected to have their relative
-abundances changed (i.e., ``Simulation B''). Re-addresssing this set of
-simulations is beyond the scope of the current anaylsis and others have
-already contributed critiques {[}(3); Gloor?{]}. However, many of the
-same concerns addressed above would apply. Perhaps most important is the
-fact that if the relative abundance of several OTUs increase, then the
-relative abundance of all other OTUs would necessarily decrease because
-the data are compositional {[}\textbf{XXXXX}{]}. Thus, one would expect
-every OTU to be differentially abundant. Because of this, it is not
-possible to truly modify the abundance of a set of OTUs indepdent of all
-othter OTUs. This is an important limitation of tests of methods
-attempting to detect differentially abundant OTUs. Regardless, a form of
-rarefaction could still be employed for detecting differential
-abundance. One could subsample the data, perform the statistical test,
-and identify the differentially abundant OTUs. This process could be
-repeated and the results synthesized. In my experience the largest
-differences between subsamples are for low relative abundances OTUs,
-which are unlikely to be biologically or statistically significant.
+abundances changed (i.e., ``Simulation B''). Re-addressing this set of
+simulations is beyond the scope of the current analysis and others have
+already contributed critiques (25). However, many of the same concerns
+addressed above would apply. Perhaps most important is the fact that if
+the relative abundance of several OTUs increase, then the relative
+abundance of all other OTUs would necessarily decrease because the data
+are compositional (47). Thus, one would expect every OTU to be
+differentially abundant. Because of this, it is not possible to truly
+modify the abundance of a set of OTUs independent of all other OTUs.
+This is an important limitation of tests of methods attempting to detect
+differentially abundant OTUs. Regardless, a form of rarefaction could
+still be employed for detecting differential abundance. One could
+subsample the data, perform the statistical test, and identify the
+differentially abundant OTUs. This process could be repeated and the
+results synthesized. In my experience the largest differences between
+subsamples are for low relative abundances OTUs, which are unlikely to
+be biologically or statistically significant.
 
 In a parallel set of analyses I have used alternative simulation and
-evaluation strategies to look closer at rarefaction and its alternatives
-(15) and the practice of filtering low abundance seqeunces (11). The
-results of those studies are similar to this reanalysis. These studies
-demonstrate that it is actually sequence and OTU filtering that
+evaluation strategies to look more closely at rarefaction and its
+alternatives (40) and the practice of filtering low abundance sequences
+(4). The results of those studies are similar to this analysis. These
+studies demonstrate that it is actually sequence and OTU filtering that
 ``requires the omission of available valid data'' and that rarefaction
 is the only available method for controlling the effects of uneven
 sampling. Far from being inadmissible, rarefaction of unfiltered
@@ -989,7 +1029,7 @@ study is available at
 \url{https://www.github.com/SchlossLab/Schloss_WNWN_XXXXX_2023}. All
 simulations and analyses were performed using R and bash scripts using
 Snakemake (v7.24.0) to track dependencies and automate the pipeline and
-conda (v4.12.0) and mamba (v1.1.0) to specify software and package
+Conda (v4.12.0) and mamba (v1.1.0) to specify software and package
 versions (see \texttt{workflow/envs/nr-base.yml} in the repository).
 This manuscript was written as an R-flavored markdown document and
 rendered using the \texttt{rmarkdown} R package (v2.18). All figures
@@ -1018,7 +1058,7 @@ whereas the WNWN analysis used v3.0.2. Finally, to render the
 \texttt{simulation-cluster-accuracy-server.Rmd} file to HTML, it was
 necessary to apply a patch to the code. This patch set the path to the
 location where the figures should be saved and removed the R code that
-deleted all objects in the enviornment. Both changes were necessary to
+deleted all objects in the environment. Both changes were necessary to
 better organize the project and had no substantial bearing on the
 content of the rendered HTML file.
 
@@ -1028,29 +1068,29 @@ content of the rendered HTML file.
 The code contained within
 \texttt{simulation-cluster-accuracy-server.Rmd} was spilt into
 individual R scripts and modified to make the generation of the
-simulated communities more modular and scalable. The code for geneating
-the simulated communities was run using the nr-s1 conda environment. The
-Ocean and Feces parent distributions were generated as described above.
-Five variables were altered to simulate each set of communities. First,
-eight mixing fractions were used to manipulate the effect size between
-the two simulated treatment groups with 40 samples per group. These were
-the same effect sizes used in the WNWN study (1.0 {[}i.e., no
-difference{]}, 1.15, 1.25, 1.5, 1.75, 2, 2.5, and 3.5). Second, the
-number of sequences in each of the 80 samples was either randomly
-selected from the 26 library sizes contained within the GlobalPatterns
-dataset or from a log distribution of 80 sequencing depths evenly
-distributed between the most shallow (58,688 sequences) and deeply
-(2,357,181 sequences) sequenced samples in the GlobalPatterns dataset
-(Figure \textbf{distribution\_shape.pdf}). Third, the resulting 80
-sequencing depths were scaled so that the median sequencing depth across
-the 80 samples was either 1,000, 2,000, 5,000, 10,000, or 50,000
-sequences. Fourth, the sequencing depth of each sample was either
-randomly assigned to each treatment group or assigned so that those
-depths less than or greater than the median were assigned to separate
-treatment groups. Finally, each set of conditions was replicated 100
-times. These five parameters resulted in 1,600 simulated datasets (8
-effect sizes x 2 sequencing depth models x 5 sequencing depths x 2
-sequencing depth assignment models x 100 replicates).
+simulated communities more modular and scalable. The code for generating
+the simulated communities was run using the \texttt{nr-s1} Conda
+environment. The ocean and feces parent distributions were generated as
+described above. Five variables were altered to simulate each set of
+communities. First, eight mixing fractions were used to manipulate the
+effect size between the two simulated treatment groups with 40 samples
+per group. These were the same effect sizes used in the WNWN study (1.00
+{[}i.e., no difference{]}, 1.15, 1.25, 1.50, 1.75, 2.00, 2.50, and
+3.50). Second, the number of sequences in each of the 80 samples was
+either randomly selected from the 26 library sizes contained within the
+GlobalPatterns dataset or from a log distribution of 80 sequencing
+depths evenly distributed between the most shallow (58,688 sequences)
+and deeply (2,357,181 sequences) sequenced samples in the GlobalPatterns
+dataset (Figure 10). Third, the resulting 80 sequencing depths were
+scaled so that the median sequencing depth across the 80 samples was
+either 1,000, 2,000, 5,000, 10,000, or 50,000 sequences. Fourth, the
+sequencing depth of each sample was either randomly assigned to each
+treatment group or assigned so that those depths less than or greater
+than the median were assigned to separate treatment groups. Finally,
+each set of conditions was replicated 100 times. These five parameters
+resulted in 1,600 simulated datasets (8 effect sizes x 2 sequencing
+depth models x 5 sequencing depths x 2 sequencing depth assignment
+models x 100 replicates).
 
 \hypertarget{generation-of-distances-between-communities}{%
 \subsubsection{Generation of distances between
@@ -1061,41 +1101,42 @@ normalize uneven sampling depths, and to calculate ecological distances
 between samples. Again, the code contained within
 \texttt{simulation-cluster-accuracy-server.Rmd} was spilt into
 individual R scripts and modified to make the generation of the
-simulated communities more modular and scalable within the nr-s1 conda
-environment. First, each simulation was either filtered to remove rare
-OTUs or left unfilterd. As was done in the WNWN study, filtering was
-performed in two steps: (1) any OTUs whose total abundance was less than
-3 across all 80 samples and that did not appear in at least 3 samples
-and (2) any OTU that did not have more than 1 sequence in more than 5\%
-of the 80 samples (i.e., 4 samples) and that did not have a total
-abundance across the 80 samples greater than one half of the number of
-samples in each community type (i.e., 20) were removed. Second, OTU data
-was normalized by one of six approaches: (1) non-normalized raw counts,
-(2) relative abundance, (3) varaiance stabilization using DESeq, (4)
-Upper Quartile normalization using edgeR, (5) a single subsampling to a
-common number of sequences, (6) rarefaction with 100 randomizations to a
-common number of sequences. Although the data were not presented, the
-WNWN code and my code also normalized the counts using trimmed mean of
-M-values (TMM) and relative log expression (RLE) in edgeR. The level of
-subsampling and rarefaction was selected based on the size of the sample
-whose sequencing depth was at the 0 (i.e., included all of the samples),
-5, 10, 15, 20, 25, and 40th percentiles. Finally, the normalized
-simulated datasets were used to calculate pairwise distances between the
-80 samples using seven different calculations: Bray-Curtis, Euclidean,
-Poisson, Mean Squared Difference, Unweighted UniFrac, Weighted Unifrac,
-and Biological Coeffcient of Variation (BCV); however, data using BCV
-were not discussed in this or the WNWN analysis. For the rarefaction
-normalized data, each of the 100 subsampled datasets were used to
-calculate a distance matrix. The mean of the 100 distance matrices was
-used as the distance matrix for the rarefaction data. As indicated in
-the Results section, there were combinations of normalization and
-distance methods that were not compatible (e.g., DESeq Variance
-Stabilization normalization with Bray-Curtis distances). In such cases,
-distance matrices were coded as \texttt{NA}. My choice of combinations
-of normalizations and distances to visualize was determined by the WNWN
+simulated communities more modular and scalable within the
+\texttt{nr-s1} Conda environment. First, each simulation was either
+filtered to remove rare OTUs or left unfiltered. As was done in the WNWN
+study, filtering was performed in two steps: (1) any OTUs whose total
+abundance was less than 3 across all 80 samples and that did not appear
+in at least 3 samples and (2) any OTU that did not have more than 1
+sequence in more than 5\% of the 80 samples (i.e., 4 samples) and that
+did not have a total abundance across the 80 samples greater than one
+half of the number of samples in each community type (i.e., 20) were
+removed. Second, OTU data was normalized by one of six approaches: (1)
+non-normalized raw counts, (2) relative abundance, (3) DESeq Variance
+Stabilization, (4) Upper-Quartile Log-Fold Change normalization using
+edgeR, (5) a single subsampling to a common number of sequences, (6)
+rarefaction with 100 randomizations to a common number of sequences.
+Although the data were not presented, the WNWN code and my code also
+normalized the counts using trimmed mean of M-values (TMM) and relative
+log expression (RLE) in edgeR. The level of subsampling and rarefaction
+was selected based on the size of the sample whose sequencing depth was
+at the 0 (i.e., included all of the samples), 5, 10, 15, 20, 25, and
+40th percentiles. Finally, the normalized simulated datasets were used
+to calculate pairwise distances between the 80 samples using seven
+different calculations: Bray-Curtis, Euclidean, Poisson, Mean Squared
+Difference, Unweighted UniFrac, Weighted Unifrac, and Biological
+Coeffcient of Variation (BCV); however, data using BCV were not
+discussed in this or the WNWN analysis. For the rarefaction normalized
+data, each of the 100 subsampled datasets were used to calculate a
+distance matrix. The mean of the 100 distance matrices was used as the
+distance matrix for the rarefaction data. As indicated in the Results
+section, there were combinations of normalization and distance methods
+that were not compatible (e.g., DESeq Variance Stabilization
+normalization with Bray-Curtis distances). In such cases, distance
+matrices were coded as \texttt{NA}. My choice of combinations of
+normalizations and distances to visualize was determined by the WNWN
 analysis except where noted. For each simulated dataset there were 280
 possible combinations of filtering, normalization, and distance methods
-(2 filtering methods x 20 normalization method x 7 distance methods).
+(2 filtering methods x 20 normalization methods x 7 distance methods).
 
 \hypertarget{analysis-of-distances-between-communities}{%
 \subsubsection{Analysis of distances between
@@ -1103,8 +1144,8 @@ communities}\label{analysis-of-distances-between-communities}}
 
 Two general strategies were used to analyze the pairwise distances in
 each distance matrix. First, by recycling the the code contained within
-\texttt{simulation-cluster-accuracy-server.Rmd} in the nr-s1 Conda
-environment, samples were assigned to one of two clusters using
+\texttt{simulation-cluster-accuracy-server.Rmd} in the \texttt{nr-s1}
+Conda environment, samples were assigned to one of two clusters using
 partitioning around the medoid (PAM) with the \texttt{pam} function from
 the \texttt{cluster} R package, K-means clustering with the
 \texttt{kmeans} function from the \texttt{stats} base R package, and
@@ -1116,36 +1157,37 @@ number of sequences in them fell below the threshold for subsampling or
 rarefaction, then the accuracy could be below 50\%. For the effect size
 of 1.00 all of the samples should have been assigned to one group;
 however, because they were forced into two groups there would be 41
-``correctly'' assigned samples of the 80 samples (51.25\%). Second, the
-distance matrices were analyzed for significant different centroids
-using the \texttt{adonis2} function from the \texttt{vegan} package
-(v2.6-4) in the nr-modern environment. The fraction of significant tests
-was the fraction of the 100 replicate simulations that had a p-value
-less than or equal to 0.05. The Type I error rate for a condition was
-the fraction of significant tests when the effect size was 1.0. The
-power was the fraction of significant tests at other effect sizes.
+``correctly'' assigned samples of the 80 samples (i.e., an accuracy of
+0.51). Second, the distance matrices were analyzed for significant
+different centroids using the \texttt{adonis2} function from the
+\texttt{vegan} package (v2.6-4) in the \texttt{nr-modern} Conda
+environment. The fraction of significant tests was the fraction of the
+100 replicate simulations that had a p-value less than or equal to 0.05.
+The Type I error rate for a condition was the fraction of significant
+tests when the effect size was 1.00. The power was the fraction of
+significant tests at other effect sizes.
 
 \hypertarget{analysis-of-richness-and-diversity-between-communities}{%
 \subsubsection{Analysis of richness and diversity between
 communities}\label{analysis-of-richness-and-diversity-between-communities}}
 
-The WNWN analysis did not address the impact of normalization on alpha
-diversitiy metrics. Using the nr-s1 conda environment, I measured the
-richness and Shannon diversity using the normalized OTU counts. Richness
-was measured by counting the number of OTUs for each sample across the
-simulations and the Shannon diversity using their relative abundance
-using the commonly used formula (14). For the rarefaction data, each of
-the 100 subsampled datasets were used to calculate the richness and
-diversity. The mean of the 100 values was used as the value for the
-rarefaction data. To assess differences between the two treatment
-groups, the richness and diversity values were compared using the
-two-sample Wilcoxon non-parametric test with the \texttt{wilcox.test}
-from the \texttt{stats} base R package. Similar to the adonis analysis,
-the fraction of significant tests was the fraction of the 100 replicate
-simulations that had a p-value less than or equal to 0.05. The Type I
-error rate for a condition was the fraction of significant tests when
-the effect size was 1.0. The power was the fraction of significant tests
-at other effect sizes.
+Using the \texttt{nr-s1} Conda environment, I measured the richness and
+Shannon diversity using the normalized OTU counts. Richness was measured
+by counting the number of OTUs for each sample across the simulations
+and the Shannon diversity using their relative abundance using the
+commonly used formula (31). For the rarefaction data, each of the 80
+samples in the 100 subsampled datasets were used to calculate the
+richness and diversity. The mean across the 100 subsamplings was used as
+the value for the rarefaction data across each of the 80 samples. To
+assess differences between the two treatment groups, the richness and
+diversity values were compared using the two-sample Wilcoxon
+non-parametric test with the \texttt{wilcox.test} from the
+\texttt{stats} base R package. Similar to the analysis using
+\texttt{adonis2}, the fraction of significant tests was the fraction of
+the 100 replicate simulations that had a p-value less than or equal to
+0.05. The Type I error rate for a condition was the fraction of
+significant tests when the effect size was 1.00. The power was the
+fraction of significant tests at other effect sizes.
 
 \hypertarget{acknowledgements}{%
 \subsection{Acknowledgements}\label{acknowledgements}}
@@ -1168,8 +1210,17 @@ their code.
 
 \hypertarget{refs}{}
 \begin{CSLReferences}{0}{1}
-\leavevmode\vadjust pre{\hypertarget{ref-Caporaso2010}{}}%
+\leavevmode\vadjust pre{\hypertarget{ref-Sogin2006}{}}%
 \CSLLeftMargin{1. }%
+\CSLRightInline{\textbf{Sogin ML}, \textbf{Morrison HG}, \textbf{Huber
+JA}, \textbf{Welch DM}, \textbf{Huse SM}, \textbf{Neal PR},
+\textbf{Arrieta JM}, \textbf{Herndl GJ}. 2006. Microbial diversity in
+the deep sea and the underexplored {``}rare biosphere{''}. Proceedings
+of the National Academy of Sciences \textbf{103}:12115--12120.
+doi:\href{https://doi.org/10.1073/pnas.0605127103}{10.1073/pnas.0605127103}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Caporaso2010}{}}%
+\CSLLeftMargin{2. }%
 \CSLRightInline{\textbf{Caporaso JG}, \textbf{Lauber CL},
 \textbf{Walters WA}, \textbf{Berg-Lyons D}, \textbf{Lozupone CA},
 \textbf{Turnbaugh PJ}, \textbf{Fierer N}, \textbf{Knight R}. 2010.
@@ -1178,25 +1229,175 @@ sequences per sample. Proceedings of the National Academy of Sciences
 \textbf{108}:4516--4522.
 doi:\href{https://doi.org/10.1073/pnas.1000080107}{10.1073/pnas.1000080107}.}
 
+\leavevmode\vadjust pre{\hypertarget{ref-Kozich2013}{}}%
+\CSLLeftMargin{3. }%
+\CSLRightInline{\textbf{Kozich JJ}, \textbf{Westcott SL}, \textbf{Baxter
+NT}, \textbf{Highlander SK}, \textbf{Schloss PD}. 2013. Development of a
+dual-index sequencing strategy and curation pipeline for analyzing
+amplicon sequence data on the {MiSeq} illumina sequencing platform.
+Applied and Environmental Microbiology \textbf{79}:5112--5120.
+doi:\href{https://doi.org/10.1128/aem.01043-13}{10.1128/aem.01043-13}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Schloss2023sing}{}}%
+\CSLLeftMargin{4. }%
+\CSLRightInline{\textbf{Schloss PD}. 2020. Removal of rare amplicon
+sequence variants from 16S {rRNA} gene sequence surveys biases the
+interpretation of community structure data. bio{R}xiv.
+doi:\href{https://doi.org/10.1101/2020.12.11.422279}{10.1101/2020.12.11.422279}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Sanders1968}{}}%
+\CSLLeftMargin{5. }%
+\CSLRightInline{\textbf{Sanders HL}. 1968. Marine benthic diversity: A
+comparative study. The American Naturalist \textbf{102}:243--282.
+doi:\href{https://doi.org/10.1086/282541}{10.1086/282541}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Hurlbert1971}{}}%
+\CSLLeftMargin{6. }%
+\CSLRightInline{\textbf{Hurlbert SH}. 1971. The nonconcept of species
+diversity: A critique and alternative parameters. Ecology
+\textbf{52}:577--586.
+doi:\href{https://doi.org/10.2307/1934145}{10.2307/1934145}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Anders2010}{}}%
+\CSLLeftMargin{7. }%
+\CSLRightInline{\textbf{Anders S}, \textbf{Huber W}. 2010. Differential
+expression analysis for sequence count data. Genome Biology \textbf{11}.
+doi:\href{https://doi.org/10.1186/gb-2010-11-10-r106}{10.1186/gb-2010-11-10-r106}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Beule2020}{}}%
+\CSLLeftMargin{8. }%
+\CSLRightInline{\textbf{Beule L}, \textbf{Karlovsky P}. 2020.
+\href{https://doi.org/10.7717/peerj.9593}{Improved normalization of
+species count data in ecology by scaling with ranked subsampling (SRS):
+Application to microbial communities}. PeerJ \textbf{8}:e9593.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Chao2003}{}}%
+\CSLLeftMargin{9. }%
+\CSLRightInline{\textbf{Chao A}, \textbf{Shen T-J}. 2003. Nonparametric
+estimation of shannon's index of diversity when there are unseen species
+in sample. Environmental and ecological statistics
+\textbf{10}:429--443.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Chao2016}{}}%
+\CSLLeftMargin{10. }%
+\CSLRightInline{\textbf{Chao A}, \textbf{Chiu C-H}. 2016. Species
+richness: Estimation and comparison. Wiley StatsRef: statistics
+reference online \textbf{1}:26.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Costea2014}{}}%
+\CSLLeftMargin{11. }%
+\CSLRightInline{\textbf{Costea PI}, \textbf{Zeller G}, \textbf{Sunagawa
+S}, \textbf{Bork P}. 2014. A fair comparison. Nature Methods
+\textbf{11}:359--359.
+doi:\href{https://doi.org/10.1038/nmeth.2897}{10.1038/nmeth.2897}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Hughes2001}{}}%
+\CSLLeftMargin{12. }%
+\CSLRightInline{\textbf{Hughes JB}, \textbf{Hellmann JJ},
+\textbf{Ricketts TH}, \textbf{Bohannan BJM}. 2001. Counting the
+uncountable: Statistical approaches to estimating microbial diversity.
+Applied and Environmental Microbiology \textbf{67}:4399--4406.
+doi:\href{https://doi.org/10.1128/aem.67.10.4399-4406.2001}{10.1128/aem.67.10.4399-4406.2001}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Hughes2005}{}}%
+\CSLLeftMargin{13. }%
+\CSLRightInline{\textbf{Hughes JB}, \textbf{Hellmann JJ}. 2005.
+\href{https://doi.org/10.1016/s0076-6879(05)97017-1}{The application of
+rarefaction techniques to molecular inventories of microbial diversity},
+p. 292--308. \emph{In} Methods in enzymology. Elsevier.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Lin2020}{}}%
+\CSLLeftMargin{14. }%
+\CSLRightInline{\textbf{Lin H}, \textbf{Peddada SD}. 2020. Analysis of
+microbial compositions: A review of normalization and differential
+abundance analysis. npj Biofilms and Microbiomes \textbf{6}.
+doi:\href{https://doi.org/10.1038/s41522-020-00160-w}{10.1038/s41522-020-00160-w}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Love2014}{}}%
+\CSLLeftMargin{15. }%
+\CSLRightInline{\textbf{Love MI}, \textbf{Huber W}, \textbf{Anders S}.
+2014. Moderated estimation of fold change and dispersion for {RNA}-seq
+data with {DESeq}2. Genome Biology \textbf{15}.
+doi:\href{https://doi.org/10.1186/s13059-014-0550-8}{10.1186/s13059-014-0550-8}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Martino2019}{}}%
+\CSLLeftMargin{16. }%
+\CSLRightInline{\textbf{Martino C}, \textbf{Morton JT}, \textbf{Marotz
+CA}, \textbf{Thompson LR}, \textbf{Tripathi A}, \textbf{Knight R},
+\textbf{Zengler K}. 2019. A novel sparse compositional technique reveals
+microbial perturbations. {mSystems} \textbf{4}:00016--19.
+doi:\href{https://doi.org/10.1128/msystems.00016-19}{10.1128/msystems.00016-19}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Paulson2013}{}}%
+\CSLLeftMargin{17. }%
+\CSLRightInline{\textbf{Paulson JN}, \textbf{Stine OC}, \textbf{Bravo
+HC}, \textbf{Pop M}. 2013. Differential abundance analysis for microbial
+marker-gene surveys. Nature Methods \textbf{10}:1200--1202.
+doi:\href{https://doi.org/10.1038/nmeth.2658}{10.1038/nmeth.2658}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Quinn2019}{}}%
+\CSLLeftMargin{18. }%
+\CSLRightInline{\textbf{Quinn TP}, \textbf{Erb I}, \textbf{Gloor G},
+\textbf{Notredame C}, \textbf{Richardson MF}, \textbf{Crowley TM}. 2019.
+A field guide for the compositional analysis of any-omics data.
+{GigaScience} \textbf{8}:giz107.
+doi:\href{https://doi.org/10.1093/gigascience/giz107}{10.1093/gigascience/giz107}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Robinson2009}{}}%
+\CSLLeftMargin{19. }%
+\CSLRightInline{\textbf{Robinson MD}, \textbf{McCarthy DJ},
+\textbf{Smyth GK}. 2009. {edgeR}: A bioconductor package for
+differential expression analysis of digital gene expression data.
+Bioinformatics \textbf{26}:139--140.
+doi:\href{https://doi.org/10.1093/bioinformatics/btp616}{10.1093/bioinformatics/btp616}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-teBeest2021}{}}%
+\CSLLeftMargin{20. }%
+\CSLRightInline{\textbf{Beest DE te}, \textbf{Nijhuis EH},
+\textbf{Möhlmann TWR}, \textbf{Braak CJF}. 2021. Log-ratio analysis of
+microbiome data with many zeroes is library size dependent. Molecular
+Ecology Resources \textbf{21}:1866--1874.
+doi:\href{https://doi.org/10.1111/1755-0998.13391}{10.1111/1755-0998.13391}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Willis2019}{}}%
+\CSLLeftMargin{21. }%
+\CSLRightInline{\textbf{Willis AD}. 2019. Rarefaction, alpha diversity,
+and statistics. Frontiers in Microbiology \textbf{10}:2407.
+doi:\href{https://doi.org/10.3389/fmicb.2019.02407}{10.3389/fmicb.2019.02407}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Willis2015}{}}%
+\CSLLeftMargin{22. }%
+\CSLRightInline{\textbf{Willis A}, \textbf{Bunge J}. 2015. Estimating
+diversity via frequency ratios. Biometrics \textbf{71}:1042--1049.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-McKnight2018}{}}%
+\CSLLeftMargin{23. }%
+\CSLRightInline{\textbf{McKnight DT}, \textbf{Huerlimann R},
+\textbf{Bower DS}, \textbf{Schwarzkopf L}, \textbf{Alford RA},
+\textbf{Zenger KR}. 2018. Methods for normalizing microbiome data: An
+ecological perspective. Methods in Ecology and Evolution
+\textbf{10}:389--400.
+doi:\href{https://doi.org/10.1111/2041-210x.13115}{10.1111/2041-210x.13115}.}
+
 \leavevmode\vadjust pre{\hypertarget{ref-McMurdie2014}{}}%
-\CSLLeftMargin{2. }%
+\CSLLeftMargin{24. }%
 \CSLRightInline{\textbf{McMurdie PJ}, \textbf{Holmes S}. 2014. Waste
 not, want not: Why rarefying microbiome data is inadmissible. {PLoS}
 Computational Biology \textbf{10}:e1003531.
 doi:\href{https://doi.org/10.1371/journal.pcbi.1003531}{10.1371/journal.pcbi.1003531}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Weiss2017}{}}%
-\CSLLeftMargin{3. }%
+\CSLLeftMargin{25. }%
 \CSLRightInline{\textbf{Weiss S}, \textbf{Xu ZZ}, \textbf{Peddada S},
 \textbf{Amir A}, \textbf{Bittinger K}, \textbf{Gonzalez A},
 \textbf{Lozupone C}, \textbf{Zaneveld JR}, \textbf{Vázquez-Baeza Y},
 \textbf{Birmingham A}, \textbf{Hyde ER}, \textbf{Knight R}. 2017.
 Normalization and microbial differential abundance strategies depend
-upon data characteristics. Microbiome \textbf{5}.
+upon data characteristics. Microbiome \textbf{5}:27.
 doi:\href{https://doi.org/10.1186/s40168-017-0237-y}{10.1186/s40168-017-0237-y}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-NavasMolina2013}{}}%
-\CSLLeftMargin{4. }%
+\CSLLeftMargin{26. }%
 \CSLRightInline{\textbf{Navas-Molina JA}, \textbf{Peralta-Sánchez JM},
 \textbf{González A}, \textbf{McMurdie PJ}, \textbf{Vázquez-Baeza Y},
 \textbf{Xu Z}, \textbf{Ursell LK}, \textbf{Lauber C}, \textbf{Zhou H},
@@ -1207,15 +1408,8 @@ doi:\href{https://doi.org/10.1186/s40168-017-0237-y}{10.1186/s40168-017-0237-y}.
 understanding of the human microbiome using {QIIME}}, p. 371--444.
 \emph{In} Methods in enzymology. Elsevier.}
 
-\leavevmode\vadjust pre{\hypertarget{ref-Hughes2005}{}}%
-\CSLLeftMargin{5. }%
-\CSLRightInline{\textbf{Hughes JB}, \textbf{Hellmann JJ}. 2005.
-\href{https://doi.org/10.1016/s0076-6879(05)97017-1}{The application of
-rarefaction techniques to molecular inventories of microbial diversity},
-p. 292--308. \emph{In} Methods in enzymology. Elsevier.}
-
 \leavevmode\vadjust pre{\hypertarget{ref-Koren2013}{}}%
-\CSLLeftMargin{6. }%
+\CSLLeftMargin{27. }%
 \CSLRightInline{\textbf{Koren O}, \textbf{Knights D}, \textbf{Gonzalez
 A}, \textbf{Waldron L}, \textbf{Segata N}, \textbf{Knight R},
 \textbf{Huttenhower C}, \textbf{Ley RE}. 2013. A guide to enterotypes
@@ -1224,44 +1418,107 @@ in human microbiome datasets. {PLoS} Computational Biology
 \textbf{9}:e1002863.
 doi:\href{https://doi.org/10.1371/journal.pcbi.1002863}{10.1371/journal.pcbi.1002863}.}
 
-\leavevmode\vadjust pre{\hypertarget{ref-Sanders1968}{}}%
-\CSLLeftMargin{7. }%
-\CSLRightInline{\textbf{Sanders HL}. 1968. Marine benthic diversity: A
-comparative study. The American Naturalist \textbf{102}:243--282.
-doi:\href{https://doi.org/10.1086/282541}{10.1086/282541}.}
-
 \leavevmode\vadjust pre{\hypertarget{ref-Gotelli2001}{}}%
-\CSLLeftMargin{8. }%
+\CSLLeftMargin{28. }%
 \CSLRightInline{\textbf{Gotelli NJ}, \textbf{Colwell RK}. 2001.
 Quantifying biodiversity: Procedures and pitfalls in the measurement and
 comparison of species richness. Ecology Letters \textbf{4}:379--391.
 doi:\href{https://doi.org/10.1046/j.1461-0248.2001.00230.x}{10.1046/j.1461-0248.2001.00230.x}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Mao2005}{}}%
-\CSLLeftMargin{9. }%
+\CSLLeftMargin{29. }%
 \CSLRightInline{\textbf{Mao CX}, \textbf{Colwell RK}. 2005. Estimation
 of species richness: Mixture models, the role of rare species, and
 inferential challenges. Ecology \textbf{86}:1143--1153.
 doi:\href{https://doi.org/10.1890/04-1078}{10.1890/04-1078}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Cameron2021}{}}%
-\CSLLeftMargin{10. }%
+\CSLLeftMargin{30. }%
 \CSLRightInline{\textbf{Cameron ES}, \textbf{Schmidt PJ},
 \textbf{Tremblay BJ-M}, \textbf{Emelko MB}, \textbf{Müller KM}. 2021.
 Enhancing diversity analysis by repeatedly rarefying next generation
 sequencing data describing microbial communities. Scientific Reports
-\textbf{11}.
+\textbf{11}:22302.
 doi:\href{https://doi.org/10.1038/s41598-021-01636-1}{10.1038/s41598-021-01636-1}.}
 
-\leavevmode\vadjust pre{\hypertarget{ref-Schloss2020}{}}%
-\CSLLeftMargin{11. }%
-\CSLRightInline{\textbf{Schloss PD}. 2020. Removal of rare amplicon
-sequence variants from 16S {rRNA} gene sequence surveys biases the
-interpretation of community structure data.
-doi:\href{https://doi.org/10.1101/2020.12.11.422279}{10.1101/2020.12.11.422279}.}
+\leavevmode\vadjust pre{\hypertarget{ref-Legendre2012}{}}%
+\CSLLeftMargin{31. }%
+\CSLRightInline{\textbf{Legendre P}, \textbf{Legendre L}. 2012.
+Numerical ecology. Elsevier Science.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Lozupone2005}{}}%
+\CSLLeftMargin{32. }%
+\CSLRightInline{\textbf{Lozupone C}, \textbf{Knight R}. 2005. {UniFrac}:
+A new phylogenetic method for comparing microbial communities. Applied
+and Environmental Microbiology \textbf{71}:8228--8235.
+doi:\href{https://doi.org/10.1128/aem.71.12.8228-8235.2005}{10.1128/aem.71.12.8228-8235.2005}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Lozupone2007}{}}%
+\CSLLeftMargin{33. }%
+\CSLRightInline{\textbf{Lozupone CA}, \textbf{Hamady M}, \textbf{Kelley
+ST}, \textbf{Knight R}. 2007. Quantitative and qualitative \(\upbeta\)
+diversity measures lead to different insights into factors that
+structure microbial communities. Applied and Environmental Microbiology
+\textbf{73}:1576--1585.
+doi:\href{https://doi.org/10.1128/aem.01996-06}{10.1128/aem.01996-06}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-McMurdie2013}{}}%
+\CSLLeftMargin{34. }%
+\CSLRightInline{\textbf{McMurdie PJ}, \textbf{Holmes S}. 2013. Phyloseq:
+An r package for reproducible interactive analysis and graphics of
+microbiome census data. {PLoS} {ONE} \textbf{8}:e61217.
+doi:\href{https://doi.org/10.1371/journal.pone.0061217}{10.1371/journal.pone.0061217}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Witten2011}{}}%
+\CSLLeftMargin{35. }%
+\CSLRightInline{\textbf{Witten DM}. 2011. Classification and clustering
+of sequencing data using a poisson model. The Annals of Applied
+Statistics \textbf{5}:2493--2518.
+doi:\href{https://doi.org/10.1214/11-aoas493}{10.1214/11-aoas493}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Amir2017}{}}%
+\CSLLeftMargin{36. }%
+\CSLRightInline{\textbf{Amir A}, \textbf{McDonald D},
+\textbf{Navas-Molina JA}, \textbf{Kopylova E}, \textbf{Morton JT},
+\textbf{Xu ZZ}, \textbf{Kightley EP}, \textbf{Thompson LR}, \textbf{Hyde
+ER}, \textbf{Gonzalez A}, \textbf{Knight R}. 2017. Deblur rapidly
+resolves single-nucleotide community sequence patterns. {mSystems}
+\textbf{2}:00191--16.
+doi:\href{https://doi.org/10.1128/msystems.00191-16}{10.1128/msystems.00191-16}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Bokulich2013}{}}%
+\CSLLeftMargin{37. }%
+\CSLRightInline{\textbf{Bokulich NA}, \textbf{Subramanian S},
+\textbf{Faith JJ}, \textbf{Gevers D}, \textbf{Gordon JI}, \textbf{Knight
+R}, \textbf{Mills DA}, \textbf{Caporaso JG}. 2013. Quality-filtering
+vastly improves diversity estimates from illumina amplicon sequencing.
+Nature Methods \textbf{10}:57--59.
+doi:\href{https://doi.org/10.1038/nmeth.2276}{10.1038/nmeth.2276}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Callahan2016}{}}%
+\CSLLeftMargin{38. }%
+\CSLRightInline{\textbf{Callahan BJ}, \textbf{McMurdie PJ},
+\textbf{Rosen MJ}, \textbf{Han AW}, \textbf{Johnson AJA}, \textbf{Holmes
+SP}. 2016. {DADA}2: High-resolution sample inference from illumina
+amplicon data. Nature Methods \textbf{13}:581--583.
+doi:\href{https://doi.org/10.1038/nmeth.3869}{10.1038/nmeth.3869}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Edgar2016}{}}%
+\CSLLeftMargin{39. }%
+\CSLRightInline{\textbf{Edgar RC}. 2016. {UNOISE}2: Improved
+error-correction for illumina 16S and {ITS} amplicon sequencing.
+bio{R}xiv. doi:\href{https://doi.org/10.1101/081257}{10.1101/081257}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Schloss2023rare}{}}%
+\CSLLeftMargin{40. }%
+\CSLRightInline{\textbf{Schloss PD}. 2023. Rarefaction is currently the
+best approach to control for uneven sampling effort in amplicon
+sequencing analyses. bio{R}xiv.
+doi:\href{https://doi.org/Pending\%20at\%20bioRxiv}{Pending at
+bioRxiv}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Morris2013}{}}%
-\CSLLeftMargin{12. }%
+\CSLLeftMargin{41. }%
 \CSLRightInline{\textbf{Morris A}, \textbf{Beck JM}, \textbf{Schloss
 PD}, \textbf{Campbell TB}, \textbf{Crothers K}, \textbf{Curtis JL},
 \textbf{Flores SC}, \textbf{Fontenot AP}, \textbf{Ghedin E},
@@ -1273,29 +1530,205 @@ healthy nonsmokers and smokers. American Journal of Respiratory and
 Critical Care Medicine \textbf{187}:1067--1075.
 doi:\href{https://doi.org/10.1164/rccm.201210-1913oc}{10.1164/rccm.201210-1913oc}.}
 
+\leavevmode\vadjust pre{\hypertarget{ref-Knights2014}{}}%
+\CSLLeftMargin{42. }%
+\CSLRightInline{\textbf{Knights D}, \textbf{Ward TL}, \textbf{McKinlay
+CE}, \textbf{Miller H}, \textbf{Gonzalez A}, \textbf{McDonald D},
+\textbf{Knight R}. 2014. Rethinking {``}enterotypes{''}. Cell Host {\&}
+Microbe \textbf{16}:433--437.
+doi:\href{https://doi.org/10.1016/j.chom.2014.09.013}{10.1016/j.chom.2014.09.013}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Costea2017}{}}%
+\CSLLeftMargin{43. }%
+\CSLRightInline{\textbf{Costea PI}, \textbf{Hildebrand F},
+\textbf{Arumugam M}, \textbf{Bäckhed F}, \textbf{Blaser MJ},
+\textbf{Bushman FD}, \textbf{Vos WM de}, \textbf{Ehrlich SD},
+\textbf{Fraser CM}, \textbf{Hattori M}, \textbf{Huttenhower C},
+\textbf{Jeffery IB}, \textbf{Knights D}, \textbf{Lewis JD}, \textbf{Ley
+RE}, \textbf{Ochman H}, \textbf{O'Toole PW}, \textbf{Quince C},
+\textbf{Relman DA}, \textbf{Shanahan F}, \textbf{Sunagawa S},
+\textbf{Wang J}, \textbf{Weinstock GM}, \textbf{Wu GD}, \textbf{Zeller
+G}, \textbf{Zhao L}, \textbf{Raes J}, \textbf{Knight R}, \textbf{Bork
+P}. 2017. Enterotypes in the landscape of gut microbial community
+composition. Nature Microbiology \textbf{3}:8--16.
+doi:\href{https://doi.org/10.1038/s41564-017-0072-8}{10.1038/s41564-017-0072-8}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Anderson2001}{}}%
+\CSLLeftMargin{44. }%
+\CSLRightInline{\textbf{Anderson MJ}. 2001. A new method for
+non-parametric multivariate analysis of variance. Austral Ecology
+\textbf{26}:32--46.
+doi:\href{https://doi.org/10.1111/j.1442-9993.2001.01070.pp.x}{10.1111/j.1442-9993.2001.01070.pp.x}.}
+
 \leavevmode\vadjust pre{\hypertarget{ref-Dixon2003}{}}%
-\CSLLeftMargin{13. }%
+\CSLLeftMargin{45. }%
 \CSLRightInline{\textbf{Dixon P}. 2003. {VEGAN}, a package of r
 functions for community ecology. Journal of Vegetation Science
 \textbf{14}:927--930.
 doi:\href{https://doi.org/10.1111/j.1654-1103.2003.tb02228.x}{10.1111/j.1654-1103.2003.tb02228.x}.}
 
-\leavevmode\vadjust pre{\hypertarget{ref-Legendre2012}{}}%
-\CSLLeftMargin{14. }%
-\CSLRightInline{\textbf{Legendre P}, \textbf{Legendre L}. 2012.
-Numerical ecology. Elsevier Science.}
+\leavevmode\vadjust pre{\hypertarget{ref-Palarea2015}{}}%
+\CSLLeftMargin{46. }%
+\CSLRightInline{\textbf{Palarea-Albaladejo J}, \textbf{Martin-Fernandez
+J}. 2015. zCompositions -- {R} package for multivariate imputation of
+left-censored data under a compositional approach. Chemometrics and
+Intelligent Laboratory Systems \textbf{143}:85--96.
+doi:\href{https://doi.org/10.1016/j.chemolab.2015.02.019}{10.1016/j.chemolab.2015.02.019}.}
 
-\leavevmode\vadjust pre{\hypertarget{ref-Schloss2023}{}}%
-\CSLLeftMargin{15. }%
-\CSLRightInline{\textbf{Schloss PD}. 2023. Rarefaction is currently the
-best approach to control for uneven sampling effort in amplicon
-sequencing analyses.
-doi:\href{https://doi.org/Pending\%20at\%20bioRxiv}{Pending at
-bioRxiv}.}
+\leavevmode\vadjust pre{\hypertarget{ref-Gloor2017}{}}%
+\CSLLeftMargin{47. }%
+\CSLRightInline{\textbf{Gloor GB}, \textbf{Macklaim JM},
+\textbf{Pawlowsky-Glahn V}, \textbf{Egozcue JJ}. 2017. Microbiome
+datasets are compositional: And this is not optional. Frontiers in
+Microbiology \textbf{8}:2224.
+doi:\href{https://doi.org/10.3389/fmicb.2017.02224}{10.3389/fmicb.2017.02224}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Goodrich2014}{}}%
+\CSLLeftMargin{48. }%
+\CSLRightInline{\textbf{Goodrich JK}, \textbf{Rienzi SCD}, \textbf{Poole
+AC}, \textbf{Koren O}, \textbf{Walters WA}, \textbf{Caporaso JG},
+\textbf{Knight R}, \textbf{Ley RE}. 2014. Conducting a microbiome study.
+Cell \textbf{158}:250--262.
+doi:\href{https://doi.org/10.1016/j.cell.2014.06.037}{10.1016/j.cell.2014.06.037}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Blint2016}{}}%
+\CSLLeftMargin{49. }%
+\CSLRightInline{\textbf{Bálint M}, \textbf{Bahram M}, \textbf{Eren AM},
+\textbf{Faust K}, \textbf{Fuhrman JA}, \textbf{Lindahl B}, \textbf{OHara
+RB}, \textbf{Öpik M}, \textbf{Sogin ML}, \textbf{Unterseher M},
+\textbf{Tedersoo L}. 2016. Millions of reads, thousands of taxa:
+Microbial community structure and associations analyzed via marker
+genes. {FEMS} Microbiology Reviews \textbf{40}:686--700.
+doi:\href{https://doi.org/10.1093/femsre/fuw017}{10.1093/femsre/fuw017}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Chen2018}{}}%
+\CSLLeftMargin{50. }%
+\CSLRightInline{\textbf{Chen L}, \textbf{Reeve J}, \textbf{Zhang L},
+\textbf{Huang S}, \textbf{Wang X}, \textbf{Chen J}. 2018. {GMPR}: A
+robust normalization method for zero-inflated count data with
+application to microbiome sequencing data. {PeerJ} \textbf{6}:e4600.
+doi:\href{https://doi.org/10.7717/peerj.4600}{10.7717/peerj.4600}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Calle2019}{}}%
+\CSLLeftMargin{51. }%
+\CSLRightInline{\textbf{Calle ML}. 2019. Statistical analysis of
+metagenomics data. Genomics {\&} Informatics \textbf{17}:e6.
+doi:\href{https://doi.org/10.5808/gi.2019.17.1.e6}{10.5808/gi.2019.17.1.e6}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Eetemadi2020}{}}%
+\CSLLeftMargin{52. }%
+\CSLRightInline{\textbf{Eetemadi A}, \textbf{Rai N}, \textbf{Pereira
+BMP}, \textbf{Kim M}, \textbf{Schmitz H}, \textbf{Tagkopoulos I}. 2020.
+The computational diet: A review of computational methods across diet,
+microbiome, and health. Frontiers in Microbiology \textbf{11}:393.
+doi:\href{https://doi.org/10.3389/fmicb.2020.00393}{10.3389/fmicb.2020.00393}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Leite2020}{}}%
+\CSLLeftMargin{53. }%
+\CSLRightInline{\textbf{Leite MFA}, \textbf{Kuramae EE}. 2020. You must
+choose, but choose wisely: Model-based approaches for microbial
+community analysis. Soil Biology and Biochemistry \textbf{151}:108042.
+doi:\href{https://doi.org/10.1016/j.soilbio.2020.108042}{10.1016/j.soilbio.2020.108042}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Lozupone2010}{}}%
+\CSLLeftMargin{54. }%
+\CSLRightInline{\textbf{Lozupone C}, \textbf{Lladser ME},
+\textbf{Knights D}, \textbf{Stombaugh J}, \textbf{Knight R}. 2010.
+{UniFrac}: An effective distance metric for microbial community
+comparison. The {ISME} Journal \textbf{5}:169--172.
+doi:\href{https://doi.org/10.1038/ismej.2010.133}{10.1038/ismej.2010.133}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Dunbar1999}{}}%
+\CSLLeftMargin{55. }%
+\CSLRightInline{\textbf{Dunbar J}, \textbf{Takala S}, \textbf{Barns SM},
+\textbf{Davis JA}, \textbf{Kuske CR}. 1999. Levels of bacterial
+community diversity in four arid soils compared by cultivation and 16S
+{rRNA} gene cloning. Applied and Environmental Microbiology
+\textbf{65}:1662--1669.
+doi:\href{https://doi.org/10.1128/aem.65.4.1662-1669.1999}{10.1128/aem.65.4.1662-1669.1999}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Moyer1998}{}}%
+\CSLLeftMargin{56. }%
+\CSLRightInline{\textbf{Moyer CL}, \textbf{Tiedje JM}, \textbf{Dobbs
+FC}, \textbf{Karl DM}. 1998. Diversity of deep-sea hydrothermal vent
+archaea from loihi seamount, hawaii. Deep Sea Research Part {II}:
+Topical Studies in Oceanography \textbf{45}:303--317.
+doi:\href{https://doi.org/10.1016/s0967-0645(97)00081-7}{10.1016/s0967-0645(97)00081-7}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Alteio2021}{}}%
+\CSLLeftMargin{57. }%
+\CSLRightInline{\textbf{Alteio LV}, \textbf{Séneca J}, \textbf{Canarini
+A}, \textbf{Angel R}, \textbf{Jansa J}, \textbf{Guseva K},
+\textbf{Kaiser C}, \textbf{Richter A}, \textbf{Schmidt H}. 2021. A
+critical perspective on interpreting amplicon sequencing data in soil
+ecological research. Soil Biology and Biochemistry \textbf{160}:108357.
+doi:\href{https://doi.org/10.1016/j.soilbio.2021.108357}{10.1016/j.soilbio.2021.108357}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Vandeputte2017}{}}%
+\CSLLeftMargin{58. }%
+\CSLRightInline{\textbf{Vandeputte D}, \textbf{Kathagen G},
+\textbf{D'hoe K}, \textbf{Vieira-Silva S}, \textbf{Valles-Colomer M},
+\textbf{Sabino J}, \textbf{Wang J}, \textbf{Tito RY}, \textbf{Commer
+LD}, \textbf{Darzi Y}, \textbf{Vermeire S}, \textbf{Falony G},
+\textbf{Raes J}. 2017. Quantitative microbiome profiling links gut
+community variation to microbial load. Nature \textbf{551}:507--511.
+doi:\href{https://doi.org/10.1038/nature24460}{10.1038/nature24460}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-LlornsRico2021}{}}%
+\CSLLeftMargin{59. }%
+\CSLRightInline{\textbf{Lloréns-Rico V}, \textbf{Vieira-Silva S},
+\textbf{Gonçalves PJ}, \textbf{Falony G}, \textbf{Raes J}. 2021.
+Benchmarking microbiome transformations favors experimental quantitative
+approaches to address compositionality and sampling depth biases. Nature
+Communications \textbf{12}:3562.
+doi:\href{https://doi.org/10.1038/s41467-021-23821-6}{10.1038/s41467-021-23821-6}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Neu2021}{}}%
+\CSLLeftMargin{60. }%
+\CSLRightInline{\textbf{Neu AT}, \textbf{Allen EE}, \textbf{Roy K}.
+2021. Defining and quantifying the core microbiome: Challenges and
+prospects. Proceedings of the National Academy of Sciences
+\textbf{118}:e2104429118.
+doi:\href{https://doi.org/10.1073/pnas.2104429118}{10.1073/pnas.2104429118}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Hong2022}{}}%
+\CSLLeftMargin{61. }%
+\CSLRightInline{\textbf{Hong J}, \textbf{Karaoz U}, \textbf{Valpine P
+de}, \textbf{Fithian W}. 2022. To rarefy or not to rarefy: Robustness
+and efficiency trade-offs of rarefying microbiome data. Bioinformatics
+\textbf{38}:2389--2396.
+doi:\href{https://doi.org/10.1093/bioinformatics/btac127}{10.1093/bioinformatics/btac127}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Swift2022}{}}%
+\CSLLeftMargin{62. }%
+\CSLRightInline{\textbf{Swift D}, \textbf{Cresswell K}, \textbf{Johnson
+R}, \textbf{Stilianoudakis S}, \textbf{Wei X}. 2022. A review of
+normalization and differential abundance methods for microbiome counts
+data. {WIREs} Computational Statistics \textbf{15}:e1586.
+doi:\href{https://doi.org/10.1002/wics.1586}{10.1002/wics.1586}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Kennedy2014}{}}%
+\CSLLeftMargin{63. }%
+\CSLRightInline{\textbf{Kennedy K}, \textbf{Hall MW}, \textbf{Lynch
+MDJ}, \textbf{Moreno-Hagelsieb G}, \textbf{Neufeld JD}. 2014. Evaluating
+bias of {I}llumina-based bacterial 16S {rRNA} gene profiles. Applied and
+Environmental Microbiology \textbf{80}:5717--5722.
+doi:\href{https://doi.org/10.1128/aem.01451-14}{10.1128/aem.01451-14}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Weinroth2022}{}}%
+\CSLLeftMargin{64. }%
+\CSLRightInline{\textbf{Weinroth MD}, \textbf{Belk AD}, \textbf{Dean C},
+\textbf{Noyes N}, \textbf{Dittoe DK}, \textbf{Rothrock MJ},
+\textbf{Ricke SC}, \textbf{Myer PR}, \textbf{Henniger MT},
+\textbf{Ramírez GA}, \textbf{Oakley BB}, \textbf{Summers KL},
+\textbf{Miles AM}, \textbf{Ault-Seay TB}, \textbf{Yu Z}, \textbf{Metcalf
+JL}, \textbf{Wells JE}. 2022. Considerations and best practices in
+animal science 16S ribosomal {RNA} gene sequencing microbiome studies.
+Journal of Animal Science \textbf{100}:skab346.
+doi:\href{https://doi.org/10.1093/jas/skab346}{10.1093/jas/skab346}.}
 
 \end{CSLReferences}
 
-\appto{\bibsetup}{\raggedright}
 \bibliography{ref}
 \setlength{\parindent}{0in}
 \setlength{\leftskip}{0in}
@@ -1308,16 +1741,14 @@ bioRxiv}.}
 \includegraphics{figure_01.png}
 
 \textbf{Figure 1. Re-running the R-flavored markdown provided in
-Protocol S1 of WNWN qualitatively regenerated Figure 3 from the original
-study.}
+Protocol S1 of WNWN qualitatively reproduced Figure 3 from WNWN.}
 
 \newpage
 
 \includegraphics{figure_02.png}
 
 \textbf{Figure 2. Re-running the R-flavored markdown provided in
-Protocol S1 of WNWN qualitatively regenerated Figure 4 from the original
-study.}
+Protocol S1 of WNWN qualitatively reproduced Figure 4 from WNWN.}
 
 \newpage
 
@@ -1334,7 +1765,7 @@ indicate the median of 100 randomizations and the error bars represent
 the observed 95\% confidence interval. Simulations run at the same
 effect size are dodged to better reveal overlapping data. The sequencing
 depths were drawn from the GlobalPatterns dataset and sequences were
-clusterd using PAM.
+clustered using PAM.
 
 \newpage
 
@@ -1349,9 +1780,10 @@ use of 100 rather than 5 randomizations and the addition of the median
 sequencing depth (Ñ\textsubscript{L}) of 50,000. The plotting symbols
 indicate the median of 100 randomizations and the error bars represent
 the observed 95\% confidence interval. Simulations run at the same
-effect size are dodged to better reveal overlapping data. The sequencing
-depths were drawn from the GlobalPatterns dataset and sequences were
-clusterd using PAM.
+effect size are dodged to better reveal overlapping data. A light gray
+line is shown to indicate the best possible accuracy for each library
+size minimum quantile value. The sequencing depths were drawn from the
+GlobalPatterns dataset and sequences were clustered using PAM.
 
 \newpage
 
@@ -1361,11 +1793,12 @@ clusterd using PAM.
 negative values that were used to calculate Bray-Curtis and Weighted
 UniFrac distances.} The median number of negative OTU counts that had a
 negative OTU count following normalization increased with the effect
-size and decreased as Ñ\textsubscript{L} increased. The fraction
+size and decreased as Ñ\textsubscript{L} increased (first row). The
+error bars indicate the observe 95\% confidence interval. The fraction
 simulated datasets that had a negative OTU count following normalization
 also increased with effect size, but increased as Ñ\textsubscript{L}
-increased. For each effect size there were 100 replicate datasets. The
-error bars indicate the observe 95\% confidence interval.
+increased (second row). For each effect size there were 100 replicate
+datasets.
 
 \newpage
 
@@ -1408,7 +1841,7 @@ rarefaction were as good or better than any other normalization method.}
 This figure is analogous to Figure 3 except that K-means clustering was
 used instead of PAM, rarefaction on the full dataset was used instead of
 subsampling to the size of the sample at the 15th percentile, and DESeq
-variance stabilization normalized OTU counts were only used with
+Variance Stabilization normalized OTU counts were only used with
 Euclidean distances.
 
 \newpage
@@ -1418,7 +1851,7 @@ Euclidean distances.
 \textbf{Figure 10. Comparison of the normally distributed sequencing
 depths from the GlobalPatterns dataset and a log-scaled distribution of
 sequencing depths.} The log-scaled distribution was generated so that
-each sample in a simulation could have a unqiue number of sequences and
+each sample in a simulation could have a unique number of sequences and
 to simulate the skew right distribution commonly seen in microbiome
 studies.
 
@@ -1451,10 +1884,10 @@ depths.
 
 \textbf{Figure 13. Normalization and distance calculation methods vary
 in their sensitivity to removal of rare OTUs.} Larger values indicate
-that the clustering accuracy from filtered datastets were larger than
+that the clustering accuracy from filtered datasets were larger than
 those from non-filtered datasets. The median of 100 randomizations did
 not meaningfully vary from 0.0, but the observed 95\% confidence
-interval varied considerably. Data are shown for a median samling depth
+interval varied considerably. Data are shown for a median sampling depth
 (Ñ\textsubscript{L}) of 10,000 sequences when individual sequencing
 depths were sampled with replacement from the GlobalPatterns dataset or
 without replacement from the log-scaled distribution.
@@ -1467,11 +1900,11 @@ without replacement from the log-scaled distribution.
 all other normalization methods at assigning samples to the correct
 treatment group regardless of whether sequencing depth was confounded by
 treatment group.} Because the clustering algorithms forced samples into
-one of two groups, the exepected accuracy with an effect size of 1.00
-was 0.51. With an effect size of 1.15, the expected accuracy was 1.00.
-Each point represents the median of 100 replicates and the error bars
+one of two groups, the expected accuracy with an effect size of 1.00 was
+0.51. With an effect size of 1.15, the expected accuracy was 1.00. Each
+point represents the median of 100 replicates and the error bars
 represent the observed 95\% confidence interval. Data are shown for a
-median samling depth (Ñ\textsubscript{L}) of 10,000 sequences when
+median sampling depth (Ñ\textsubscript{L}) of 10,000 sequences when
 individual sequencing depths were sampled with replacement from the
 GlobalPatterns dataset or without replacement from the log-scaled
 distribution.
@@ -1486,9 +1919,9 @@ maximizing power to detect differences in treatment group using adonis2
 regardless of whether sequencing depth was confounded by treatment
 group.} Type I errors were assessed as the fraction of 100 simulations
 that yielded a significant P-value (i.e., less than or equal to 0.05) at
-an effect size of 1.00. Power was assesed as the fraction of 100
-simulations that yieleded a significant P-Value at an effect size of
-1.15. Data are shown for a median samling depth (Ñ\textsubscript{L}) of
+an effect size of 1.00. Power was assessed as the fraction of 100
+simulations that yielded a significant P-Value at an effect size of
+1.15. Data are shown for a median sampling depth (Ñ\textsubscript{L}) of
 10,000 sequences when individual sequencing depths were sampled with
 replacement from the GlobalPatterns dataset or without replacement from
 the log-scaled distribution.
@@ -1505,10 +1938,10 @@ confounded by treatment group.} Statistical comparisons of OTU richness
 and Shannon diversity were performed using the non-parametric Wilcoxon
 two-sampled test. Type I errors were assessed as the fraction of 100
 simulations that yielded a significant P-value (i.e., less than or equal
-to 0.05) at an effect size of 1.00. Power was assesed as the fraction of
-100 simulations that yieleded a significant P-Value at an effect size of
-1.15. Data are shown for when the case when individual sequencing depths
-were sampled with replacement from the GlobalPatterns dataset.
+to 0.05) at an effect size of 1.00. Power was assessed as the fraction
+of 100 simulations that yielded a significant P-Value at an effect size
+of 1.15. Data are shown for when the case when individual sequencing
+depths were sampled with replacement from the GlobalPatterns dataset.
 
 \newpage
 
@@ -1522,9 +1955,170 @@ confounded by treatment group.} Statistical comparisons of OTU richness
 and Shannon diversity were performed using the non-parametric Wilcoxon
 two-sampled test. Type I errors were assessed as the fraction of 100
 simulations that yielded a significant P-value (i.e., less than or equal
-to 0.05) at an effect size of 1.00. Power was assesed as the fraction of
-100 simulations that yieleded a significant P-Value at an effect size of
-1.15. Data are shown for when the case when individual sequencing depths
-were sampled without replacement from the log-scaled distribution.
+to 0.05) at an effect size of 1.00. Power was assessed as the fraction
+of 100 simulations that yielded a significant P-Value at an effect size
+of 1.15. Data are shown for when the case when individual sequencing
+depths were sampled without replacement from the log-scaled
+distribution.
+
+\newpage
+
+\hypertarget{supplementary-text}{%
+\subsection{Supplementary text}\label{supplementary-text}}
+
+Quotes from selected papers that cited WNWN and conflated
+``rarefying''/``rarefy'' and ``rarefaction''. Many of these papers also
+attributed ``rarefaction'' to WNWN. Rarefying, rarefy, and rarefaction
+are bolded to make the words easier to identify. All references have
+been updated to reflect the numbering in the current study. Citations to
+WNWN are indicated by (24). Quotes are ordered chronologically.
+
+\begin{itemize}
+\item
+  ``Additionally, \textbf{rarefaction} has recently been shown to
+  introduce errors in analyses, and alternatives to rarefaction have
+  been proposed (24)'' - Quoted from (48). Implies that rarefaction and
+  WNWN's rarefying are the same thing.
+\item
+  ``\textbf{Rarefaction} is analytically problematic and poses multiple
+  statistical problems: (i) omission of available valid data, (ii) the
+  estimation of overdispersion is more difficult due to data loss, (iii)
+  loss of power (type II error), (iv) dependence on an arbitrary
+  threshold and (v) additional uncertainty due to the randomness in
+  \textbf{rarefaction} (24).'' - Quoted from (49). Implies that
+  rarefaction and WNWN's rarefying are the same thing.
+\item
+  ``McMurdie and Holmes (24) penalized the \textbf{rarefying} technique
+  for dropping the lowest fifteenth percentile of sample library sizes
+  in their simulations by counting the dropped samples as''incorrectly
+  clustered.'' Because the 15th percentile was used to set
+  \textbf{rarefaction} depth, this capped clustering accuracy at 85\%.''
+  - Quoted from (25). An example of a paper from the QIIME development
+  community using rarefaction and rarefying interchangeably.
+\item
+  ``\textbf{Rarefaction} has a limited ability in this regard since the
+  total sum constraint still exists after \textbf{rarefaction}. In
+  addition, it suffers from a great power loss due to the discard of a
+  large number of reads (24).'' - Quoted from (50). Implies that
+  rarefaction and WNWN's rarefying are the same thing.
+\item
+  ``Another popular normalization approach is \textbf{rarefaction},
+  which consists on subsampling the same number of reads for each sample
+  so that all samples have the same number of total counts.
+  \textbf{Rarefaction} is not recommended because it entails the loss of
+  important information (24).'' - Quoted from (51). Implies that
+  rarefaction and WNWN's rarefying are the same thing.
+\item
+  ``Unfortunately, \textbf{rarefaction} is neither justifiable nor
+  necessary, a view framed statistically by McMurdie and Holmes (24) in
+  the context of comparison of relative abundances.'' - Quoted from
+  (21). Implies that rarefaction and WNWN's rarefying are the same
+  thing.
+\item
+  ``Some studies perform \textbf{rarefaction} to adjust for differences
+  in library size due to unexhaustive metagenomic sampling. Although
+  several pipelines provide this functionality, it has been found
+  inadmissible for metagenomics microbiome studies as it discards many
+  reads leading to decreased sensitivity in differential abundance
+  testing (24) and biased estimates for alpha diversity (21).'' - Quoted
+  from (52). Implies that rarefaction and WNWN's rarefying are the same
+  thing.
+\item
+  ``Another widespread practice is to \textbf{rarefy} the count data to
+  force the samples to have the same number of total sequence reads
+  (13), at the expense of discarding vast amounts of information (24).''
+  - Quoted from (53). Hughes and Hellmann (13) describe traditional
+  rarefaction with multiple subsamplings.
+\item
+  ``Note that the terms \textbf{rarefying} and \textbf{rarefaction} are
+  used interchangeably in microbiome literature (24). \textbf{Rarefying}
+  was first recommended for microbiome data to deal with rare taxa (54),
+  which impact some measures of alpha and beta diversities (24).'' -
+  Quoted from (14). As the quote indicates they use rarefying and
+  rarefaction interchangeably although the cited WNWN indicates that
+  they are not the same. In addition, the first review article to
+  advocate the use of rarefaction was Hughes et al. (12) and examples of
+  its use can be found earlier (55, 56);
+\item
+  ``Ways to tackle this include total library size normalization and
+  \textbf{rarefaction}, with both remaining debated to date (24, 25).''
+  - Quoted from (57). Implies that rarefaction and WNWN's rarefying are
+  the same thing.
+\item
+  ``\textbf{Rarefaction} is a widely used normalization technique that
+  involves the random subsampling of sequences from the initial sample
+  library to a selected normalized library size. This process is often
+  dismissed as statistically invalid because subsampling effectively
+  discards a portion of the observed sequences, yet it remains prevalent
+  in practice and the suitability of \textbf{rarefying}, relative to
+  many other normalization approaches, for diversity analysis has been
+  argued'' - Quoted by (30). Uses rarefaction and rarefying
+  interchangeably. This paper describes a new method as ``repeated
+  rarefying'', which is the traditional rarefaction approach.
+\item
+  ``Confronted with technical variation as well as the overall increase
+  in raw sequencing data generated per sample over the years,
+  \textbf{rarefaction} (or downsampling) was suggested to standardize
+  within and across dataset comparisons \ldots{} However, sequencing
+  depth-based downsizing procedures were soon criticized, not only for
+  being wasteful and discarding information on low-abundant taxa (24),
+  but also for being unsuited when applied to communities characterized
+  by substantial variation in cell density (58).'' - Quoted by (59).
+  Implies that rarefaction and WNWN's rarefying are the same thing.
+\item
+  ``Some have suggested that data should be \textbf{rarefied} (23, 25)
+  to a common sampling depth, typically to the level of the sample with
+  fewest sequences, while others argue that such \textbf{rarefaction} is
+  `inadmissible' and favor approaches that transform or scale sequence
+  counts (24, 47).'' - Quoted by (60). Uses rarefied and rarefaction
+  interchangeably and implies that both are the same as WNWN's
+  rarefying.
+\item
+  ``\textbf{Rarefaction} has been criticized for wasting data since we
+  effectively remove a portion of the data in the downsampling procedure
+  (24).'' - Quoted by (61). Here and elsewhere in this paper the authors
+  use rarefaction and rarefying interchangeably and implies that both
+  are the same as WNWN's rarefying.
+\item
+  ``\textbf{Rarefying} (also referred to as \textbf{rarefaction}) is a
+  popular but widely criticized technique for correcting uneven
+  sequencing depths. It involves randomly discarding counts in samples
+  until all samples have the same predefined number of total counts.'' -
+  Quoted by (62). As the quote indicates they use rarefying and
+  rarefaction interchangeably although the cited WNWN indicates that
+  they are not the same.
+\item
+  ``One commonly used method is to \textbf{rarefy} the data; that is,
+  ASVs or OTUs within a sample are randomly subsampled without
+  replacement to a preselected depth that is the same across all
+  samples. The outcome of this is that all samples will have the same
+  number of ASVs and any samples with fewer ASVs than the
+  \textbf{rarefaction} level will be removed from the dataset. The level
+  for \textbf{rarefaction} can be decided using a \textbf{rarefaction}
+  curve, a method in which each sample is subsampled at multiple levels
+  (e.g.~1,000 reads, 2,000 reads, 3,000 reads\ldots), and the number of
+  unique features or another metric of individual sample diversity of
+  each sample at each level is measured and plotted. When the plot
+  begins to level off after an initial climb up, the corresponding
+  number of sequences indicates an appropriate sampling depth. The
+  appropriate number to \textbf{rarefy} must then be balanced with the
+  number of samples that may be dropped from the dataset which do not
+  meet that minimum. An advantage of \textbf{rarefaction} is that it may
+  be a more appropriate measure of very low-abundance (''rare'') ASVs.
+  This can in turn increase the accuracy of the data, as low biomass
+  samples often have contamination and quality concerns (63). There are
+  also disadvantages to this method, the most obvious of which is the
+  discarding of valuable data. Clearly, this is less than ideal as the
+  researcher must pay for the samples and sequences, and in cases where
+  the samples are very valuable or difficult to obtain the loss of data
+  may be destructive to the overall experimental integrity.
+  Additionally, the loss of statistical power by removing sequences from
+  a sample could lead to a loss of differences between two samples (24).
+  The statistical consequences extend beyond this, as \textbf{rarefying}
+  equalizes sample variance by adding artificial uncertainty (24).'' -
+  Quoted by (64). The authors use rarefaction and rarefying
+  interchangeably and implies that both are the same as WNWN's
+  rarefying.
+\end{itemize}
 
 \end{document}

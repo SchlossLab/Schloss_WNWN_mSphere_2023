@@ -15,7 +15,7 @@ pretty_transform <- c(deseq = "DESeq VS",
                     none = "Raw counts",
                     proportion = "Relative abundance",
                     rarefaction00 = "Rarefaction",
-                    upperquartile = "UQ Log Fold Change")
+                    upperquartile = "UQ Log-Fold Change")
 
 pretty_models <- c(gp = "Global Patterns",
                   log = "Log-scaled")

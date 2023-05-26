@@ -23,7 +23,7 @@ pretty_transform <- c(deseq = "DESeq VS",
                     proportion = "Relative abundance",
                     subsample15 = "Sub-sampled (15%)",
                     rarefaction00 = "Rarefaction (0%)",
-                    upperquartile = "Upper Quartile Log Fold Change")
+                    upperquartile = "Upper-Quartile Log-Fold Change")
 
 
 plot_four <- function(gp_log, cluster_method, transformation, deseq) {

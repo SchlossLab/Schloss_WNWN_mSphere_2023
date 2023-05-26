@@ -18,7 +18,7 @@ pretty_transform <- c(deseq = "DESeq VS",
                     proportion = "Relative abundance",
                     subsample15 = "Sub-sampled (15%)",
                     rarefaction00 = "Rarefaction",
-                    upperquartile = "Upper Quartile Log Fold Change")
+                    upperquartile = "Upper-Quartile Log-Fold Change")
 
 pretty_distro <- c(random = "Randomized",
                   skew = "Confounded")

@@ -84,5 +84,5 @@ rare_sub %>%
         shape = guide_legend(nrow = 1))
 
 ggsave("results/figures/subsample_rarefaction_compare.tiff",
-      width = 11, height = 5,
+      width = 11, height = 5.5,
       compression = "lzw+p")

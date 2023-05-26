@@ -22,7 +22,7 @@ pretty_transform <- c(deseq = "DESeq VS",
                     none = "Raw counts",
                     proportion = "Relative abundance",
                     subsample15 = "Sub-sampled (15%)",
-                    upperquartile = "Upper Quartile Log Fold Change",
+                    upperquartile = "Upper-Quartile Log-Fold Change",
                     rarefaction15 = "Rarefaction (15%)")
 
 pretty_method <- c(pam = "PAM",
