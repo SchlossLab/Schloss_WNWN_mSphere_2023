@@ -167,12 +167,12 @@ original study made choices that caused rarefying and rarefaction to
 appear to perform worse than they truly did. Most important were the
 approaches used to assess ecological distances, the removal of samples
 with low sequencing depth, and not accounting for conditions where
-sampling effort is confounded with treatment group. Although the
+sequencing effort is confounded with treatment group. Although the
 original study criticized rarefying for the arbitrary removal of valid
 data, repeatedly rarefying data many times (i.e., rarefaction)
 incorporates all the data. In contrast, it is the removal of rare taxa
 that would appear to remove valid data. Overall, I show that rarefaction
-is the most robust approach to control for uneven sampling effort when
+is the most robust approach to control for uneven sequencing effort when
 considered across a variety of alpha and beta diversity metrics.
 
 \hypertarget{importance}{%
@@ -205,7 +205,7 @@ efforts to generate equimolar pools of PCR products, it is common to
 observe more than 10-fold variation in the number of sequences per
 sample (4). Researchers desire strategies to minimize uneven sequencing
 depth and thus need methods to control for this unevenness in their
-analyses. Of course, uneven sampling is not unique to microbiome
+analyses. Of course, uneven sequencing is not unique to microbiome
 research and is a challenge faced by all community ecologists (5, 6).
 Common approaches to control for the effects of uneven sequencing depths
 include use of proportional abundance (i.e., relative abundance),
@@ -331,7 +331,7 @@ For clarity, I will use the following definition of rarefaction:
 
 This definition aligns with how rarefaction was originally defined for
 comparing richness (i.e., the number of taxa in a community) across
-communities when communities are sampled to different depths (5, 6).
+communities when communities are sequenced to different depths (5, 6).
 With this more general approach to the definition of rarefaction,
 rarefaction can be performed using any alpha or beta diversity metric.
 This strategy has been widely used by my research group and others and
@@ -358,7 +358,7 @@ R-flavored markdown file that was published as Protocol S1 in WNWN. I
 will outline the simulation strategy below and will reference line
 numbers from their R-flavored markdown file with ``L'' as a prefix.
 
-For the WNWN cluster analysis, sampling distributions for the two
+For the WNWN cluster analysis, OTU abundance distributions for the two
 treatment groups were generated using human fecal and ocean data
 originally take from the GlobalPatterns dataset (L129) (2). To generate
 the fecal and ocean distributions, the authors included any operational
@@ -369,29 +369,29 @@ across all 7 samples (L139). From this sorted list they obtained the
 identifiers of the first 2,000 OTUs (L66). Returning to the 7 samples
 they selected the data for the corresponding 2,000 OTUs and pooled the
 OTU abundances of the fecal and ocean samples separately to create two
-sampling distributions (L144, L159-160, L197-198). Next, the fecal and
-ocean distributions were mixed in 8 different fractions to generate two
-community types that differed by varying effect sizes (i.e., 1.00, 1.15,
-1.25, 1.50, 1.75, 2.00, 2.50, and 3.50; L170-195, L220); an effect size
-of 1.00 generated a null model with no difference between the treatment
-groups. To simulate the variation in sequencing depth across the 80
-samples, they normalized the number of sequences from each of the 26
-samples in the GlobalPatterns dataset so that the median number of
+OTU abundance distributions (L144, L159-160, L197-198). Next, the fecal
+and ocean distributions were mixed in 8 different fractions to generate
+two community types that differed by varying effect sizes (i.e., 1.00,
+1.15, 1.25, 1.50, 1.75, 2.00, 2.50, and 3.50; L170-195, L220); an effect
+size of 1.00 generated a null model with no difference between the
+treatment groups. To simulate the variation in sequencing depth across
+the 80 samples, they normalized the number of sequences from each of the
+26 samples in the GlobalPatterns dataset so that the median number of
 sequences (Ñ\textsubscript{L}) across the samples had 1,000, 2,000,
 5,000, or 10,000 sequences (L324-325). They then randomly sampled the 26
-normalized sequencing depths, with replacement, to generate 80 sampling
-depths. From each community type, they simulated 40 samples by sampling
-to the desired number of sequences (L73, L230-233 and L326-327). Each
-simulation condition was repeated 5 times (L85). Finally, they removed
-rare and low prevalence OTUs in two steps. First, they removed any OTUs
-whose total abundance was less than 3 across all 80 samples and that did
-not appear in at least 3 samples (L368-386). Second, they removed any
-OTUs that did not have more than 1 sequence in more than 5\% of the 80
-samples (i.e., 4 samples) and that did not have a total abundance across
-the 80 samples greater than one half of the number of samples in each
-community type (i.e., 20) (L523-538, L551). Simulation A consisted of
-160 simulations (8 effect sizes x 4 median sampling depths x 5
-replicates = 160 simulations).
+normalized sequencing depths, with replacement, to generate 80
+sequencing depths. From each community type, they simulated 40 samples
+by sampling to the desired number of sequences (L73, L230-233 and
+L326-327). Each simulation condition was repeated 5 times (L85).
+Finally, they removed rare and low prevalence OTUs in two steps. First,
+they removed any OTUs whose total abundance was less than 3 across all
+80 samples and that did not appear in at least 3 samples (L368-386).
+Second, they removed any OTUs that did not have more than 1 sequence in
+more than 5\% of the 80 samples (i.e., 4 samples) and that did not have
+a total abundance across the 80 samples greater than one half of the
+number of samples in each community type (i.e., 20) (L523-538, L551).
+Simulation A consisted of 160 simulations (8 effect sizes x 4 median
+sequencing depths x 5 replicates = 160 simulations).
 
 After generating the OTU counts for the 160 simulations, the authors
 applied several normalization methods, distance calculations, and
@@ -554,17 +554,16 @@ In the 10 years since WNWN was published, sequencing technology has
 advanced and sequence collections have grown considerably. For more
 modern datasets, it would be reasonable to expect a median number of
 sequences larger than 10,000 (see Table 1 of (4)). Therefore, I included
-an additional median depth of sampling value of 50,000 sequences with
-WNWN's four median sequencing sampling depths (i.e., 1,000, 2,000,
-5,000, 10,000). Additional sequencing coverage would be expected to
-result in more robust distance values since there would be more
-information represented in the data. Indeed, the added sampling depth
-showed higher accuracy values at lower effect sizes for the combinations
-of normalization methods and distance calculations (Figure 3). Increased
-sequencing coverage also resulted in improved clustering accuracy for
-lower effect sizes when the library size minimum quantile was decreased
-(Figure 4). I will revisit the choice of the library size minimum
-quantile below.
+an additional median depth of sequencing of 50,000 sequences with WNWN's
+four median sequencing depths (i.e., 1,000, 2,000, 5,000, 10,000).
+Additional sequencing coverage would be expected to result in more
+robust distance values since there would be more information represented
+in the data. Indeed, the added sequencing depth showed higher accuracy
+values at lower effect sizes for the combinations of normalization
+methods and distance calculations (Figure 3). Increased sequencing
+coverage also resulted in improved clustering accuracy for lower effect
+sizes when the library size minimum quantile was decreased (Figure 4). I
+will revisit the choice of the library size minimum quantile below.
 
 \hypertarget{deseq-based-variance-stabilization-generates-negative-values-and-was-used-with-distance-calculation-methods-that-are-sensitive-to-negative-values-which-likely-led-to-nonsense-distances-and-clusters}{%
 \subsubsection{3. DESeq-based Variance Stabilization generates negative
@@ -695,7 +694,7 @@ peak clustering accuracy for their subsampled data was at 85\%. Because
 the true best result would not known \emph{a priori} in an actual
 microbiome study, it would be impossible for researchers to conduct a
 sensitivity analysis comparing the tradeoffs between sequencing depth,
-sample number, and clustering accuracy to select a sampling depth for
+sample number, and clustering accuracy to select a sequencing depth for
 their analysis without the risk of P-hacking. The differences in
 clustering accuracy between subsampling and rarefaction with PAM and
 K-means clustering indicated that it was necessary to reassess the
@@ -725,32 +724,32 @@ of 1,106,849 sequences per dataset (Figure 10). The datasets ranged in
 sequencing depth between 58,688 and 2,357,181 sequences for a 40.16-fold
 difference. Rather than representing a typically observed distribution
 of sequencing depths that would be skewed right (see Figure S1 from
-(4)), the sampling distribution was normally distributed (Shapiro-Wilk
-test of normality, P=0.57). From these simulations it is unclear how
-sensitive the various normalizations and distance calculations were to a
-more realistic skewed distribution. A second limitation of this sampling
-distribution is that it only contained 26 unique sampling depths such
-that each sampling depth would have been re-used an average of 3.08
-times in each simulation. Yet, it is unlikely for a real sequence
-collection to have duplicate sequencing depths. To reassess the WNWN
-results in the context of a more typical distribution of sample sizes, I
-created a new set of simulations to test the effect of the shape of the
-distribution on the results. I created a simple sequencing depth
-distribution where there were 80 depths logarithmically distributed
-between the minimum and maximum sequencing depths of the GlobalPatterns
-dataset (Figure 10). The median of this distribution was 372,040 and the
-mean was 629,824.8. When I regenerated the WNWN's Figures 4 and 5 using
-the log-scaled sequencing effort distribution, the differences in
-normalization methods were more apparent (Figure 11 and 12). For each of
-the distance calculators, rarefaction to the size of the smallest
-dataset yielded accuracies that were at least as good as the other
-methods across effect sizes and median sequencing depths. The difference
-was most pronounced at smaller effect sizes and sequencing depths. When
-comparing the performance of rarefaction across distance calculators for
-different effect sizes, sequencing depths and size of smallest sample,
-the accuracies I observed using the log-scaled sample sizes was at least
-as good as those obtained using the GlobalPatterns-based distribution
-(Figure 9).
+(4)), the sequencing depth distribution was normally distributed
+(Shapiro-Wilk test of normality, P=0.57). From these simulations it is
+unclear how sensitive the various normalizations and distance
+calculations were to a more realistic skewed distribution. A second
+limitation of this sequencing depth distribution is that it only
+contained 26 unique sequencing depths such that each sequencing depth
+would have been re-used an average of 3.08 times in each simulation.
+Yet, it is unlikely for a real sequence collection to have duplicate
+sequencing depths. To reassess the WNWN results in the context of a more
+typical distribution of sequencing depths, I created a new set of
+simulations to test the effect of the shape of the distribution on the
+results. I created a simple sequencing depth distribution where there
+were 80 depths logarithmically distributed between the minimum and
+maximum sequencing depths of the GlobalPatterns dataset (Figure 10). The
+median of this distribution was 372,040 and the mean was 629,824.8. When
+I regenerated the WNWN's Figures 4 and 5 using the log-scaled sequencing
+effort distribution, the differences in normalization methods were more
+apparent (Figure 11 and 12). For each of the distance calculators,
+rarefaction to the size of the smallest dataset yielded accuracies that
+were at least as good as the other methods across effect sizes and
+median sequencing depths. The difference was most pronounced at smaller
+effect sizes and sequencing depths. When comparing the performance of
+rarefaction across distance calculators for different effect sizes,
+sequencing depths and size of smallest sample, the accuracies I observed
+using the log-scaled sample sizes was at least as good as those obtained
+using the GlobalPatterns-based distribution (Figure 9).
 
 \hypertarget{a-filtering-step-was-applied-to-remove-rare-taxa-from-the-simulated-datasets-which-may-have-skewed-the-shape-of-the-community-distributions}{%
 \subsubsection{8. A filtering step was applied to remove rare taxa from
@@ -793,7 +792,7 @@ when library sizes are confounded with treatment
 group}\label{there-was-no-accounting-for-differences-in-performance-when-library-sizes-are-confounded-with-treatment-group}}
 
 I and others have observed that not using rarefaction can lead to
-falsely detecting differences between communities when sampling effort
+falsely detecting differences between communities when sequencing effort
 is confounded with the treatment group (25, 40). Previous analyses
 showed that in these situations rarefaction did the best job of
 controlling the rates of false detection (i.e., Type I errors) and
@@ -802,15 +801,15 @@ Type II errors) of differences between groups of samples. Such
 situations have been observed when comparing communities at different
 body parts where one site is more likely to generate contaminating
 sequence reads from the host (41). To determine whether this result was
-replicated with the WNWN simulation framework, I created a sampling
-distribution where sequencing depth was fully confounded with the
+replicated with the WNWN simulation framework, I created a sequencing
+depth distribution where sequencing depth was fully confounded with the
 treatment group using both the GlobalPatterns and Log-scaled sequence
 distributions. To confound the sequencing depth, sequencing depths from
 one treatment group were drawn from below the median number of sequences
-of the sampling distribution and those for the second treatment group
+of the sequencing distribution and those for the second treatment group
 were from above the median. To assess the risk of falsely detecting
 clusters, I compared the clustering accuracies using an effect size of
-1.00 using both the confounded and randomized sampling distributions
+1.00 using both the confounded and randomized sequencing distributions
 (see rows 1 and 2 of Figure 14). The samples should have only been
 assigned to one cluster; however, each of the clustering methods forced
 the samples into two clusters. So, when there are two groups of 40
@@ -867,8 +866,8 @@ traditional application of
 rarefaction}\label{there-was-no-consideration-of-effects-of-normalization-methods-on-alpha-diversity-metrics-which-is-the-traditional-application-of-rarefaction}}
 
 Rarefaction was originally proposed as a method for controlling uneven
-sampling effort when comparing community richness values (5, 6). Thus it
-was surprising that WNWN did not consider the effect of the proposed
+sequencing effort when comparing community richness values (5, 6). Thus
+it was surprising that WNWN did not consider the effect of the proposed
 normalizations on alpha-diversity metrics such as richness or Shannon
 diversity. Therefore, for each of the normalizations, I compared the
 richness and diversity of the two treatment groups. The DESeq Variance
@@ -878,7 +877,7 @@ calculations of richness or Shannon diversity. Also, data from the
 Upper-Quartile Log-Fold Change normalization were not used for richness
 calculations since the normalization returned the same richness values
 for each sample regardless of the treatment group. I assessed whether
-the alpha diversity was significantly differente between the treatment
+the alpha diversity was significantly different between the treatment
 groups for each iteration using the non-parametric Wilcoxon two-sampled
 test. I compared the risk of committing Type I errors and the power to
 detect differences by the different normalizations (Figures 16 and 17).
@@ -927,11 +926,11 @@ throughout the original study that resulted in rarefying/subsampling
 looking worse than it truly is. In fact, when the data of the current
 study are taken as a whole, rarefaction is the preferred approach. Short
 of obtaining the exact same number of sequences from each sample,
-rarefaction remains the best approach to control for uneven sampling
+rarefaction remains the best approach to control for uneven sequencing
 effort when analyzing alpha and beta diversity metrics. Although beyond
 the scope of the current study, the same principles would support using
-rarefaction to control for uneven sampling effort in shotgun metagenomic
-sequencing analyses.
+rarefaction to control for uneven sequencing effort in shotgun
+metagenomic sequencing analyses.
 
 Beyond the discussion of whether rarefaction is appropriate for
 analyzing microbiome data it is worth commenting on WNWN's advice to use
@@ -952,9 +951,9 @@ L487, respectively). In WNWN, a pseudo-count of 1 was used. However,
 this value is arbitrary and the results can vary based on the choice of
 pseudo-count and the patchiness of the communities being analyzed. Since
 WNWN was published, compositional approaches have been proposed to
-account for uneven sampling and to provide improved interpretability
+account for uneven sequencing and to provide improved interpretability
 (14, 16--18, 46, 47). However, these methods also often require the use
-of pseudo-counts and are not actually insensitive to uneven sampling
+of pseudo-counts and are not actually insensitive to uneven sequencing
 (40). Rarefaction is preferred to these alternatives.
 
 The choice of distance metric is a complicated question and the use of
@@ -977,9 +976,9 @@ when using rarefaction relative to the other normalization methods.
 Although the authors claim that ``Rarefying counts requires an arbitrary
 selection of a library size minimum that affects downstream inference''
 (page 8, column 1, point 3), in actual microbiome studies the selection
-of a sampling depth is not as arbitrary as the authors claim. Rather, to
-avoid ``P-hacking'', researchers pick a set of criteria where they will
-include or exclude samples prior to testing their data. Examples of
+of a sequencing depth is not as arbitrary as the authors claim. Rather,
+to avoid ``P-hacking'', researchers pick a set of criteria where they
+will include or exclude samples prior to testing their data. Examples of
 criteria might include the presence of a large gap in the sequencing
 effort distribution, a desire to include poorly sequenced controls, or
 the \emph{a priori} stipulation of a minimum sequencing effort. To
@@ -1015,7 +1014,7 @@ alternatives (40) and the practice of filtering low abundance sequences
 studies demonstrate that it is actually sequence and OTU filtering that
 ``requires the omission of available valid data'' and that rarefaction
 is the only available method for controlling the effects of uneven
-sampling. Far from being inadmissible, rarefaction of unfiltered
+sequencing. Far from being inadmissible, rarefaction of unfiltered
 datasets yields the most robust results.
 
 \hypertarget{methods}{%
@@ -1097,8 +1096,8 @@ models x 100 replicates).
 communities}\label{generation-of-distances-between-communities}}
 
 Next, each simulation was further processed by filtering rare OTUs, to
-normalize uneven sampling depths, and to calculate ecological distances
-between samples. Again, the code contained within
+normalize uneven sequencing depths, and to calculate ecological
+distances between samples. Again, the code contained within
 \texttt{simulation-cluster-accuracy-server.Rmd} was spilt into
 individual R scripts and modified to make the generation of the
 simulated communities more modular and scalable within the
@@ -1887,10 +1886,10 @@ in their sensitivity to removal of rare OTUs.} Larger values indicate
 that the clustering accuracy from filtered datasets were larger than
 those from non-filtered datasets. The median of 100 randomizations did
 not meaningfully vary from 0.0, but the observed 95\% confidence
-interval varied considerably. Data are shown for a median sampling depth
-(Ñ\textsubscript{L}) of 10,000 sequences when individual sequencing
-depths were sampled with replacement from the GlobalPatterns dataset or
-without replacement from the log-scaled distribution.
+interval varied considerably. Data are shown for a median sequencing
+depth (Ñ\textsubscript{L}) of 10,000 sequences when individual
+sequencing depths were sampled with replacement from the GlobalPatterns
+dataset or without replacement from the log-scaled distribution.
 
 \newpage
 
@@ -1904,7 +1903,7 @@ one of two groups, the expected accuracy with an effect size of 1.00 was
 0.51. With an effect size of 1.15, the expected accuracy was 1.00. Each
 point represents the median of 100 replicates and the error bars
 represent the observed 95\% confidence interval. Data are shown for a
-median sampling depth (Ñ\textsubscript{L}) of 10,000 sequences when
+median sequencing depth (Ñ\textsubscript{L}) of 10,000 sequences when
 individual sequencing depths were sampled with replacement from the
 GlobalPatterns dataset or without replacement from the log-scaled
 distribution.
@@ -1921,8 +1920,8 @@ group.} Type I errors were assessed as the fraction of 100 simulations
 that yielded a significant P-value (i.e., less than or equal to 0.05) at
 an effect size of 1.00. Power was assessed as the fraction of 100
 simulations that yielded a significant P-Value at an effect size of
-1.15. Data are shown for a median sampling depth (Ñ\textsubscript{L}) of
-10,000 sequences when individual sequencing depths were sampled with
+1.15. Data are shown for a median sequencing depth (Ñ\textsubscript{L})
+of 10,000 sequences when individual sequencing depths were sampled with
 replacement from the GlobalPatterns dataset or without replacement from
 the log-scaled distribution.
 
