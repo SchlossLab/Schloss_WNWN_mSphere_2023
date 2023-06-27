@@ -255,7 +255,7 @@ Using the `nr-s1` Conda environment, I measured the richness and Shannon diversi
 
 ## Acknowledgements
 
-I am grateful to Dr. Paul McMurdie and Dr. Susan Holmes for publishing the source code that they used to conduct their analysis as R markdown files in the supplement to WNWN. It would not have been possible for me to replicate and build upon their simulations without their code.
+I am grateful to Dr. Paul McMurdie and Dr. Susan Holmes for publishing the source code that they used to conduct their analysis as R markdown files in the supplement to WNWN. It would not have been possible for me to replicate and build upon their simulations without their code. This work was supported in part by funding from the National Institutes of Health (U01AI124255, P30DK034933, R01CA215574, and U01CA264071).
 
 \newpage
 
