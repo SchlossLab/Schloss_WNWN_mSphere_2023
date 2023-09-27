@@ -31,8 +31,10 @@ betas = [ "clusters", "adonis" ]
 
 rule all_targets:
   input:
-    "submission/manuscript.pdf"
-
+    "submission/manuscript.pdf",
+    "submission/supplemental_text.pdf",
+    "submission/response_to_reviewers.pdf",
+    "submission/marked_up.pdf",
 
 rule s1_download_archive:
   input:
@@ -590,40 +592,38 @@ rule plot_alpha_compare:
 #
 ################################################################################
 
-figures_dict = {"01": "results/figures/s1_figure_3.tiff",
-                "02": "results/figures/s1_figure_4.tiff",
-                "03": "results/figures/fig4_pam_subsample15_gp_ds.tiff",
-                "04": "results/figures/fig5_pam_subsample_gp.tiff",
-                "05": "results/figures/deseq_negative_values.tiff",
-                "06": "results/figures/subsample_rarefaction_compare.tiff",
-                "07": "results/figures/compare_cluster_methods.tiff",
-                "08": "results/figures/fig5_kmeans_rarefaction_gp.tiff",
-                "09": "results/figures/fig4_kmeans_rarefaction00_gp_nds.tiff",
-                "10": "results/figures/distribution_shape.tiff",
-                "11": "results/figures/fig4_kmeans_rarefaction00_log_nds.tiff",
-                "12": "results/figures/fig5_kmeans_rarefaction_log.tiff",
-                "13": "results/figures/compare_filter_accuracy.tiff",
-                "14": "results/figures/cluster_skew_compare.tiff",
-                "15": "results/figures/adonis_skew_compare.tiff",
-                "16": "results/figures/alpha_compare_gp.tiff",
-                "17": "results/figures/alpha_compare_log.tiff"
+figures_dict = {"01": "results/figures/subsample_rarefaction_compare.tiff",
+                "02": "results/figures/compare_cluster_methods.tiff",
+                "03": "results/figures/fig5_kmeans_rarefaction_gp.tiff",
+                "04": "results/figures/fig4_kmeans_rarefaction00_gp_nds.tiff",
+                "05": "results/figures/fig4_kmeans_rarefaction00_log_nds.tiff",
+                "06": "results/figures/cluster_skew_compare.tiff",
+                "07": "results/figures/adonis_skew_compare.tiff",
+                "08": "results/figures/alpha_compare_gp.tiff",
+                "S1": "results/figures/s1_figure_3.tiff",
+                "S2": "results/figures/s1_figure_4.tiff",
+                "S3": "results/figures/fig4_pam_subsample15_gp_ds.tiff",
+                "S4": "results/figures/fig5_pam_subsample_gp.tiff",
+                "S5": "results/figures/deseq_negative_values.tiff",
+                "S6": "results/figures/distribution_shape.tiff",
+                "S7": "results/figures/fig5_kmeans_rarefaction_log.tiff",
+                "S8": "results/figures/compare_filter_accuracy.tiff",
+                "S9": "results/figures/alpha_compare_log.tiff"
                 }
 
-rule convert_tiff_to_png:
+rule generate_figs:
     input:
         tiff=lambda wildcards: figures_dict[wildcards.fig_num],
     output:
-        png="submission/figure_{fig_num}.png"
+        tiff="submission/figure_{fig_num}.tiff"
     shell:
         """
-        convert {input.tiff} {output.png}
+        cp {input.tiff} {output.tiff}
         """
-
-
 
 rule write_paper:
   input:
-    "workflow/scripts/render_manuscript.R",
+    "workflow/scripts/render_rmd.R",
     "submission/manuscript.Rmd",
     "submission/references.bib",
     "submission/asm.csl",
@@ -634,17 +634,69 @@ rule write_paper:
     "data/simulation_alpha.tsv.gz",
     "data/rarefy_ocean_feces.tsv.gz",
     #
-    expand("submission/figure_0{fig_number}.png", fig_number = list(range(1,10))),
-    expand("submission/figure_{fig_number}.png", fig_number = list(range(10,18))),
+    expand("submission/figure_0{fig_number}.tiff", fig_number = list(range(1,9))),
+    expand("submission/figure_S{fig_number}.tiff", fig_number = list(range(1,10))),
     #
   output:
+    "submission/manuscript.docx",
     "submission/manuscript.pdf",
     "submission/manuscript.md",
     "submission/manuscript.tex"
   conda:
     "envs/nr-modern.yml"
+  resources:
+    mem_mb=12000
   shell: 
     """
-    workflow/scripts/render_manuscript.R
+    workflow/scripts/render_rmd.R submission/manuscript.Rmd
+    mv submission/manuscript.knit.md submission/manuscript.md 
     rm -f submission/manuscript.log
+    """
+
+rule supplemental_text:
+  input:
+    "submission/supplemental_text.Rmd",
+    "submission/references.bib",
+    "submission/asm.csl",
+    "workflow/scripts/render_rmd.R"
+  output:
+    "submission/supplemental_text.pdf",
+  conda:
+    "envs/nr-modern.yml"
+  shell: 
+    """
+    workflow/scripts/render_rmd.R submission/supplemental_text.Rmd
+    mv submission/supplemental_text.knit.md submission/supplemental_text.md 
+    rm -f submission/supplemental_text.log submission/supplemental_text.tex
+    """
+
+rule response_to_reviewers:
+  input:
+    rmd="submission/response_to_reviewers.Rmd",
+    rscript="workflow/scripts/render_rmd.R"
+  output:
+    "submission/response_to_reviewers.pdf"
+  conda:
+    "envs/nr-modern.yml"
+  shell:
+    """
+    {input.rscript} {input.rmd}
+    rm -f submission/response_to_reviewers.knit.md
+    """
+
+rule track_changes:
+  input:
+    "submission/manuscript.tex"
+  output:
+    "submission/marked_up.pdf"
+  conda:
+    "envs/nr-modern.yml"
+  shell:
+    """
+    git cat-file -p cb1e940:submission/manuscript.tex > submission/manuscript_old.tex
+    latexdiff submission/manuscript_old.tex submission/manuscript.tex > submission/marked_up.tex
+    R -e "tinytex::pdflatex('submission/marked_up.tex')"
+    rm marked_up.log
+    rm submission/marked_up.tex
+    rm submission/manuscript_old.tex
     """

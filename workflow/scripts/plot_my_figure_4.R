@@ -70,7 +70,8 @@ plot_four <- function(gp_log, cluster_method, transformation, deseq) {
                               levels = pretty_transform)) %>%
     ggplot2::ggplot(ggplot2::aes(x = fraction, y = median,
                                 group = transform, color = transform,
-                                shape = transform, fill = transform)) +
+                                shape = transform, fill = transform,
+                                linewidth = transform)) +
     ggplot2::geom_line(position = position_dodge(width = 0.075)) +
     ggplot2::geom_linerange(aes(ymin = lci, ymax = uci),
                   alpha = 0.6, position = position_dodge(width = 0.075),
@@ -83,6 +84,9 @@ plot_four <- function(gp_log, cluster_method, transformation, deseq) {
     ggplot2::scale_fill_manual(
       values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")
     ) +
+    ggplot2::scale_linewidth_manual(
+      values = c(0.5, 0.5, 0.5, 1.0, 0.5)
+    ) +
     ggplot2::scale_color_manual(
       values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")
     ) +
@@ -94,7 +98,8 @@ plot_four <- function(gp_log, cluster_method, transformation, deseq) {
         y = "Accuracy",
         color = NULL, #"Normalization Method:",
         fill = NULL, #"Normalization Method:",
-        shape = NULL #"Normalization Method:"
+        shape = NULL, #"Normalization Method:",
+        linewidth = NULL #"Normalization Method:",
         ) +
     ggplot2::theme_light() +
     ggplot2::theme(
@@ -106,7 +111,8 @@ plot_four <- function(gp_log, cluster_method, transformation, deseq) {
     ) +
     ggplot2::guides(color = ggplot2::guide_legend(nrow = 1),
                     fill = ggplot2::guide_legend(nrow = 1),
-                    shape = ggplot2::guide_legend(nrow = 1))
+                    shape = ggplot2::guide_legend(nrow = 1),
+                    linewidth = ggplot2::guide_legend(nrow = 1))
 
   ggplot2::ggsave(
       paste0("results/figures/",

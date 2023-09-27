@@ -42,7 +42,8 @@ plot_alpha_compare <- function(gp_log) {
 
   alpha %>%
     ggplot(aes(x = as.numeric(fraction), y = value, shape = transform,
-              group = transform, color = transform, fill = transform)) +
+              group = transform, color = transform, fill = transform,
+              linewidth = transform)) +
     geom_line(position = position_dodge(width = 0.075)) +
     geom_point(position = position_dodge(width = 0.075),
               size = 2) +
@@ -60,6 +61,9 @@ plot_alpha_compare <- function(gp_log) {
     scale_color_manual(
       values = c("#d95f02", "#7570b3", "#e7298a", "#66a61e")
     ) +
+    scale_linewidth_manual(
+      values = c(0.5, 0.5, 1.0, 0.5)
+    ) +
     scale_shape_manual(
       values = c(22, 23, 24, 25)
     ) +
@@ -68,7 +72,8 @@ plot_alpha_compare <- function(gp_log) {
         y = "Fraction of significant tests",
         color = NULL, #"Normalization Method:",
         fill = NULL, #"Normalization Method:",
-        shape = NULL #"Normalization Method:"
+        shape = NULL, #"Normalization Method:"
+        linewidth = NULL #"Normalization Method:"
         ) +
     theme_light() +
     theme(
@@ -79,7 +84,8 @@ plot_alpha_compare <- function(gp_log) {
     ) +
     guides(color = guide_legend(nrow = 2),
           fill = guide_legend(nrow = 2),
-          shape = guide_legend(nrow = 2))
+          shape = guide_legend(nrow = 2),
+          linewidth = guide_legend(nrow = 2))
 
   ggsave(paste0("results/figures/alpha_compare_", gp_log, ".tiff"),
         width = 6, height = 8,

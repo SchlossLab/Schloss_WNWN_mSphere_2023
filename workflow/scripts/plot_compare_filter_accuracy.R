@@ -54,21 +54,24 @@ cluster_data <- read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
 
 cluster_data %>%
   ggplot(aes(x = fraction, y = median, ymin = lci, ymax = uci,
-            group = transform, color = transform,
-            shape = transform, fill = transform)) +
-  geom_line(position = position_dodge(width = 0.075), show.legend = FALSE) +
+            group = transform, color = transform, shape = transform,
+            fill = transform, linewidth = transform)) +
+  geom_line(position = position_dodge(width = 0.075)) +
   geom_point(position = position_dodge(width = 0.075), size = 2) +
   geom_linerange(position = position_dodge(width = 0.075), alpha = 0.6,
                 show.legend = FALSE) +
   facet_grid(distance ~ model) +
   scale_fill_manual(
-    values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#000000")
+    values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")
   ) +
   scale_color_manual(
-    values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e", "#000000")
+    values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")
+  ) +
+  scale_linewidth_manual(
+    values = c(0.5, 0.5, 0.5, 1.0, 0.5)
   ) +
   scale_shape_manual(
-    values = c(21, 22, 23, 24, 25, 21)
+    values = c(21, 22, 23, 24, 25)
   ) +
   scale_x_continuous(
     breaks = seq(0, 3.5, 0.5)
@@ -77,7 +80,8 @@ cluster_data %>%
       y = "Difference in clustering accuracy when\nusing filtered and non-filtered data",
       color = NULL,
       fill = NULL,
-      shape = NULL) +
+      shape = NULL,
+      linewidth = NULL) +
   theme_light() +
   theme(
     legend.position = "top",
@@ -88,7 +92,8 @@ cluster_data %>%
   ) +
   guides(color = guide_legend(nrow = 2),
       fill = guide_legend(nrow = 2),
-      shape = guide_legend(nrow = 2))
+      shape = guide_legend(nrow = 2),
+      linewidth = guide_legend(nrow = 2))
 
 ggsave("results/figures/compare_filter_accuracy.tiff",
       width = 4.5, height = 8,

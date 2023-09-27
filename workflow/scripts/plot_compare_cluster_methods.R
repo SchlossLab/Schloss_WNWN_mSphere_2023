@@ -99,7 +99,8 @@ best_method %>%
       y = "Percentage of Simulations (N=100)",
       color = NULL, #"Normalization Method:",
       fill = NULL, #"Normalization Method:",
-      shape = NULL #"Normalization Method:"
+      shape = NULL, #"Normalization Method:"
+      linewidth = NULL #"Normalization Method:"
       ) +
   theme_light() +
   theme(
@@ -110,7 +111,8 @@ best_method %>%
   ) +
   guides(color = guide_legend(nrow = 1),
         fill = guide_legend(nrow = 1),
-        shape = guide_legend(nrow = 1))
+        shape = guide_legend(nrow = 1),
+        linewidth = guide_legend(nrow = 1))
 
 ggsave("results/figures/compare_cluster_methods.tiff",
       height = 10, width = 11,

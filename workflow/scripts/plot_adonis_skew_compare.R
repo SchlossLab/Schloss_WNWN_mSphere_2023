@@ -54,7 +54,7 @@ adonis_data <- read_tsv("data/simulation_adonis.tsv.gz") %>%
 
 adonis_data %>%
   ggplot(aes(x = distribution, y = p, color = transform, shape = transform,
-            fill = transform)) +
+            fill = transform, linewidth = transform)) +
   geom_point(position = position_dodge(width = 0.5), size = 2) +
   facet_nested(fraction + model ~ distance,
               strip = strip_nested(
@@ -69,6 +69,9 @@ adonis_data %>%
   scale_color_manual(
     values = c("#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#66a61e")
   ) +
+  scale_linewidth_manual(
+    values = c(0.5, 0.5, 0.5, 1.0, 0.5)
+  ) +
   scale_shape_manual(
     values = c(21, 22, 23, 24, 25, 21)
   ) +
@@ -77,8 +80,9 @@ adonis_data %>%
       y = "Fraction of significant tests",
       color = NULL, #"Normalization Method:",
       fill = NULL, #"Normalization Method:",
-      shape = NULL #"Normalization Method:"
-      ) +
+      shape = NULL, #"Normalization Method:"
+      linewidth = NULL #"Normalization Method:"
+  ) +
   theme_light() +
   theme(
     legend.position = "top",
@@ -87,7 +91,8 @@ adonis_data %>%
   ) +
   guides(color = guide_legend(nrow = 1),
         fill = guide_legend(nrow = 1),
-        shape = guide_legend(nrow = 1))
+        shape = guide_legend(nrow = 1),
+        linewidth = guide_legend(nrow = 1))
 
 ggsave("results/figures/adonis_skew_compare.tiff",
       width = 11, height = 7,

@@ -61,7 +61,8 @@ cluster_data <- read_tsv(here("data/simulation_clusters.tsv.gz")) %>%
 
 cluster_data %>%
     ggplot(aes(x = distribution, y = median, group = transform,
-              color = transform, shape = transform, fill = transform)) +
+              color = transform, shape = transform, fill = transform,
+              linewidth = transform)) +
     geom_linerange(aes(ymin = lci, ymax = uci),
                   alpha = 0.6, position = position_dodge(width = 0.5),
                   show.legend = FALSE) +
@@ -83,13 +84,17 @@ cluster_data %>%
     scale_shape_manual(
       values = c(21, 22, 23, 24, 25, 21)
     ) +
+     scale_linewidth_manual(
+      values = c(0.5, 0.5, 0.5, 1.0, 0.5)
+    ) +
     coord_cartesian(ylim = c(0.4, 1.05)) +
     labs(x = "Confounded by sample size",
         y = "Accuracy",
         color = NULL, #"Normalization Method:",
         fill = NULL, #"Normalization Method:",
-        shape = NULL #"Normalization Method:"
-        ) +
+        shape = NULL, #"Normalization Method:"
+        linewidth = NULL #"Normalization Method:"
+    ) +
     theme_light() +
     theme(
       legend.position = "top",
@@ -98,7 +103,8 @@ cluster_data %>%
     ) +
     guides(color = guide_legend(nrow = 1),
           fill = guide_legend(nrow = 1),
-          shape = guide_legend(nrow = 1))
+          shape = guide_legend(nrow = 1),
+          linewidth = guide_legend(nrow = 1))
 
   ggsave("results/figures/cluster_skew_compare.tiff",
          width = 11, height = 7,

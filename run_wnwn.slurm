@@ -21,4 +21,4 @@ conda activate nr-base
 #time snakemake -nr
 #time snakemake --use-conda --conda-frontend mamba -nr data/sim_a/1_1000_1.filter.RDS
 #time snakemake --profile config/slurm --batch all_targets=9/10
-time snakemake --profile config/slurm
+time snakemake --profile config/slurm  --rerun-triggers mtime
