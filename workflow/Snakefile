@@ -621,6 +621,16 @@ rule generate_figs:
         cp {input.tiff} {output.tiff}
         """
 
+rule generate_figs_pngs:
+    input:
+        tiff=lambda wildcards: figures_dict[wildcards.fig_num],
+    output:
+        png="submission/figure_{fig_num}.png"
+    shell:
+        """
+        convert {input.tiff} {output.png}
+        """
+
 rule write_paper:
   input:
     "workflow/scripts/render_rmd.R",
@@ -635,7 +645,6 @@ rule write_paper:
     "data/rarefy_ocean_feces.tsv.gz",
     #
     expand("submission/figure_0{fig_number}.tiff", fig_number = list(range(1,9))),
-    expand("submission/figure_S{fig_number}.tiff", fig_number = list(range(1,10))),
     #
   output:
     "submission/manuscript.docx",
@@ -656,6 +665,7 @@ rule write_paper:
 rule supplemental_text:
   input:
     "submission/supplemental_text.Rmd",
+    expand("submission/figure_S{fig_number}.png", fig_number = list(range(1,10))),
     "submission/references.bib",
     "submission/asm.csl",
     "workflow/scripts/render_rmd.R"
