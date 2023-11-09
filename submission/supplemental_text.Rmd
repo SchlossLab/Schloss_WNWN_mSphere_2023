@@ -102,7 +102,7 @@ Quotes from selected papers that cited WNWN and conflated "rarefying"/"rarefy" a
 
 \includegraphics{figure_S7.png}
 
-**Figure S7. Rarefaction with all samples yielded clustering accuracies that were as good or better than removing the smallest 15% of samples across distance calculation methods.** This figure is analogous to Figure 8 except that the sequencing depths for each of the 80 samples in each simulation were drawn without replacement from a log-scaled distribution rather than from the GlobalPatterns sequencing depths.
+**Figure S7. Rarefaction with all samples yielded clustering accuracies that were as good or better than removing the smallest 15% of samples across distance calculation methods.** This figure is analogous to Figure 3 except that the sequencing depths for each of the 80 samples in each simulation were drawn without replacement from a log-scaled distribution rather than from the GlobalPatterns sequencing depths.
 
 \newpage
 
